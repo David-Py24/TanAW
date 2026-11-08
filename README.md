@@ -5,6 +5,7 @@ Static sign-in page for AccessMap.
 ## Structure
 
 - `index.html` — sign-in page
+- `signup.html` — sign-up page
 - `assets/css/` — stylesheets
 - `assets/js/` — scripts
 - `assets/images/` — images
