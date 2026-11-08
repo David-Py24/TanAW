@@ -43,6 +43,11 @@ A consistent, thorough documentation entry for the architectural transformation,
    - Refined all interactive buttons (`.btn.accent`) and active badges to use `#FFFFFF` text on `#21524B` for WCAG AAA compliance.
    - Created supporting variables: `--accent-hover: #2B6860;`, `--accent-deep: #13332E;`, `--accent-light: #E7F2F0;`, and tuned all AI scanner reticles, badges, and background motion textures to match.
 
+5. **Brand Logo Integration**:
+   - Removed the placeholder dark teal box and generic person icon.
+   - Integrated the official AccessMap folded-map with location pin logo (`assets/Logo ref.jpg`) in the header navbar and browser tab favicon.
+   - Applied neo-brutalist styling with a 1.8px dark border, subtle offset shadow, and interactive hover tilt (`rotate(-6deg) scale(1.08)`).
+
 ---
 
 ### 2. Motivation / Why
@@ -140,6 +145,8 @@ Additionally, source backups are maintained in `SRC/` and `backup/`.
 
 | Date | Title | Agent/tool | Status |
 |------|-------|------------|--------|
+| 2026-11-08 | Brand Logo Replacement with Folded-Map Pin Icon | Antigravity | Approved |
 | 2026-11-08 | AccessMap SaaS Landing Page, Cross-Platform Map Suite & Dark Teal Design System | Antigravity | Approved |
 | 2026-11-08 | Ambient Motion Texture Layer & Resized Elongated Mobile Viewport | Antigravity | Approved |
 | 2026-11-08 | Spectra SaaS to AccessMap SaaS Transformation | Antigravity | Approved |
+

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AccessMap &bull; Crowdsourced Accessibility Mapping & AI Storefront Vision</title>
+<link rel="icon" type="image/jpeg" href="assets/Logo ref.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -222,21 +223,23 @@ nav {
   font-size: 18px;
   letter-spacing: -0.02em;
 }
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--accent);
+.logo-img {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 9px;
   border: 1.8px solid var(--line);
-  border-radius: 10px;
   box-shadow: 0 2px 0 var(--line);
-  display: grid;
-  place-items: center;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: #FFF;
+  display: block;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
 }
-.logo:hover .logo-icon {
-  transform: rotate(-8deg) scale(1.08);
+.logo:hover .logo-img {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 4px 0 var(--line);
 }
-.logo-icon svg { width: 18px; height: 18px; stroke: var(--ink); fill: none; stroke-width: 2.2; }
 
 .links { display: flex; gap: 8px; font-size: 13px; font-weight: 500; }
 .links a {
@@ -1502,14 +1505,8 @@ footer .wrap {
   <!-- Nav -->
   <nav>
     <a class="logo" href="#" aria-label="AccessMap Home">
-      <div class="logo-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <circle cx="12" cy="5" r="2.5" />
-          <path d="M9 20l3-6 3 6" />
-          <path d="M6 12h12" />
-        </svg>
-      </div>
-      AccessMap<span style="color:var(--accent-deep)">.</span>
+      <img class="logo-img" src="assets/Logo ref.jpg" alt="AccessMap Logo" onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='../assets/Logo ref.jpg';}">
+      AccessMap<span style="color:var(--accent)">.</span>
     </a>
 
     <div class="links">

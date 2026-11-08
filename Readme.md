@@ -97,3 +97,4 @@ For full details on recent architectural changes, technical decisions, and rollo
 ## ⚖️ License
 
 MIT License. Open and free for universal accessibility advocates, developers, and civic organizations.
+
