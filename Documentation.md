@@ -32,3 +32,15 @@ The `AccessMap-Interactive-Map-Page` repository was separated from the main mono
   - `Src/utils/storage.ts`: Accessibility score color calculator and distance math.
 - **Standalone Preview**: Generated zero-dependency `index.html` with Leaflet CDN, Tailwind CDN, tile switcher, and Mindanao/CDO presets for instant testing.
 - **Git Repository**: Initialized local git repository with initial commit.
+
+### `2026-11-09 17:14:00` — Interactive Map Engine Modernization & Feature Upgrade
+- **Action**: Implemented full modernization across `Src/` (React/TypeScript) and standalone `index.html`.
+- **New & Updated Modules**:
+  - `Src/utils/routingAndSpatial.ts`: Added Web Mercator viewport clustering (`computeMapClusters`), overlapping coordinate spiderfying, category-aware animated SVG pin & cluster HTML builders (`buildInteractivePinHtml`, `buildClusterPinHtml`), regional Mindanao city presets (`MINDANAO_CITY_PRESETS`), and keyless OSRM street route preview with geodesic fallback (`fetchAccessibleRoute`).
+  - `Src/components/MapSearchFilterBar.tsx`: Created floating glassmorphic search bar with `/` keyboard shortcut, autocomplete dropdown, category filter pills, verified accessibility tag filter chips, and Mindanao city quick-jump switcher.
+  - `Src/components/MapView.tsx`: Integrated dynamic spatial clustering, animated category SVG pins, search/tag/category filtering, GPS proximity radar ring (`1 km`, `3 km`, `5 km`) with Downtown CDO GPS simulation fallback, and dual-stroke OSRM route polyline rendering.
+  - `Src/components/MapFloatingCard.tsx`: Upgraded with venue thumbnail preview, AI accessibility summary & barrier badges, `Prev / Next` (`←` / `→`) venue carousel navigation, and interactive `Preview Route` toggle with travel time & distance HUD.
+  - `Src/index.ts`: Exported `MapSearchFilterBar`, `ACCESSIBILITY_QUICK_FILTERS`, `INITIAL_LOCATIONS`, and all spatial/routing utilities.
+  - `index.html`: Synchronized all 37 Mindanao & Cagayan de Oro locations and brought full feature parity (clustering, category SVG pins, search & tag filters, city presets, GPS proximity radar, and live route polyline preview) to the standalone browser engine.
+
+

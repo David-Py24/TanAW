@@ -1,0 +1,21 @@
+{
+  "changelists": [
+    {
+      "name": "Default",
+      "files": [
+        ".gitignore",
+        "Documentation.md",
+        "README.md",
+        "Src/index.ts",
+        "index.html",
+        "\"Docs/Implementation plan.md\"",
+        ".vscode/changelists.json",
+        "Src/components/MapFloatingCard.tsx",
+        "Src/components/MapView.tsx",
+        "Src/components/MapSearchFilterBar.tsx",
+        "Src/utils/routingAndSpatial.ts"
+      ]
+    }
+  ],
+  "active": "Default"
+}
