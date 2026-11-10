@@ -1,0 +1,17 @@
+{
+  "changelists": [
+    {
+      "name": "Default",
+      "files": [
+        "Src/AccessMap.html",
+        "Documentation.md",
+        "index.html",
+        ".vscode/changelists.json",
+        "Src/Spectra.html",
+        "Src/Saved-places-page.html",
+        "saved-places.html"
+      ]
+    }
+  ],
+  "active": "Default"
+}

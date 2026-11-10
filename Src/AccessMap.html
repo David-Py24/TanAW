@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AccessMap &bull; Crowdsourced Accessibility Mapping & AI Storefront Vision</title>
+<link rel="icon" type="image/jpeg" href="assets/Logo ref.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5FAFD;
+  --soft: #EAF3F7;
+  --soft-alt: #E3F0F5;
+  --ink: #0F172A;
+  --mute: #475569;
+  --line: #0F172A;
+  --accent: #21524B;
+  --accent-hover: #2B6860;
+  --accent-deep: #13332E;
+  --accent-light: #E7F2F0;
+  --accent-glow: rgba(33, 82, 75, 0.25);
+  --blue-badge: #38BDF8;
+  --card: #FFFFFF;
+  --grid: #D5E5EC;
+  --shadow-line: 0 3px 0 var(--line);
+  --shadow-hover: 0 6px 0 var(--line);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 30px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 14px/1.6 "Space Grotesk", system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 28px; }
+
+/* Ensure all main content sections sit above the motion texture */
+.wrap, nav, header, section, footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* Background Motion Texture Layer */
+.bg-motion-texture {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.038'/%3E%3C/svg%3E");
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+}
+
+.bg-grid-drift {
+  position: absolute;
+  inset: -80px;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1.2px, transparent 0),
+    linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px, 72px 72px, 72px 72px;
+  animation: gridDrift 45s linear infinite;
+  opacity: 0.9;
+}
+
+.bg-topo-drift {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600' fill='none'%3E%3Cpath d='M-100 200 C 150 120, 300 350, 600 250 S 850 150, 1000 280' stroke='rgba(33,82,75,0.08)' stroke-width='2' stroke-dasharray='8 6' fill='none'/%3E%3Cpath d='M-100 280 C 180 200, 340 420, 640 320 S 880 220, 1000 350' stroke='rgba(15,23,42,0.04)' stroke-width='1.5' fill='none'/%3E%3Cpath d='M-100 360 C 210 280, 380 490, 680 390 S 910 290, 1000 420' stroke='rgba(56,189,248,0.07)' stroke-width='2' stroke-dasharray='12 8' fill='none'/%3E%3C/svg%3E");
+  background-size: 800px 600px;
+  animation: topoFloat 60s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(85px);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.orb-1 {
+  top: -8%;
+  right: -5%;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(33, 82, 75, 0.25) 0%, rgba(33, 82, 75, 0.05) 60%, transparent 80%);
+  animation: floatOrb1 24s ease-in-out infinite alternate;
+}
+.orb-2 {
+  top: 38%;
+  left: -10%;
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0.04) 60%, transparent 80%);
+  animation: floatOrb2 28s ease-in-out infinite alternate;
+}
+.orb-3 {
+  top: 72%;
+  right: -8%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(33, 82, 75, 0.2) 0%, rgba(251, 191, 36, 0.12) 50%, transparent 80%);
+  animation: floatOrb3 32s ease-in-out infinite alternate;
+}
+
+.bg-radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(33, 82, 75, 0.16);
+  pointer-events: none;
+  animation: radarPulse 18s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+.ring-1 {
+  top: 14%;
+  left: 18%;
+  width: 360px;
+  height: 360px;
+  animation-delay: 0s;
+}
+.ring-2 {
+  top: 62%;
+  right: 12%;
+  width: 440px;
+  height: 440px;
+  animation-delay: 9s;
+}
+
+@keyframes gridDrift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(72px, 72px); }
+}
+@keyframes topoFloat {
+  0% { transform: scale(1) translateY(0); }
+  100% { transform: scale(1.06) translateY(-40px); }
+}
+@keyframes floatOrb1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-60px, 50px) scale(1.12); }
+  100% { transform: translate(-30px, 90px) scale(0.95); }
+}
+@keyframes floatOrb2 {
+  0% { transform: translate(0, 0) scale(0.95); }
+  50% { transform: translate(70px, -40px) scale(1.1); }
+  100% { transform: translate(40px, 50px) scale(1.02); }
+}
+@keyframes floatOrb3 {
+  0% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-50px, -60px) scale(0.92); }
+  100% { transform: translate(-80px, -20px) scale(1.1); }
+}
+@keyframes radarPulse {
+  0% { transform: scale(0.6) rotate(0deg); opacity: 0; }
+  25% { opacity: 0.65; }
+  75% { opacity: 0.3; }
+  100% { transform: scale(1.6) rotate(60deg); opacity: 0; }
+}
+
+/* Typography */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+  font-weight: 700;
+  background: var(--accent-light);
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--accent);
+  margin-bottom: 14px;
+}
+.eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-deep);
+  animation: pulse-dot 1.8s infinite ease-in-out;
+}
+
+h1, h2, h3 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  color: var(--ink);
+}
+h1 { font-size: clamp(34px, 4.8vw, 50px); }
+h2 { font-size: clamp(28px, 3.4vw, 36px); }
+h3 { font-size: 17px; margin-bottom: 8px; }
+p { margin: 0; color: var(--mute); }
+.lead { font-size: 14px; line-height: 1.65; color: #334155; }
+.highlight { color: var(--accent-deep); background: var(--accent-light); padding: 0 4px; border-radius: 4px; }
+
+/* Nav */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+  position: relative;
+  z-index: 20;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.logo-img {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 9px;
+  border: 1.8px solid var(--line);
+  box-shadow: 0 2px 0 var(--line);
+  background: #FFF;
+  display: block;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+.logo:hover .logo-img {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 4px 0 var(--line);
+}
+
+.links { display: flex; gap: 8px; font-size: 13px; font-weight: 500; }
+.links a {
+  padding: 7px 16px;
+  border-radius: 99px;
+  border: 1.5px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.links a:hover {
+  background: var(--card);
+  border-color: var(--line);
+  box-shadow: 0 2px 0 var(--line);
+  transform: translateY(-1px);
+}
+.links a.on {
+  border-color: var(--line);
+  background: var(--card);
+  box-shadow: 0 2px 0 var(--line);
+}
+
+/* Interactive Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: 600 13px "Space Grotesk", sans-serif;
+  padding: 11px 22px;
+  border-radius: 99px;
+  border: 1.8px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow-line);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  user-select: none;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  background: #FFF;
+}
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--line);
+}
+.btn.accent {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--line);
+}
+.btn.accent:hover {
+  background: var(--accent-hover);
+  color: #FFFFFF;
+}
+.btn.sm { padding: 8px 18px; font-size: 12px; }
+.burger { display: none; background: none; border: 0; color: var(--ink); font-size: 22px; cursor: pointer; }
+
+/* Hero Section */
+.hero {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 36px;
+  align-items: center;
+  padding: 30px 0 80px;
+  position: relative;
+}
+.hero-content {
+  opacity: 0;
+  transform: translateY(25px);
+  animation: heroEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+.hero .lead {
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+.cta-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cta-note {
+  margin-top: 18px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mute);
+}
+.cta-note span {
+  display: inline-block;
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+/* Hero Stage / Visual Mockup */
+.stage {
+  position: relative;
+  height: 390px;
+  opacity: 0;
+  transform: translateY(35px) scale(0.97);
+  animation: heroEntrance 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+}
+.panel {
+  position: absolute;
+  background: var(--card);
+  border: 1.8px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow-line);
+  padding: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.panel:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+/* Storefront AI Vision Scanner Card */
+.p-scanner {
+  right: 0;
+  top: 0;
+  width: 82%;
+  height: 220px;
+  z-index: 1;
+  background: #0B132B;
+  color: #FFF;
+  overflow: hidden;
+  border-color: var(--line);
+}
+.scanner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #94A3B8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.scanner-tag {
+  background: rgba(52, 211, 153, 0.2);
+  color: #6EE7B7;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.storefront-view {
+  position: relative;
+  height: 140px;
+  background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Scanning Laser Line */
+.scan-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #21524B 20%, #4D847C 50%, #21524B 80%, transparent);
+  box-shadow: 0 0 12px rgba(33, 82, 75, 0.6);
+  top: 0;
+  animation: scanningBeam 3s ease-in-out infinite alternate;
+  z-index: 5;
+}
+/* AI Vision Bounding Boxes */
+.ai-box {
+  position: absolute;
+  border: 1.5px solid #21524B;
+  background: rgba(33, 82, 75, 0.16);
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #D3ECE7;
+  padding: 3px 6px;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+.ai-box::after {
+  content: attr(data-label);
+  position: absolute;
+  top: -18px;
+  left: -1px;
+  background: #21524B;
+  color: #FFFFFF;
+  font-size: 8.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid #143631;
+  white-space: nowrap;
+}
+.box-ramp { left: 14%; bottom: 12px; width: 44%; height: 38px; }
+.box-door { right: 12%; top: 22px; width: 28%; height: 80px; }
+
+/* Interactive Pin Card */
+.p-pin {
+  left: 2%;
+  top: 110px;
+  width: 72%;
+  transform: rotate(-3deg);
+  z-index: 3;
+  cursor: pointer;
+  background: var(--card);
+}
+.p-pin:hover {
+  transform: rotate(0deg) scale(1.02);
+}
+.pin-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.pin-title-row b { font-size: 13px; font-weight: 600; color: var(--ink); }
+.score-badge {
+  background: var(--accent-light);
+  color: var(--accent-deep);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  border: 1px solid var(--accent);
+}
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+.tag-chip {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1.2px solid var(--line);
+  background: var(--soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.tag-chip.active {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--line);
+  font-weight: 600;
+}
+.tag-chip:hover {
+  transform: scale(1.04);
+}
+.meta-review {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--grid);
+  padding-top: 8px;
+  font-size: 10px;
+  color: var(--mute);
+}
+
+/* Floating GPS Beacon */
+.gps-orb {
+  position: absolute;
+  left: -10px;
+  bottom: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 1.8px solid var(--line);
+  box-shadow: var(--shadow-line);
+  display: grid;
+  place-items: center;
+  z-index: 4;
+  animation: floatOrb 4s ease-in-out infinite alternate;
+}
+.gps-orb svg {
+  width: 28px;
+  height: 28px;
+  color: var(--accent-deep);
+}
+
+/* Social Proof Band */
+.band {
+  background: var(--soft);
+  border-top: 1.5px solid var(--line);
+  border-bottom: 1.5px solid var(--line);
+  padding: 36px 0;
+}
+.band .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.band h3 { font-size: 18px; margin: 0; }
+.logos {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+.partner-card {
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 2px 0 var(--line);
+  background: var(--card);
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.partner-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 var(--line);
+  background: #FFF;
+}
+
+/* How It Works / Deep Dive Section */
+.content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  padding: 85px 0 50px;
+  align-items: center;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 32px;
+}
+.stat-box {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 2px 0 var(--line);
+  padding: 14px 16px;
+  transition: transform 0.2s ease;
+}
+.stat-box:hover {
+  transform: translateY(-2px);
+}
+.stat-box big {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-box p { font-size: 11px; }
+
+/* Interactive AI Demo Panel */
+.vis {
+  position: relative;
+  background: var(--soft);
+  border: 1.8px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-line);
+  padding: 24px;
+}
+.vis-card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 2px 0 var(--line);
+  padding: 18px;
+}
+.vis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.live-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-deep);
+  background: var(--accent-light);
+  border: 1px solid var(--accent);
+  padding: 2px 8px;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.checklist-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--grid);
+  font-size: 12px;
+}
+.checklist-item:last-child { border-bottom: 0; }
+.check-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.check-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--accent);
+  border: 1.5px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+.badge-score {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Cross Platform Mobile and PC Section */
+.cross-platform {
+  padding: 80px 0 60px;
+}
+.cp-header {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 46px;
+}
+.cp-header h2 {
+  font-size: clamp(28px, 3.8vw, 38px);
+  margin: 10px 0 16px;
+}
+.cp-header p {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.device-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.45fr 0.85fr;
+  gap: 28px;
+  align-items: start;
+  margin-bottom: 40px;
+}
+
+/* PC Mockup Window with Real Map Interface */
+.pc-window {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 8px 0 var(--line);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.pc-window:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 0 var(--line);
+}
+.pc-topbar {
+  background: #EAEFF2;
+  border-bottom: 1.5px solid var(--line);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pc-dots {
+  display: flex;
+  gap: 6px;
+}
+.pc-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: inline-block;
+}
+.dot-red { background: #FF6B6B; }
+.dot-yellow { background: #FFD166; }
+.dot-green { background: #06D6A0; }
+.pc-address {
+  flex: 1;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  padding: 3px 12px;
+  font-size: 11px;
+  color: var(--mute);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pc-address span.secure {
+  color: var(--ink);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 11px;
+}
+.pc-body {
+  padding: 0;
+  background: #FAFCFE;
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  height: 480px;
+  overflow: hidden;
+}
+
+/* Left Location Sidebar */
+.pc-sidebar {
+  border-right: 1.5px solid var(--line);
+  background: #FFF;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pc-nav-rail {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--grid);
+  align-items: center;
+  background: #F8FAFC;
+}
+.pc-rail-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--grid);
+  background: #FFF;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.pc-rail-icon.active {
+  background: var(--accent);
+  border-color: var(--line);
+}
+.pc-sidebar-header {
+  padding: 10px 12px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pc-sidebar-header b {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pc-sidebar-header span.count {
+  font-size: 10px;
+  background: var(--soft);
+  padding: 1px 6px;
+  border-radius: 99px;
+  border: 1px solid var(--grid);
+}
+.pc-filter-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 10px 8px;
+}
+.pc-tab {
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  border: 1px solid var(--grid);
+  background: var(--soft);
+  color: var(--mute);
+  font-weight: 600;
+  cursor: pointer;
+}
+.pc-tab.active {
+  background: var(--ink);
+  color: #FFF;
+  border-color: var(--ink);
+}
+.pc-search-box {
+  margin: 0 10px 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  font-size: 10px;
+  color: var(--mute);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #F8FAFC;
+}
+.pc-cards-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pc-loc-card {
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  background: #FFF;
+  box-shadow: 0 2px 0 var(--line);
+}
+.pc-loc-card.selected {
+  border-color: var(--line);
+  background: #F1F7F6;
+  outline: 1.5px solid var(--accent);
+}
+.pc-loc-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.pc-loc-sub {
+  font-size: 8px;
+  color: var(--mute);
+  margin-top: 2px;
+}
+.pc-tag-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 8px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 99px;
+  border: 1px solid rgba(33, 82, 75, 0.35);
+  margin: 4px 0;
+}
+.pc-progress-bar {
+  height: 4px;
+  background: #E2E8F0;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.pc-progress-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  width: 96%;
+}
+.pc-loc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  font-size: 8px;
+  color: var(--mute);
+  border-top: 1px solid var(--grid);
+  padding-top: 4px;
+  text-align: center;
+}
+.pc-loc-grid strong {
+  display: block;
+  color: var(--ink);
+  font-size: 9px;
+}
+
+/* Map Canvas on PC */
+.pc-map-container {
+  position: relative;
+  height: 100%;
+  background: #f1ede6;
+  overflow: hidden;
+}
+.pc-map-header {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+.pc-city-badge {
+  pointer-events: auto;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 5px 10px;
+  box-shadow: 0 2px 0 var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pc-city-badge b {
+  font-size: 11px;
+}
+.pc-city-badge span {
+  font-size: 9px;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 1px 6px;
+  border-radius: 99px;
+  border: 1px solid rgba(33, 82, 75, 0.3);
+  font-weight: 600;
+}
+.pc-map-tools {
+  pointer-events: auto;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.pc-tool-btn {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  box-shadow: 0 2px 0 var(--line);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Realistic SVG Map Canvas */
+.osm-map-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Map Score Pins */
+.map-score-pin {
+  position: absolute;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #FFF;
+  border: 1.5px solid #FFF;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  cursor: pointer;
+  z-index: 3;
+  transition: transform 0.2s ease;
+}
+.map-score-pin:hover {
+  transform: scale(1.15);
+}
+.map-score-pin.green {
+  background: var(--accent);
+  width: 26px;
+  height: 26px;
+}
+.map-score-pin.green.large {
+  background: var(--accent);
+  width: 32px;
+  height: 32px;
+  font-size: 10px;
+  border: 2px solid var(--line);
+  box-shadow: 0 0 0 3px rgba(33, 82, 75, 0.4), 0 3px 6px rgba(0,0,0,0.35);
+  animation: mapPulse 2s infinite ease-in-out;
+}
+.map-score-pin.orange {
+  background: #F59E0B;
+  width: 26px;
+  height: 26px;
+}
+.map-score-pin.red {
+  background: #EF4444;
+  width: 24px;
+  height: 24px;
+}
+@keyframes mapPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(33, 82, 75, 0.4), 0 3px 6px rgba(0,0,0,0.35); }
+  50% { box-shadow: 0 0 0 7px rgba(33, 82, 75, 0.15), 0 4px 8px rgba(0,0,0,0.4); }
+}
+
+/* Map Bottom Drawer Overlay */
+.pc-map-overlay-card {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 3px 0 var(--line);
+  z-index: 5;
+}
+.pc-overlay-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.pc-overlay-head strong {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pc-overlay-row {
+  display: flex;
+  gap: 16px;
+  font-size: 9px;
+  color: var(--mute);
+}
+.pc-overlay-row strong {
+  color: var(--ink);
+}
+.pc-overlay-row .score-highlight {
+  color: var(--accent);
+  font-weight: 800;
+}
+.leaflet-attr {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 7px;
+  color: rgba(0,0,0,0.5);
+  background: rgba(255,255,255,0.7);
+  padding: 1px 4px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Resized Mobile Mockup with Increased Length */
+.mobile-device {
+  background: var(--line);
+  border: 2.5px solid var(--line);
+  border-radius: 40px;
+  padding: 10px;
+  box-shadow: 0 10px 0 var(--line);
+  width: 275px;
+  min-height: 540px;
+  margin: 0 auto;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.mobile-device:hover {
+  transform: translateY(-4px) rotate(0.5deg);
+  box-shadow: 0 14px 0 var(--line);
+}
+.mobile-screen {
+  background: #FFF;
+  border-radius: 30px;
+  overflow: hidden;
+  border: 1.5px solid rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+}
+.mobile-notch {
+  width: 80px;
+  height: 14px;
+  background: var(--line);
+  border-radius: 0 0 12px 12px;
+  margin: 0 auto;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+.mobile-topbar {
+  background: transparent;
+  padding: 6px 14px 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 9;
+  color: var(--ink);
+}
+.mobile-map-view {
+  position: relative;
+  flex: 1;
+  background: #f1ede6;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.mobile-search-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  background: #FFF;
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  box-shadow: 0 2px 0 var(--line);
+  z-index: 6;
+  color: var(--mute);
+}
+.mobile-map-tools {
+  position: absolute;
+  right: 10px;
+  top: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 6;
+}
+.mobile-tool-icon {
+  width: 26px;
+  height: 26px;
+  background: #FFF;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  box-shadow: 0 2px 0 var(--line);
+  cursor: pointer;
+}
+
+/* Mobile Bottom Sheet Drawer */
+.mobile-bottom-sheet {
+  background: #FFF;
+  border-top: 1.5px solid var(--line);
+  border-radius: 16px 16px 0 0;
+  padding: 10px 12px 8px;
+  box-shadow: 0 -3px 10px rgba(0,0,0,0.08);
+  z-index: 7;
+}
+.mobile-drag-handle {
+  width: 32px;
+  height: 4px;
+  border-radius: 99px;
+  background: #CBD5E1;
+  margin: 0 auto 6px;
+}
+.mobile-sheet-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mobile-sheet-sub {
+  font-size: 8px;
+  color: var(--mute);
+  margin-top: 2px;
+}
+.mobile-tag-chips {
+  display: flex;
+  gap: 4px;
+  margin: 6px 0;
+  flex-wrap: wrap;
+}
+.mobile-tag {
+  font-size: 7.5px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 700;
+  border: 1px solid rgba(33, 82, 75, 0.3);
+}
+.mobile-cta-btn {
+  background: var(--accent);
+  color: #FFFFFF;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 2px 0 var(--line);
+  cursor: pointer;
+  display: block;
+  margin-top: 4px;
+}
+
+.mobile-bottom-nav {
+  background: #FFF;
+  border-top: 1px solid var(--grid);
+  padding: 6px 12px 8px;
+  display: flex;
+  justify-content: space-around;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--mute);
+  z-index: 8;
+}
+.mobile-bottom-nav span.active {
+  color: var(--accent);
+}
+
+/* 3-Column Sync Feature Cards */
+.cp-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.cp-card {
+  background: var(--card);
+  border: 1.8px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-line);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+.cp-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--soft);
+  border: 1.5px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+.cp-card h3 {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+.cp-card p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--mute);
+}
+
+/* Feature Cards Grid */
+.feat { padding: 60px 0 95px; }
+.feat .head {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  align-items: flex-end;
+  margin-bottom: 40px;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.card {
+  background: var(--card);
+  border: 1.8px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow-line);
+  padding: 26px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+.card .ic {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1.8px solid var(--line);
+  background: var(--accent-light);
+  box-shadow: 0 2px 0 var(--line);
+  display: grid;
+  place-items: center;
+  margin-bottom: 20px;
+  color: var(--accent);
+}
+.card .ic svg { width: 22px; height: 22px; stroke-width: 2; }
+.card p { font-size: 12px; margin-bottom: 20px; line-height: 1.6; }
+.card ul { padding: 0; margin: 0; list-style: none; }
+.card li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  margin-top: 10px;
+  color: var(--ink);
+}
+.card li::before {
+  content: "✓";
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #FFFFFF;
+  flex: none;
+}
+
+/* Interactive Interactive CTA Banner */
+.cta-banner {
+  background: var(--ink);
+  color: #FFF;
+  border: 1.8px solid var(--line);
+  border-radius: 20px;
+  padding: 48px;
+  box-shadow: 0 4px 0 var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 80px;
+  position: relative;
+  overflow: hidden;
+}
+.cta-banner::after {
+  content: "";
+  position: absolute;
+  right: -50px;
+  bottom: -50px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(33, 82, 75, 0.45) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-banner h2 { color: #FFF; margin-bottom: 10px; }
+.cta-banner p { color: #94A3B8; max-width: 480px; }
+
+/* Footer */
+footer {
+  border-top: 1.8px solid var(--line);
+  background: var(--soft);
+  padding: 30px 0;
+  font-size: 12px;
+  color: var(--mute);
+}
+footer .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+.footer-links a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+/* Scroll Animation Helper */
+.fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Keyframes */
+@keyframes heroEntrance {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes scanningBeam {
+  0% { top: 0; opacity: 0.9; }
+  50% { top: 138px; opacity: 1; }
+  100% { top: 0; opacity: 0.9; }
+}
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+}
+@keyframes floatOrb {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-8px) rotate(6deg); }
+}
+
+/* Responsive */
+@media (max-width: 920px) {
+  .links, nav > .btn { display: none; }
+  .burger { display: block; }
+  .hero, .content { grid-template-columns: 1fr; gap: 36px; }
+  .stage { height: 360px; }
+  .p-scanner { width: 100%; }
+  .p-pin { left: 4%; width: 85%; }
+  .logos { grid-template-columns: repeat(2, 1fr); }
+  .cards { grid-template-columns: 1fr; }
+  .feat .head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .cta-banner { flex-direction: column; align-items: flex-start; padding: 30px; }
+  .device-stage { grid-template-columns: 1fr; gap: 36px; justify-items: center; }
+  .cp-features { grid-template-columns: 1fr; }
+  .pc-body { grid-template-columns: 1fr; height: auto; }
+  .pc-sidebar { border-right: 0; border-bottom: 1.5px solid var(--line); max-height: 240px; }
+  .pc-map-container { height: 350px; }
+  .mobile-device { width: 100%; max-width: 290px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .bg-grid-drift, .bg-topo-drift, .bg-orb, .bg-radar-ring {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Motion Texture Background Layers -->
+<div class="bg-motion-texture" aria-hidden="true">
+  <div class="bg-noise"></div>
+  <div class="bg-grid-drift"></div>
+  <div class="bg-topo-drift"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="bg-radar-ring ring-1"></div>
+  <div class="bg-radar-ring ring-2"></div>
+</div>
+
+<div class="wrap">
+  <!-- Nav -->
+  <nav>
+    <a class="logo" href="#" aria-label="AccessMap Home">
+      <img class="logo-img" src="assets/Logo ref.jpg" alt="AccessMap Logo" onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='../assets/Logo ref.jpg';}">
+      AccessMap<span style="color:var(--accent)">.</span>
+    </a>
+
+    <div class="links">
+      <a class="on" href="#hero">Overview</a>
+      <a href="#ai-vision">AI Storefront Vision</a>
+      <a href="#cross-platform">Mobile &amp; PC</a>
+      <a href="#features">Features</a>
+      <a href="#community">Community</a>
+    </div>
+
+    <a class="btn accent sm" href="#demo">Launch Web App &rarr;</a>
+    <button class="burger" aria-label="Toggle navigation menu">&#9776;</button>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero" id="hero">
+    <div class="hero-content">
+      <div class="eyebrow">Crowdsourced Accessibility &bull; Computer Vision AI</div>
+      <h1>Navigate Without Barriers. Pin, Rate & Scan.</h1>
+      <p class="lead">
+        A local crowdsourced mapping platform where communities pin and rate locations based on granular accessibility tags — powered by an instant AI engine that analyzes storefront photos for ramps, steps, and automatic doors.
+      </p>
+
+      <div class="cta-group">
+        <a class="btn accent" href="#demo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          Explore Live Map
+        </a>
+        <a class="btn" href="#ai-vision" id="triggerScanDemo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Try AI Photo Scan
+        </a>
+      </div>
+
+      <div class="cta-note">
+        <span>★ 4.9/5 Community Verified</span> &bull; 100% Free for individuals & transit advocates
+      </div>
+    </div>
+
+    <!-- Hero Interactive Stage -->
+    <div class="stage" aria-label="Interactive map and AI scanner preview">
+      <!-- AI Storefront Vision Scanner Panel -->
+      <div class="panel p-scanner" id="scannerPanel">
+        <div class="scanner-header">
+          <span>AI Entrance Audit &bull; Storefront #4092</span>
+          <span class="scanner-tag">
+            <span style="width:6px;height:6px;background:var(--accent);border-radius:50%"></span>
+            Vision Active
+          </span>
+        </div>
+        <div class="storefront-view" id="storefrontView">
+          <div class="scan-beam"></div>
+          <!-- Computer Vision Detected Items -->
+          <div class="ai-box box-ramp" data-label="Ramp: 1:12 Incline (Pass)"></div>
+          <div class="ai-box box-door" data-label="Door: 36&quot; Auto-Sensor (Pass)"></div>
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Crowdsourced Pin / Location Review Card -->
+      <div class="panel p-pin" id="pinCard">
+        <div class="pin-title-row">
+          <div>
+            <b>Blueberry Bakery & Cafe</b>
+            <div style="font-size:11px;color:var(--mute)">214 Market St &bull; Rated by 38 locals</div>
+          </div>
+          <span class="score-badge">&#9733; 4.9 High Access</span>
+        </div>
+
+        <div class="tags-list">
+          <span class="tag-chip active" title="Verified step-free entry">&#9855; Step-Free</span>
+          <span class="tag-chip active" title="Automatic door opener">&#8644; Auto-Door</span>
+          <span class="tag-chip active" title="Tactile indicators available">&#10022; Braille Signs</span>
+          <span class="tag-chip" title="Restroom with grab bars">&#9855; Wide Restroom</span>
+        </div>
+
+        <div class="meta-review">
+          <span>Photo analyzed via <strong>AccessMap AI</strong></span>
+          <span style="color:var(--accent);font-weight:600">Verified Yesterday</span>
+        </div>
+      </div>
+
+      <!-- Floating Radar Orb -->
+      <div class="gps-orb" title="Live Geo-tagging Active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="5" fill="var(--accent-light)"/>
+          <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+        </svg>
+      </div>
+    </div>
+  </header>
+</div>
+
+<!-- Partner & Verification Band -->
+<section class="band" id="community">
+  <div class="wrap">
+    <div class="top">
+      <h3>Empowering over <span class="highlight">45,000+</span> accessible route seekers and advocates</h3>
+      <a class="btn sm" href="#demo">Join the Community &rarr;</a>
+    </div>
+    <div class="logos">
+      <div class="partner-card">&#9855; OpenMobility</div>
+      <div class="partner-card">&#9678; UrbanTransit</div>
+      <div class="partner-card">&#10038; EqualAccess Co.</div>
+      <div class="partner-card">&#9650; CityWalkers</div>
+      <div class="partner-card">&#10004; CivicTech Lab</div>
+    </div>
+  </div>
+</section>
+
+<!-- Deep Dive: AI Photo Analysis & Crowdsourcing -->
+<div class="wrap">
+  <section class="content fade-up" id="ai-vision">
+    <div>
+      <span class="eyebrow">Computer Vision Intelligence</span>
+      <h2>Snap a storefront photo. Let AI audit the entrance.</h2>
+      <p class="lead">
+        No more guessing if a door has a hidden step or if the entryway is too narrow. Upload any storefront photo, and AccessMap's vision model will identify curb cuts, ramp grades, doorway clearance, and automatic openers in under 2 seconds.
+      </p>
+
+      <div class="stats">
+        <div class="stat-box">
+          <big>99.4%</big>
+          <p>Detection accuracy for steps, steep thresholds, and grab-rails.</p>
+        </div>
+        <div class="stat-box">
+          <big>45+ Tags</big>
+          <p>Granular tags from sensory quiet hours to auditory hearing loops.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive AI Live Check Panel -->
+    <div class="vis" id="demo">
+      <div class="vis-card">
+        <div class="vis-header">
+          <div>
+            <strong style="display:block;font-size:13px">Storefront AI Audit Breakdown</strong>
+            <span style="font-size:11px;color:var(--mute)">Model v3.4 &bull; Multi-feature detection</span>
+          </div>
+          <span class="live-pill">&#9679; Real-Time</span>
+        </div>
+
+        <div class="checklist">
+          <div class="checklist-item">
+            <div class="check-meta">
+              <span class="check-icon">&#10003;</span>
+              <div>
+                <strong>Zero-Step Entrance</strong>
+                <div style="font-size:10px;color:var(--mute)">Threshold height &lt; 0.25 inch</div>
+              </div>
+            </div>
+            <span class="badge-score">99.8% Match</span>
+          </div>
+
+          <div class="checklist-item">
+            <div class="check-meta">
+              <span class="check-icon">&#10003;</span>
+              <div>
+                <strong>Automatic Push Button</strong>
+                <div style="font-size:10px;color:var(--mute)">34-inch height &bull; ADA Compliant</div>
+              </div>
+            </div>
+            <span class="badge-score">98.5% Match</span>
+          </div>
+
+          <div class="checklist-item">
+            <div class="check-meta">
+              <span class="check-icon">&#10003;</span>
+              <div>
+                <strong>Ramp Slope Analysis</strong>
+                <div style="font-size:10px;color:var(--mute)">Estimated 1:12 ADA ratio</div>
+              </div>
+            </div>
+            <span class="badge-score">97.2% Match</span>
+          </div>
+        </div>
+
+        <button class="btn accent sm" style="width:100%;margin-top:14px;" id="reScanBtn">
+          &#8635; Simulate Real-Time Scan
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cross-Platform: Mobile and PC Section -->
+  <section class="cross-platform fade-up" id="cross-platform">
+    <div class="cp-header">
+      <span class="eyebrow">Unified Cross-Platform Experience</span>
+      <h2>Seamless Between Mobile &amp; PC</h2>
+      <p class="lead">
+        Capture accessibility hurdles on the sidewalk with your smartphone, then inspect, verify, and manage urban accessibility datasets from your desktop workstation.
+      </p>
+    </div>
+
+    <!-- Dual Device Interactive Showcase -->
+    <div class="device-stage">
+      <!-- Desktop PC Mockup with Real Cagayan de Oro Map Dashboard -->
+      <div class="pc-window" aria-label="AccessMap Desktop PC Dashboard">
+        <div class="pc-topbar">
+          <div class="pc-dots" aria-hidden="true">
+            <span class="dot-red"></span>
+            <span class="dot-yellow"></span>
+            <span class="dot-green"></span>
+          </div>
+          <div class="pc-address">
+            <span class="secure">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              127.0.0.1:3000
+            </span>
+            <span style="font-size:10px;color:var(--accent);font-weight:700;">● OpenStreetMap &bull; Leaflet</span>
+          </div>
+        </div>
+
+        <div class="pc-body">
+          <!-- Left Locations Sidebar -->
+          <div class="pc-sidebar">
+            <div class="pc-nav-rail">
+              <div class="pc-rail-icon active" title="Map View">📍</div>
+              <div class="pc-rail-icon" title="AI Vision">✨</div>
+              <div class="pc-rail-icon" title="Add Place">+</div>
+              <div class="pc-rail-icon" title="Filter Settings">⚙️</div>
+            </div>
+
+            <div class="pc-sidebar-header">
+              <b>Locations <span class="count">11</span></b>
+              <span style="font-size:10px;color:var(--mute);cursor:pointer;">Filter ☰</span>
+            </div>
+
+            <div class="pc-filter-tabs">
+              <span class="pc-tab active">All Places</span>
+              <span class="pc-tab">Verified (4★+)</span>
+              <span class="pc-tab">Barriers</span>
+            </div>
+
+            <div class="pc-search-box">
+              <span>🔍</span>
+              <span>Search CDO locations or tags...</span>
+            </div>
+
+            <div class="pc-cards-scroll">
+              <!-- Selected Card (Centrio Mall) -->
+              <div class="pc-loc-card selected">
+                <div class="pc-loc-title">Centrio Mall (Ayala Malls)</div>
+                <div class="pc-loc-sub">CDO-CENTRIO-MALL</div>
+                <div class="pc-tag-verified">✓ VERIFIED ACCESS</div>
+                <div class="pc-progress-bar"><span style="width:96%"></span></div>
+                <div class="pc-loc-grid">
+                  <div>CATEGORY<br><strong>Shopping</strong></div>
+                  <div>SCORE<br><strong>4.8 ★</strong></div>
+                  <div>DISTANCE<br><strong>0.4 km</strong></div>
+                  <div>VERIFIED<br><strong>6 Tags</strong></div>
+                </div>
+              </div>
+
+              <!-- Secondary Card -->
+              <div class="pc-loc-card">
+                <div class="pc-loc-title">SM CDO Downtown Premier</div>
+                <div class="pc-loc-sub">Shopping &bull; 1 km away</div>
+                <div class="pc-tag-verified">✓ VERIFIED ACCESS</div>
+              </div>
+
+              <!-- Third Card -->
+              <div class="pc-loc-card">
+                <div class="pc-loc-title">Northern Mindanao Medical...</div>
+                <div class="pc-loc-sub">Healthcare &bull; 0.6 km away</div>
+                <div class="pc-tag-verified">✓ VERIFIED ACCESS</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Map Container with OpenStreetMap Leaflet Interface -->
+          <div class="pc-map-container">
+            <!-- Floating Map Header -->
+            <div class="pc-map-header">
+              <div class="pc-city-badge">
+                <b>📍 Cagayan de Oro</b>
+                <span>● OpenStreetMap Leaflet</span>
+              </div>
+              <div class="pc-map-tools">
+                <div class="pc-tool-btn">🗺️ Standard OSM</div>
+                <div class="pc-tool-btn" title="Center Location">🎯</div>
+                <div class="pc-tool-btn" title="Layers">📑</div>
+                <div class="pc-tool-btn" title="Zoom in">+</div>
+                <div class="pc-tool-btn" title="Zoom out">-</div>
+              </div>
+            </div>
+
+            <!-- Vector Map (Cagayan de Oro OSM Style) -->
+            <svg class="osm-map-svg" viewBox="0 0 600 480" preserveAspectRatio="none">
+              <!-- Land Background -->
+              <rect width="600" height="480" fill="#f2efe9"/>
+
+              <!-- Parks and Green spaces -->
+              <polygon points="120,60 180,70 160,130 90,110" fill="#d8ecc5"/>
+              <polygon points="340,210 390,200 410,250 360,260" fill="#d8ecc5"/>
+              <polygon points="210,340 270,330 280,390 220,380" fill="#d8ecc5"/>
+
+              <!-- Minor Street Grid -->
+              <g stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="40" y1="80" x2="560" y2="80"/>
+                <line x1="40" y1="140" x2="560" y2="140"/>
+                <line x1="30" y1="210" x2="570" y2="210"/>
+                <line x1="40" y1="280" x2="560" y2="280"/>
+                <line x1="30" y1="350" x2="570" y2="350"/>
+                <line x1="80" y1="30" x2="80" y2="440"/>
+                <line x1="150" y1="30" x2="150" y2="440"/>
+                <line x1="220" y1="30" x2="220" y2="440"/>
+                <line x1="310" y1="30" x2="310" y2="440"/>
+                <line x1="380" y1="30" x2="380" y2="440"/>
+                <line x1="460" y1="30" x2="460" y2="440"/>
+                <line x1="530" y1="30" x2="530" y2="440"/>
+                <!-- Diagonal secondary roads -->
+                <line x1="60" y1="40" x2="350" y2="380"/>
+                <line x1="350" y1="40" x2="550" y2="300"/>
+              </g>
+
+              <!-- Cagayan de Oro River -->
+              <path d="M 280 0 Q 320 80 290 150 T 260 260 T 250 380 Q 240 430 220 480" fill="none" stroke="#aad3df" stroke-width="38" stroke-linecap="round"/>
+              <path d="M 280 0 Q 320 80 290 150 T 260 260 T 250 380 Q 240 430 220 480" fill="none" stroke="#90c2d3" stroke-width="4"/>
+
+              <!-- Major Arterial Highways (CM Recto & Maharlika) -->
+              <g stroke="#fcd6a4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="30" y1="120" x2="580" y2="180"/>
+                <line x1="140" y1="30" x2="420" y2="450"/>
+                <line x1="260" y1="210" x2="570" y2="210"/>
+              </g>
+              <g stroke="#e29f52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="30" y1="120" x2="580" y2="180"/>
+                <line x1="140" y1="30" x2="420" y2="450"/>
+                <line x1="260" y1="210" x2="570" y2="210"/>
+              </g>
+
+              <!-- Bridge Crossings -->
+              <rect x="270" y="140" width="36" height="12" fill="#888" stroke="#333" stroke-width="1.5" transform="rotate(10 288 146)"/>
+              <rect x="246" y="252" width="34" height="12" fill="#888" stroke="#333" stroke-width="1.5" transform="rotate(5 263 258)"/>
+
+              <!-- District Labels -->
+              <text x="140" y="240" font-family="sans-serif" font-size="12" font-weight="700" fill="#8d857a" opacity="0.8">Carmen</text>
+              <text x="360" y="160" font-family="sans-serif" font-size="12" font-weight="700" fill="#8d857a" opacity="0.8">Consolacion</text>
+              <text x="360" y="235" font-family="sans-serif" font-size="14" font-weight="800" fill="#71675b">Poblacion</text>
+              <text x="490" y="240" font-family="sans-serif" font-size="11" font-weight="700" fill="#8d857a" opacity="0.8">Lapasan</text>
+              <text x="310" y="80" font-family="sans-serif" font-size="9" font-style="italic" fill="#588599" transform="rotate(70 310 80)">Cagayan de Oro River</text>
+              <text x="210" y="135" font-family="sans-serif" font-size="8" font-weight="600" fill="#786c5f">Maharlika Bridge</text>
+              <text x="380" y="172" font-family="sans-serif" font-size="8" font-weight="700" fill="#b06c28">C.M. Recto Avenue</text>
+            </svg>
+
+            <!-- Map Accessibility Rating Pins (Matching Screenshot) -->
+            <!-- Centrio Mall Active Pin -->
+            <div class="map-score-pin green large" style="top:175px;left:380px;" title="Centrio Mall (Ayala Malls) - 4.8 ★">
+              4.8★
+            </div>
+
+            <!-- Other Pins -->
+            <div class="map-score-pin green" style="top:150px;left:365px;" title="Barangay 25 - 4.6 ★">
+              4.6★
+            </div>
+            <div class="map-score-pin green" style="top:135px;left:415px;" title="Consolacion - 4.9 ★">
+              4.9★
+            </div>
+            <div class="map-score-pin green" style="top:225px;left:415px;" title="Poblacion - 4.0 ★">
+              4.0★
+            </div>
+            <div class="map-score-pin green" style="top:250px;left:428px;" title="Limketkai - 4.2 ★">
+              4.2★
+            </div>
+            <div class="map-score-pin orange" style="top:290px;left:340px;" title="Downtown South - 3.8 ★">
+              3.8★
+            </div>
+            <div class="map-score-pin red" style="top:290px;left:400px;" title="Barrier Reported - 2.1 ★">
+              2.1★
+            </div>
+            <div class="map-score-pin" style="top:265px;left:325px;background:#3B82F6;width:22px;height:22px;" title="Current Position">
+              ★
+            </div>
+
+            <!-- Bottom Floating Overlay Drawer on Map -->
+            <div class="pc-map-overlay-card">
+              <div class="pc-overlay-head">
+                <strong>Centrio Mall (Ayala Malls) <span class="pc-tag-verified" style="margin:0 0 0 6px;">✓ VERIFIED</span></strong>
+                <a href="#ai-vision" style="font-size:9px;font-weight:700;color:var(--accent);text-decoration:underline;">Full Details &amp; Tags &rarr;</a>
+              </div>
+              <div class="pc-overlay-row">
+                <div>DISTRICT: <strong>Downtown CDO</strong></div>
+                <div>CATEGORY: <strong>Shopping</strong></div>
+                <div>DISTANCE: <strong>0.4 km away</strong></div>
+                <div>ACCESSIBILITY SCORE: <span class="score-highlight">4.8 / 5.0 ★</span></div>
+              </div>
+            </div>
+
+            <div class="leaflet-attr">Leaflet | &copy; OpenStreetMap contributors</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resized Mobile Phone Mockup with Increased Length & Map View -->
+      <div class="mobile-device" aria-label="AccessMap Mobile Map Preview">
+        <div class="mobile-screen">
+          <div class="mobile-notch"></div>
+          
+          <div class="mobile-topbar">
+            <span>9:41</span>
+            <span style="font-size:9px;color:var(--accent);font-weight:700;">● GPS Active</span>
+          </div>
+
+          <!-- Mobile Map Interface -->
+          <div class="mobile-map-view">
+            <!-- Search Pill -->
+            <div class="mobile-search-pill">
+              <span>🔍 Search CDO locations...</span>
+              <span>⚙️</span>
+            </div>
+
+            <!-- Mobile Map Tools -->
+            <div class="mobile-map-tools">
+              <div class="mobile-tool-icon" title="My Location">🎯</div>
+              <div class="mobile-tool-icon" title="Map Layers">📑</div>
+            </div>
+
+            <!-- Mobile Vector Map (OpenStreetMap centered on CDO) -->
+            <svg class="osm-map-svg" viewBox="0 0 280 340" preserveAspectRatio="none">
+              <!-- Land Background -->
+              <rect width="280" height="340" fill="#f2efe9"/>
+
+              <!-- Parks -->
+              <polygon points="20,40 70,50 60,100 10,80" fill="#d8ecc5"/>
+              <polygon points="180,140 230,130 240,180 190,190" fill="#d8ecc5"/>
+
+              <!-- Streets -->
+              <g stroke="#ffffff" stroke-width="3.5" stroke-linecap="round">
+                <line x1="10" y1="60" x2="270" y2="60"/>
+                <line x1="10" y1="120" x2="270" y2="120"/>
+                <line x1="10" y1="180" x2="270" y2="180"/>
+                <line x1="10" y1="240" x2="270" y2="240"/>
+                <line x1="50" y1="10" x2="50" y2="330"/>
+                <line x1="120" y1="10" x2="120" y2="330"/>
+                <line x1="190" y1="10" x2="190" y2="330"/>
+              </g>
+
+              <!-- River -->
+              <path d="M 120 0 Q 150 70 130 140 T 110 240 Q 90 290 80 340" fill="none" stroke="#aad3df" stroke-width="26"/>
+              <path d="M 120 0 Q 150 70 130 140 T 110 240 Q 90 290 80 340" fill="none" stroke="#90c2d3" stroke-width="2.5"/>
+
+              <!-- Main Avenue (CM Recto) -->
+              <line x1="10" y1="130" x2="270" y2="130" stroke="#fcd6a4" stroke-width="6"/>
+              <line x1="10" y1="130" x2="270" y2="130" stroke="#e29f52" stroke-width="1.5"/>
+
+              <!-- Labels -->
+              <text x="35" y="160" font-family="sans-serif" font-size="9" font-weight="700" fill="#8d857a">Carmen</text>
+              <text x="160" y="115" font-family="sans-serif" font-size="9" font-weight="800" fill="#71675b">Poblacion</text>
+            </svg>
+
+            <!-- Map Score Pins on Mobile Screen -->
+            <div class="map-score-pin green large" style="top:115px;left:155px;width:28px;height:28px;font-size:9px;" title="Centrio Mall">
+              4.8★
+            </div>
+            <div class="map-score-pin green" style="top:85px;left:135px;width:22px;height:22px;font-size:8px;">
+              4.6★
+            </div>
+            <div class="map-score-pin orange" style="top:180px;left:140px;width:22px;height:22px;font-size:8px;">
+              3.8★
+            </div>
+            <div class="map-score-pin red" style="top:210px;left:180px;width:20px;height:20px;font-size:7.5px;">
+              2.1★
+            </div>
+          </div>
+
+          <!-- Mobile Sliding Bottom Sheet -->
+          <div class="mobile-bottom-sheet">
+            <div class="mobile-drag-handle"></div>
+            <div class="mobile-sheet-title">
+              <span>Centrio Mall (Ayala Malls)</span>
+              <span class="mobile-tag" style="margin:0;">✓ VERIFIED</span>
+            </div>
+            <div class="mobile-sheet-sub">
+              <strong>4.8 ★</strong> (120+ reviews) &bull; Downtown CDO &bull; 0.4 km
+            </div>
+            <div class="mobile-tag-chips">
+              <span class="mobile-tag">✓ Step-Free</span>
+              <span class="mobile-tag">✓ Auto-Door</span>
+              <span class="mobile-tag">✓ 36" Ramp</span>
+            </div>
+            <a class="mobile-cta-btn" href="#demo">
+              Accessible Route (Step-Free) &rarr;
+            </a>
+          </div>
+
+          <!-- Bottom Navigation Bar -->
+          <div class="mobile-bottom-nav">
+            <span class="active">📍 Map</span>
+            <span>📸 Scan AI</span>
+            <span>⭐ Saved</span>
+            <span>👤 Profile</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3-Column Sync Feature Cards -->
+    <div class="cp-features">
+      <div class="cp-card">
+        <div class="cp-card-icon">📱</div>
+        <h3>Mobile On-The-Go</h3>
+        <p>
+          Pin accessibility tags on the sidewalk, capture storefront entrance photos with AI assistance, and get voice-guided step-free routes on iOS and Android.
+        </p>
+      </div>
+
+      <div class="cp-card">
+        <div class="cp-card-icon">💻</div>
+        <h3>PC Analytical Suite</h3>
+        <p>
+          Manage neighborhood accessibility audits, review flagged pins, view high-res heatmaps, and export GIS datasets (GeoJSON/CSV) on Windows, Mac, and Linux.
+        </p>
+      </div>
+
+      <div class="cp-card">
+        <div class="cp-card-icon">🔄</div>
+        <h3>Instant Cloud Sync</h3>
+        <p>
+          Locations and photos submitted on the street instantly populate your desktop dashboard with zero delay, keeping maps up-to-date across your team.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Grid -->
+  <section class="feat fade-up" id="features">
+    <div class="head">
+      <div>
+        <span class="eyebrow">Engineered for Inclusion</span>
+        <h2>Built for every mobility need</h2>
+      </div>
+      <p style="max-width:380px;">
+        AccessMap bridges crowdsourced community feedback with automated AI vision to build the world's most trustworthy accessibility atlas.
+      </p>
+    </div>
+
+    <div class="cards">
+      <!-- Card 1 -->
+      <article class="card">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        </div>
+        <h3>Crowdsourced Pin & Rating</h3>
+        <p>Drop pins on entrances, transit stops, and public buildings with specific accessibility badges verified by the local community.</p>
+        <ul>
+          <li>Granular tag filters for wheelchair, stroller & cane</li>
+          <li>Detailed photo reviews & user ratings</li>
+          <li>Upvote/downvote verification system</li>
+        </ul>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="card">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <h3>AI Storefront Vision</h3>
+        <p>Take or upload a photo of any restaurant or shop entrance. The neural model classifies steps, doorway width, and ramp inclines instantly.</p>
+        <ul>
+          <li>Real-time bounding box identification</li>
+          <li>Automatic confidence scoring</li>
+          <li>Suggests missing tags automatically</li>
+        </ul>
+      </article>
+
+      <!-- Card 3 -->
+      <article class="card">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        </div>
+        <h3>Turn-by-Turn Adaptive Routing</h3>
+        <p>Calculate point-to-point walking and transit routes that completely bypass steep slopes, construction, and broken elevators.</p>
+        <ul>
+          <li>Avoid stairs, curbs, and construction barriers</li>
+          <li>Real-time elevator status alerts</li>
+          <li>Offline map downloads for daily commutes</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- Interactive Call to Action Banner -->
+  <div class="cta-banner fade-up">
+    <div>
+      <h2>Ready to map your neighborhood?</h2>
+      <p>Start pinning local spots, verify your favorite venues, or let our AI scan storefronts in seconds.</p>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <a class="btn accent" href="#hero">Launch Free Map</a>
+      <a class="btn" style="background:transparent;color:#FFF;border-color:rgba(255,255,255,0.4)" href="#community">Partner with Us</a>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap">
+    <div>
+      <strong>&copy; AccessMap SaaS.</strong> An open, inclusive mapping initiative for universal accessibility.
+    </div>
+    <div class="footer-links">
+      <a href="#hero">Overview</a>
+      <a href="#ai-vision">AI Vision</a>
+      <a href="#features">Tags & Badges</a>
+      <a href="#community">Community</a>
+      <a href="#">Privacy Policy</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Interactive UX JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. Intersection Observer for Smooth Scroll Reveal
+  const observerOptions = {
+    threshold: 0.15,
+    rootMargin: '0px 0px -40px 0px'
+  };
+
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.fade-up').forEach(el => revealObserver.observe(el));
+
+  // 2. Interactive AI Scan Simulation
+  const reScanBtn = document.getElementById('reScanBtn');
+  const triggerScanDemo = document.getElementById('triggerScanDemo');
+  const scannerPanel = document.getElementById('scannerPanel');
+  const storefrontBoxes = document.querySelectorAll('.ai-box');
+
+  function simulateScan() {
+    if (!scannerPanel) return;
+    
+    // Visual scan reaction
+    scannerPanel.style.transform = 'scale(0.98)';
+    setTimeout(() => { scannerPanel.style.transform = 'scale(1)'; }, 200);
+
+    // Pulse boxes
+    storefrontBoxes.forEach((box, index) => {
+      box.style.opacity = '0';
+      box.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        box.style.opacity = '1';
+        box.style.transform = 'scale(1)';
+      }, (index + 1) * 350);
+    });
+
+    if (reScanBtn) {
+      const origText = reScanBtn.innerHTML;
+      reScanBtn.innerHTML = '&#9881; Scanning Storefront...';
+      reScanBtn.style.opacity = '0.7';
+      setTimeout(() => {
+        reScanBtn.innerHTML = '&#10004; Verified ADA Accessible';
+        reScanBtn.style.opacity = '1';
+        setTimeout(() => {
+          reScanBtn.innerHTML = origText;
+        }, 2200);
+      }, 1000);
+    }
+  }
+
+  if (reScanBtn) {
+    reScanBtn.addEventListener('click', simulateScan);
+  }
+
+  if (triggerScanDemo) {
+    triggerScanDemo.addEventListener('click', (e) => {
+      simulateScan();
+    });
+  }
+
+  // 3. Interactive Tag Chips Toggle
+  const tagChips = document.querySelectorAll('.tag-chip');
+  tagChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('active');
+    });
+  });
+
+  // 4. Subtle Parallax/Tilt effect on hero pin card
+  const pinCard = document.getElementById('pinCard');
+  if (pinCard && window.innerWidth > 768) {
+    pinCard.addEventListener('mousemove', (e) => {
+      const rect = pinCard.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      pinCard.style.transform = `rotate(0deg) translate(${x * 0.05}px, ${y * 0.05}px)`;
+    });
+    pinCard.addEventListener('mouseleave', () => {
+      pinCard.style.transform = 'rotate(-3deg)';
+    });
+  }
+});
+</script>
+
+</body>
+</html>
