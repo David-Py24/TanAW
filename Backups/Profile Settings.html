@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Profile &amp; account</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --soft:#EAF3F7; --ink:#0F172A; --mute:#475569; --faint:#8196A6;
+  --accent:#21524B; --accent-hover:#2B6860; --accent-light:#E7F2F0; --card:#FFFFFF; --grid:#D5E5EC;
+  --shadow:0 3px 0 var(--ink); --shadow-up:0 6px 0 var(--ink);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.5 "Space Grotesk",system-ui,sans-serif;overflow-x:hidden}
+
+/* Background Motion Texture Layer */
+.bg-motion-texture {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.038'/%3E%3C/svg%3E");
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+}
+
+.bg-grid-drift {
+  position: absolute;
+  inset: -80px;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1.2px, transparent 0),
+    linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px, 72px 72px, 72px 72px;
+  animation: gridDrift 45s linear infinite;
+  opacity: 0.9;
+}
+
+.bg-topo-drift {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600' fill='none'%3E%3Cpath d='M-100 200 C 150 120, 300 350, 600 250 S 850 150, 1000 280' stroke='rgba(33,82,75,0.08)' stroke-width='2' stroke-dasharray='8 6' fill='none'/%3E%3Cpath d='M-100 280 C 180 200, 340 420, 640 320 S 880 220, 1000 350' stroke='rgba(15,23,42,0.04)' stroke-width='1.5' fill='none'/%3E%3Cpath d='M-100 360 C 210 280, 380 490, 680 390 S 910 290, 1000 420' stroke='rgba(56,189,248,0.07)' stroke-width='2' stroke-dasharray='12 8' fill='none'/%3E%3C/svg%3E");
+  background-size: 800px 600px;
+  animation: topoFloat 60s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(85px);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.orb-1 {
+  top: -8%;
+  right: -5%;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(33, 82, 75, 0.25) 0%, rgba(33, 82, 75, 0.05) 60%, transparent 80%);
+  animation: floatOrb1 24s ease-in-out infinite alternate;
+}
+.orb-2 {
+  top: 38%;
+  left: -10%;
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0.04) 60%, transparent 80%);
+  animation: floatOrb2 28s ease-in-out infinite alternate;
+}
+.orb-3 {
+  top: 72%;
+  right: -8%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(33, 82, 75, 0.2) 0%, rgba(251, 191, 36, 0.12) 50%, transparent 80%);
+  animation: floatOrb3 32s ease-in-out infinite alternate;
+}
+
+.bg-radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(33, 82, 75, 0.16);
+  pointer-events: none;
+  animation: radarPulse 18s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+.ring-1 {
+  top: 14%;
+  left: 18%;
+  width: 360px;
+  height: 360px;
+  animation-delay: 0s;
+}
+.ring-2 {
+  top: 62%;
+  right: 12%;
+  width: 440px;
+  height: 440px;
+  animation-delay: 9s;
+}
+
+@keyframes gridDrift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(72px, 72px); }
+}
+@keyframes topoFloat {
+  0% { transform: scale(1) translateY(0); }
+  100% { transform: scale(1.06) translateY(-40px); }
+}
+@keyframes floatOrb1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-60px, 50px) scale(1.12); }
+  100% { transform: translate(-30px, 90px) scale(0.95); }
+}
+@keyframes floatOrb2 {
+  0% { transform: translate(0, 0) scale(0.95); }
+  50% { transform: translate(70px, -40px) scale(1.1); }
+  100% { transform: translate(40px, 50px) scale(1.02); }
+}
+@keyframes floatOrb3 {
+  0% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-50px, -60px) scale(0.92); }
+  100% { transform: translate(-80px, -20px) scale(1.1); }
+}
+@keyframes radarPulse {
+  0% { transform: scale(0.6) rotate(0deg); opacity: 0; }
+  25% { opacity: 0.65; }
+  75% { opacity: 0.3; }
+  100% { transform: scale(1.6) rotate(60deg); opacity: 0; }
+}
+
+.page{position:relative;z-index:1;min-height:100%;display:grid;place-items:center;padding:28px 16px}
+.card{width:100%;max-width:580px;background:var(--card);border:1.8px solid var(--ink);border-radius:28px;box-shadow:0 6px 0 var(--ink);overflow:hidden;animation:rise .7s cubic-bezier(.16,1,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}}
+
+.cover{height:132px;background:linear-gradient(135deg,var(--soft) 0%,var(--accent-light) 100%);border-bottom:1.8px solid var(--ink);position:relative;border-radius:0 0 28px 28px;overflow:hidden}
+.cover .cover-grid{position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(15,23,42,.08) 1.2px,transparent 0),linear-gradient(to right,rgba(15,23,42,.035) 1px,transparent 1px),linear-gradient(to bottom,rgba(15,23,42,.035) 1px,transparent 1px);background-size:24px 24px,48px 48px,48px 48px;opacity:.9}
+.cover svg{position:absolute;inset:0;width:100%;height:100%}
+.body{padding:0 32px 26px}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.avatar{width:76px;height:76px;border-radius:50%;border:1.8px solid var(--ink);box-shadow:0 3px 0 var(--ink);background:var(--accent-light);margin-top:-38px;display:grid;place-items:center;overflow:hidden;flex-shrink:0}
+.top .btn{margin-top:14px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 13px "Space Grotesk",sans-serif;padding:10px 20px;border-radius:99px;border:1.8px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:var(--shadow);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-up)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.btn.sm{padding:7px 16px;font-size:12px}
+.btn.accent{background:var(--accent);color:#fff}
+.btn.accent:hover{background:var(--accent-hover)}
+.btn.soft{background:var(--soft)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--shadow)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:3px}
+
+.name{display:flex;align-items:center;gap:8px;margin:14px 0 2px;font-size:26px;font-weight:600;letter-spacing:-.025em;line-height:1.15}
+.verified{flex-shrink:0}
+.email{color:var(--faint);font-size:13px}
+
+.stats{display:grid;grid-template-columns:repeat(4,auto);justify-content:space-between;margin:26px 0 24px;padding-bottom:24px;border-bottom:1.5px dashed var(--grid)}
+.stat{padding:0 18px;border-left:1.5px solid var(--grid)}
+.stat:first-child{padding-left:0;border-left:0}
+.stat:last-child{padding-right:0}
+.stat small{display:block;color:var(--faint);font-size:12px;font-weight:500;margin-bottom:2px}
+.stat b{font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+
+.row{display:grid;grid-template-columns:170px 1fr;gap:20px;align-items:start;padding-bottom:24px;border-bottom:1.5px dashed var(--grid)}
+h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
+.hint{color:var(--faint);font-size:12.5px;line-height:1.45;margin:0}
+.fields{display:grid;gap:10px}
+.input{display:flex;align-items:stretch;border:1.8px solid var(--ink);border-radius:14px;background:var(--card);overflow:hidden;transition:box-shadow .18s}
+.input:focus-within{box-shadow:0 3px 0 var(--accent);border-color:var(--accent)}
+.input span{padding:11px 12px 11px 14px;color:var(--faint);background:var(--soft);border-right:1.8px solid var(--ink);white-space:nowrap}
+.input input,.input select{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 14px "Space Grotesk",sans-serif;padding:11px 14px;outline:none}
+.input select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230F172A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.input.bad{border-color:#C2410C}
+.err{color:#C2410C;font-size:12px;margin:-4px 0 0 4px;min-height:0}
+
+.setting{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 0 0}
+.setting + .setting{padding-top:20px}
+.setting p.hint{max-width:340px}
+.switch{position:relative;width:52px;height:30px;flex-shrink:0;border-radius:99px;border:1.8px solid var(--ink);background:var(--soft);cursor:pointer;box-shadow:0 2px 0 var(--ink);transition:background .2s}
+.switch::after{content:"";position:absolute;top:2.5px;left:3px;width:21px;height:21px;border-radius:50%;background:var(--card);border:1.8px solid var(--ink);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(21px)}
+
+.foot{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:22px;border-top:1.5px dashed var(--grid)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;z-index:5;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:600;font-size:13px;transition:.3s cubic-bezier(.16,1,.3,1);pointer-events:none}
+.toast.on{transform:translate(-50%,0);opacity:1}
+
+@media (max-width:560px){
+  .body{padding:0 20px 22px}
+  .stats{grid-template-columns:1fr 1fr;gap:16px 0}
+  .stat:nth-child(3){padding-left:0;border-left:0}
+  .stat{padding:0 12px}
+  .row{grid-template-columns:1fr;gap:14px}
+  .setting{align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){.bg-grid-drift,.bg-topo-drift,.bg-orb,.bg-radar-ring,.card{animation:none!important}*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="bg-motion-texture" aria-hidden="true">
+  <div class="bg-noise"></div>
+  <div class="bg-grid-drift"></div>
+  <div class="bg-topo-drift"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="bg-radar-ring ring-1"></div>
+  <div class="bg-radar-ring ring-2"></div>
+</div>
+
+<main class="page">
+  <form class="card" id="form" novalidate>
+    <div class="cover" aria-hidden="true">
+      <div class="cover-grid"></div>
+      <svg viewBox="0 0 580 132" preserveAspectRatio="none">
+        <path d="M-20 45 C 100 15, 200 85, 360 40 S 500 15, 600 55" stroke="rgba(33,82,75,0.22)" stroke-width="2" stroke-dasharray="8 6" fill="none"/>
+        <path d="M-20 75 C 120 30, 240 100, 420 65 S 540 40, 600 80" stroke="rgba(15,23,42,0.12)" stroke-width="1.5" fill="none"/>
+        <path d="M-20 105 C 150 60, 270 115, 460 80 S 550 55, 600 95" stroke="rgba(56,189,248,0.3)" stroke-width="2" stroke-dasharray="12 8" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="body">
+      <div class="top">
+        <div class="avatar" role="img" aria-label="Henry Sullivan's avatar">
+          <svg viewBox="0 0 76 76" width="76" height="76">
+            <circle cx="38" cy="30" r="13" fill="#E8B898" stroke="#0F172A" stroke-width="1.8"/>
+            <path d="M24 27c0-11 8-15 15-15s13 5 13 14c-4-4-7-6-12-6s-12 2-16 7z" fill="#4A2F22" stroke="#0F172A" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M10 76c2-17 12-24 28-24s26 7 28 24z" fill="#F5FAFD" stroke="#0F172A" stroke-width="1.8"/>
+          </svg>
+        </div>
+        <button type="button" class="btn sm" id="view">View profile</button>
+      </div>
+
+      <div class="name">
+        <span id="displayName">Henry Sullivan</span>
+        <svg class="verified" width="22" height="22" viewBox="0 0 24 24" role="img" aria-label="Verified"><path d="M12 1.5l2.6 1.8 3.1-.2 1.2 2.9 2.7 1.6-.7 3.1 1.1 2.9-2.2 2.2-.4 3.1-3.1.6L12 22.5l-2.3-1.9-3.1-.6-.4-3.1L4 14.7l1.1-2.9-.7-3.1 2.7-1.6 1.2-2.9 3.1.2z" fill="#38BDF8" stroke="#0F172A" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 12.2l2.8 2.8 5.2-5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="email">henrysullivan@gmail.com &bull; Verified Contributor</div>
+
+      <div class="stats">
+        <div class="stat"><small>Location pins</small><b>148</b></div>
+        <div class="stat"><small>Saved routes</small><b>24</b></div>
+        <div class="stat"><small>AI storefront scans</small><b>86</b></div>
+        <div class="stat"><small>Verified tags</small><b>312</b></div>
+      </div>
+
+      <section class="row" aria-labelledby="pp">
+        <div>
+          <h2 id="pp">Public profile</h2>
+          <p class="hint">Your contributor identity and navigation preferences across AccessMap.</p>
+        </div>
+        <div class="fields">
+          <label class="input"><span>Contributor</span><input id="fullName" value="Henry Sullivan" aria-label="Contributor name" autocomplete="name"></label>
+          <label class="input" id="slugBox"><span>accessmap.org/@</span><input id="slug" value="henrysullivan" aria-label="Profile handle" autocapitalize="none" spellcheck="false"></label>
+          <label class="input"><span>Navigation</span><select id="mobilityMode" aria-label="Navigation preference">
+            <option value="step-free" selected>Step-Free (Wheelchair / Stroller)</option>
+            <option value="low-incline">Low Incline &amp; Ramp Priority</option>
+            <option value="tactile">Tactile Paving &amp; Audio Guidance</option>
+            <option value="sensory">Quiet &amp; Low-Stimulus Routing</option>
+          </select></label>
+          <label class="input"><span>Mapping Focus</span><input id="mappingFocus" value="Downtown CDO &bull; Storefront ramps &amp; curb cuts" aria-label="Mapping focus"></label>
+          <div class="err" id="err" role="alert"></div>
+        </div>
+      </section>
+
+      <div class="setting">
+        <div>
+          <h2 id="sa">Public contributor profile</h2>
+          <p class="hint" id="saText">Your pins, storefront audits, and contributor badge are visible on the public accessibility map and leaderboard.</p>
+        </div>
+        <button type="button" class="switch" id="support" role="switch" aria-checked="true" aria-labelledby="sa"></button>
+      </div>
+
+      <div class="setting">
+        <div>
+          <h2>Offline route &amp; map cache</h2>
+          <p class="hint">Keep your 24 saved step-free routes and downloaded neighborhood tiles available offline.</p>
+        </div>
+        <button type="button" class="btn soft" id="syncBtn">Manage cache</button>
+      </div>
+
+      <div class="setting">
+        <div>
+          <h2>Active sessions</h2>
+          <p class="hint">Currently signed in on AccessMap Mobile (iOS &bull; GPS Active) and AccessMap PC Suite.</p>
+        </div>
+        <button type="button" class="btn soft" id="logout">Log out</button>
+      </div>
+
+      <div class="foot">
+        <button type="button" class="btn" id="cancel">Cancel</button>
+        <button type="submit" class="btn accent" id="save" disabled>Save changes</button>
+      </div>
+    </div>
+  </form>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var saved={
+    name:"Henry Sullivan",
+    slug:"henrysullivan",
+    mode:"step-free",
+    focus:"Downtown CDO • Storefront ramps & curb cuts",
+    publicBadge:true
+  };
+  var name=$("fullName"),
+      slug=$("slug"),
+      mode=$("mobilityMode"),
+      focus=$("mappingFocus"),
+      sw=$("support"),
+      save=$("save"),
+      err=$("err"),
+      box=$("slugBox"),
+      toastEl=$("toast"),
+      t;
+
+  function toast(m){
+    toastEl.textContent=m;
+    toastEl.classList.add("on");
+    clearTimeout(t);
+    t=setTimeout(function(){toastEl.classList.remove("on")},2200);
+  }
+
+  function state(){
+    return {
+      name:name.value.trim(),
+      slug:slug.value.trim(),
+      mode:mode.value,
+      focus:focus.value.trim(),
+      publicBadge:sw.getAttribute("aria-checked")==="true"
+    };
+  }
+
+  function valid(s){
+    if(!s.name){return"Enter your contributor name."}
+    if(!/^[a-z0-9-]{3,30}$/.test(s.slug)){return"Use 3–30 lowercase letters, numbers or hyphens in your address."}
+    return"";
+  }
+
+  function refresh(){
+    var s=state();
+    var dirty=s.name!==saved.name||s.slug!==saved.slug||s.mode!==saved.mode||s.focus!==saved.focus||s.publicBadge!==saved.publicBadge;
+    var m=valid(s);
+    err.textContent=dirty?m:"";
+    box.classList.toggle("bad",!!m&&dirty);
+    save.disabled=!dirty||!!m;
+    $("saText").textContent=s.publicBadge
+      ?"Your pins, storefront audits, and contributor badge are visible on the public accessibility map and leaderboard."
+      :"Contributor profile is private. Your pins and audits will appear anonymously on the map.";
+  }
+
+  name.addEventListener("input",refresh);
+  slug.addEventListener("input",function(){
+    slug.value=slug.value.toLowerCase().replace(/\s+/g,"-");
+    refresh();
+  });
+  mode.addEventListener("change",refresh);
+  focus.addEventListener("input",refresh);
+  sw.addEventListener("click",function(){
+    sw.setAttribute("aria-checked",sw.getAttribute("aria-checked")==="true"?"false":"true");
+    refresh();
+  });
+
+  $("form").addEventListener("submit",function(e){
+    e.preventDefault();
+    var s=state();
+    if(valid(s)) return;
+    saved=s;
+    $("displayName").textContent=s.name;
+    refresh();
+    toast("Changes saved");
+  });
+
+  $("cancel").addEventListener("click",function(){
+    name.value=saved.name;
+    slug.value=saved.slug;
+    mode.value=saved.mode;
+    focus.value=saved.focus;
+    sw.setAttribute("aria-checked",saved.publicBadge);
+    refresh();
+    toast("Changes discarded");
+  });
+
+  $("view").addEventListener("click",function(){
+    toast("Opening accessmap.org/@"+saved.slug);
+  });
+
+  var syncBtn=$("syncBtn");
+  if(syncBtn){
+    syncBtn.addEventListener("click",function(){
+      toast("24 saved routes & map tiles synced offline");
+    });
+  }
+
+  var lo=$("logout");
+  lo.addEventListener("click",function(){
+    lo.disabled=true;
+    lo.textContent="Logging out…";
+    setTimeout(function(){
+      lo.textContent="Logged out";
+      toast("Logged out of all other devices");
+      setTimeout(function(){
+        lo.disabled=false;
+        lo.textContent="Log out";
+      },2500);
+    },900);
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>

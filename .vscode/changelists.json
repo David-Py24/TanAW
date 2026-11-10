@@ -1,0 +1,17 @@
+{
+  "changelists": [
+    {
+      "name": "Default",
+      "files": [
+        ".vscode/changelists.json",
+        "\"Src/Profile Settings.html\"",
+        "\"Src/Profile & account (1).html\"",
+        "\"Assets/Logo ref.jpg\"",
+        "Src/AccessMap.html",
+        "Assets/logo.png",
+        "Documentation.md"
+      ]
+    }
+  ],
+  "active": "Default"
+}
