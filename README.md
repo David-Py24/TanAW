@@ -82,7 +82,7 @@ AccessMap is a web application focused on accessible navigation and community en
 
 ```bash
 # Clone the main repository
-git clone <main-repo-url>
+git clone https://github.com/David-Py24/AccessMap-.git
 cd AccessMap
 
 # Install dependencies
@@ -120,6 +120,20 @@ AcessMap/
 - Keep changes scoped to the requested module; preserve existing UI/behavior elsewhere.
 - Record durable decisions in `.agents/memory/decisions.md`.
 - Log progress in `Documentation-Main.md`.
+
+## Backend & Database Collaboration
+
+- The default `main` branch contains the integrated frontend host app and is the base for backend/database work.
+- Page modules are tracked as separate `feature/*` branches and sibling repositories; they are not automatically merged into `main`.
+- To add backend or database features, branch from `main`:
+  ```bash
+  git checkout main
+  git pull origin main
+  git checkout -b feature/backend-<name>
+  ```
+- Push your branch to `origin` (`https://github.com/David-Py24/AccessMap-.git`) and open a pull request targeting `main`.
+- Keep frontend module changes in their owning repository/branch, then integrate through pull requests.
+- Do not commit secrets or credentials; use `.env.example` for variable names.
 
 ## Contributing
 
