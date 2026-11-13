@@ -35,7 +35,7 @@ interface PlacesPanelProps {
   userCoords: { lat: number; lng: number } | null;
   onResetData: () => void;
   isOpen: boolean;
-  onCloseMobile?: () => void;
+  onClose?: () => void;
 }
 
 const CATEGORIES: (CategoryType | 'All')[] = [
@@ -63,11 +63,24 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
   userCoords,
   onResetData,
   isOpen,
-  onCloseMobile,
+  onClose,
 }) => {
   const { announce } = useA11y();
   const [activeTab, setActiveTab] = useState<PlacesTab>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const listContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Automatically scroll to the selected location card when panel opens or pin selection changes
+  React.useEffect(() => {
+    if (isOpen && selectedLocation && listContainerRef.current) {
+      const el = listContainerRef.current.querySelector(
+        `[data-location-id="${selectedLocation.id}"]`
+      );
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [isOpen, selectedLocation?.id]);
 
   // Tab filtering logic
   const tabFilteredLocations = locations.filter((loc) => {
@@ -90,8 +103,8 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
     <aside
       aria-label="Locations list and filters"
       className={`${
-        isOpen ? 'flex' : 'hidden md:flex'
-      } w-full md:w-[380px] lg:w-[420px] bg-[#f8fafc] border-r border-slate-200 flex-col h-full shrink-0 z-30 select-none shadow-xs`}
+        isOpen ? 'flex' : 'hidden'
+      } w-full md:w-[380px] lg:w-[420px] bg-[#f8fafc] border-r border-slate-200 flex-col h-full shrink-0 z-30 select-none shadow-xs transition-all duration-200`}
     >
       {/* Top Header matching reference "Packages" */}
       <div className="p-4 sm:p-5 pb-3 border-b border-slate-200/80 bg-white/70 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
@@ -104,7 +117,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
           </span>
         </div>
 
-        {/* Ellipsis Menu Button (Direct recreation of reference button) */}
+        {/* Action Buttons */}
         <div className="flex items-center gap-1.5">
           <button
             type="button"
@@ -129,6 +142,21 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
           >
             <MoreVertical className="w-4 h-4" />
           </button>
+
+          {onClose && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                announce('Location details panel closed');
+              }}
+              className="w-9 h-9 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer"
+              title="Close location details panel"
+              aria-label="Close location details panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -256,7 +284,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
       </div>
 
       {/* Cards List matching reference list spacing */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div ref={listContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {tabFilteredLocations.length === 0 ? (
           <div className="p-8 text-center bg-white rounded-3xl border border-dashed border-slate-200 space-y-2">
             <p className="text-sm font-bold text-slate-700">No matching places</p>

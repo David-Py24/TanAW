@@ -68,6 +68,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   if (isSelected) {
     return (
       <article
+        data-location-id={location.id}
         onClick={() => onSelect(location)}
         className="w-full bg-white rounded-3xl border-2 border-slate-900 shadow-xl p-4 sm:p-5 transition-all cursor-pointer relative animate-scale-up"
         role="region"
@@ -203,6 +204,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   // Normal Inactive Card
   return (
     <article
+      data-location-id={location.id}
       onClick={() => onSelect(location)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

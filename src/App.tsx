@@ -80,9 +80,7 @@ function AccessMapApp() {
   });
 
   // Selected Location
-  const [selectedLocation, setSelectedLocation] = useState<LocationPin | null>(() => {
-    return locations.length > 0 ? locations[0] : null;
-  });
+  const [selectedLocation, setSelectedLocation] = useState<LocationPin | null>(null);
 
   // Detail Drawer Visibility (full drawer with voting & review form)
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
@@ -91,7 +89,7 @@ function AccessMapApp() {
   const [activeNavTab, setActiveNavTab] = useState<string>('map');
 
   // Mobile / Filter panel toggle
-  const [isPlacesPanelOpen, setIsPlacesPanelOpen] = useState(true);
+  const [isPlacesPanelOpen, setIsPlacesPanelOpen] = useState(false);
 
   // Search & Tag Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -366,6 +364,7 @@ function AccessMapApp() {
           userCoords={userCoords}
           onResetData={handleResetData}
           isOpen={isPlacesPanelOpen}
+          onClose={() => setIsPlacesPanelOpen(false)}
         />
       )}
 
@@ -426,6 +425,7 @@ function AccessMapApp() {
               selectedLocation={selectedLocation}
               onSelectLocation={(loc) => {
                 setSelectedLocation(loc);
+                setIsPlacesPanelOpen(true);
               }}
               onOpenDetails={(loc) => {
                 setSelectedLocation(loc);
@@ -441,14 +441,16 @@ function AccessMapApp() {
               }}
             />
 
-            {/* Mobile toggle button for places panel */}
+            {/* Floating toggle button for location details panel */}
             <button
               type="button"
               onClick={() => setIsPlacesPanelOpen(!isPlacesPanelOpen)}
-              className="md:hidden absolute bottom-24 right-5 z-[550] px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-full shadow-xl flex items-center gap-1.5 cursor-pointer"
+              className="absolute bottom-24 right-5 z-[550] px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-full shadow-xl flex items-center gap-1.5 cursor-pointer transition-all"
+              title={isPlacesPanelOpen ? 'Collapse location details' : 'Show location details'}
+              aria-label={isPlacesPanelOpen ? 'Collapse location details' : 'Show location details'}
             >
               <Layers className="w-4 h-4" />
-              <span>{isPlacesPanelOpen ? 'Hide List' : 'Show List'}</span>
+              <span>{isPlacesPanelOpen ? 'Hide Locations' : 'Show Locations'}</span>
             </button>
           </>
         )}

@@ -115,7 +115,7 @@ export const MapView: React.FC<MapViewProps> = ({
   const { highContrast, announce } = useA11y();
   const [isLocating, setIsLocating] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [showSummaryCard, setShowSummaryCard] = useState(true);
+  const [showSummaryCard, setShowSummaryCard] = useState(false);
 
   // Viewport & Clustering state
   const [currentZoom, setCurrentZoom] = useState<number>(DEFAULT_ZOOM);
@@ -232,7 +232,19 @@ export const MapView: React.FC<MapViewProps> = ({
       onNewPinCoordsChange({ lat: e.latlng.lat, lng: e.latlng.lng });
     });
 
+    // Invalidate map size when container dimensions change (e.g. sidebar collapse/expand)
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    });
+
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapInstanceRef.current = null;
     };
