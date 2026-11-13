@@ -8,7 +8,7 @@
 
 ## Project Details
 
-- **Project Deployment Link**: https://tanaw1.vercel.app/
+- **Project Deployment Link**: https://tanaw-ten.vercel.app/
 - **Vision**: Empower people with mobility challenges to navigate urban environments confidently and safely.
 - **Target Audience**: Residents and visitors of Iligan City and across Mindanao seeking accessible routes, venue owners wanting to showcase accessibility, and community volunteers verifying data.
 - **Core Values**: Open‑source, zero‑cost mapping, privacy‑by‑design, community‑driven verification, and inclusive design.
