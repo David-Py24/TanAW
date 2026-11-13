@@ -1,6 +1,6 @@
-# AccessMap
+# TanAW
 
-> **AccessMap** – An accessibility‑first navigation and community platform for Mindanao, helping everyone find step‑free routes, accessible places, and community support.
+> **TanAW** – An accessibility‑first navigation and community platform for Mindanao, helping everyone find step‑free routes, accessible places, and community support.
 
 
 ---
