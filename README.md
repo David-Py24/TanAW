@@ -2,6 +2,12 @@
 
 > **AccessMap** – An accessibility‑first navigation and community platform for Mindanao, helping everyone find step‑free routes, accessible places, and community support.
 
+
+---
+## Deployed Project Link
+https://tanaw1.vercel.app/
+---
+
 ---
 
 ## Project Details
