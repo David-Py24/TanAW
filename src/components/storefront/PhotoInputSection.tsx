@@ -35,19 +35,10 @@ export const PhotoInputSection: React.FC<PhotoInputSectionProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
           1. Provide a Storefront or Entrance Photograph
         </label>
-        {selectedImage && (
-          <button
-            type="button"
-            onClick={() => onSelectImage(null)}
-            className="text-xs text-slate-500 hover:text-rose-600 cursor-pointer"
-          >
-            Change Photo
-          </button>
-        )}
       </div>
 
       {!selectedImage ? (
