@@ -58,16 +58,6 @@ const PROTOTYPE_ROUTES: Record<string, { title: string; subtitle: string; url: s
     subtitle: 'Accessibility preferences and display configurations',
     url: '/prototypes/profile-settings/index.html',
   },
-  landing: {
-    title: 'AccessMap Public Portal',
-    subtitle: 'Urban accessibility showcase and mission overview',
-    url: '/prototypes/landing/index.html',
-  },
-  signin: {
-    title: 'Contributor Sign In',
-    subtitle: 'Authentication and account access portal',
-    url: '/prototypes/sign-in/index.html',
-  },
 };
 
 function AccessMapApp() {

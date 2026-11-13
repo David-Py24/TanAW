@@ -107,9 +107,6 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </symbol>
-          <symbol id="i-door" viewBox="0 0 24 24">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
-          </symbol>
         </defs>
       </svg>
 
@@ -301,22 +298,6 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
             </svg>
             {!isCollapsed && <span>Contribution history</span>}
           </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('signin', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'signin'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Sign in & Account access"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-door" />
-            </svg>
-            {!isCollapsed && <span>Sign in</span>}
-          </button>
         </div>
 
         {/* EXPLORE Group */}
@@ -345,22 +326,6 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
               <use href="#i-pin" />
             </svg>
             {!isCollapsed && <span>Map view</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('landing', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'landing'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="AccessMap Public Landing Page"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-globe" />
-            </svg>
-            {!isCollapsed && <span>Landing portal</span>}
           </button>
 
           <button
