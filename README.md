@@ -1,13 +1,16 @@
-# AccessMap
+# TanAW
 
-> **AccessMap** – An accessibility‑first navigation and community platform for Mindanao, helping everyone find step‑free routes, accessible places, and community support.
+> **TanAW** – An accessibility‑first navigation and community platform for Iligan City and across Mindanao, helping everyone find step‑free routes, accessible places, and community support.
+
+**Project Deployment Link:** [https://tanaw1.vercel.app/](https://tanaw1.vercel.app/)
 
 ---
 
 ## Project Details
 
+- **Project Deployment Link**: https://tanaw1.vercel.app/
 - **Vision**: Empower people with mobility challenges to navigate urban environments confidently and safely.
-- **Target Audience**: Residents and visitors of Mindanao seeking accessible routes, venue owners wanting to showcase accessibility, and community volunteers verifying data.
+- **Target Audience**: Residents and visitors of Iligan City and across Mindanao seeking accessible routes, venue owners wanting to showcase accessibility, and community volunteers verifying data.
 - **Core Values**: Open‑source, zero‑cost mapping, privacy‑by‑design, community‑driven verification, and inclusive design.
 - **Key Stakeholders**: End‑users, local accessibility NGOs, city planners, and the open‑source contributor community.
 
@@ -27,63 +30,58 @@
 - [Project Structure](#project-structure)
 - [Development Workflow](#development-workflow)
 - [Contributing](#contributing)
-- [Documentation](#documentation)
 - [License](#license)
 
 ---
 
 ## About
 
-AccessMap is a web application focused on accessible navigation and community engagement. It combines an interactive map with step-free route planning, saved places, contribution history, a community leaderboard, messaging, and accessibility resources — all wrapped in a neo-brutalist UI.
+**TanAW** (*meaning "to see / look closely" in Bisaya*) is a web application focused on accessible navigation and community engagement. It combines an interactive map with step-free route planning, AI storefront accessibility scanning, saved places, contribution history, a community leaderboard, messaging, and accessibility settings (Dark Mode & Text Scale).
 
 ## Features
 
-- Interactive map with spatial marker clustering, category-aware animated pins, and proximity radar.
-- Step-free route planning with live OSRM accessible route preview.
-- Mindanao city viewport switcher.
-- Saved places and contribution history tracking.
-- Community leaderboard and messaging.
-- Sign-in / registration portal.
-- Accessibility statement and help resources.
-- Neo-brutalist, responsive navigation banner with back-to-map and fullscreen controls.
+- Interactive map with category-aware accessibility pins (`Accessible`, `Partial`, `Not Accessible`), live geolocation, and place search.
+- AI Storefront Accessibility Scanner powered by Google Gemini 2.5 Flash Vision to automatically detect ramps, steps, door widths, and obstacles from storefront photos.
+- Step-free route and venue discovery across Iligan City and Mindanao.
+- Saved places and personal contribution history tracking.
+- Community leaderboard, live activity feed, and local mapper messaging.
+- Sign-in / registration anti-trolling verification gate.
+- Built-in Dark Mode and Large Text (`100%` / `115%` / `125%`) accessibility toolbar.
 
 ## Modules / Pages
 
 | Module | Description |
 |---|---|
-| AccessMap (main) | Vite + React host app, sidebar, prototype mounting. |
-| Interactive Map Page | Map engine, markers, routing, viewport switcher. |
-| Step-Free Route Planner Page | Accessible route planning UI. |
-| Saved Places Page | Saved locations management. |
-| Contribution History Page | User contribution log. |
-| Community Leaderboard Page | Community rankings. |
-| Landing Page | Marketing / portal entry. |
-| Sign-in Page | Authentication UI. |
-| Profile / Account Page | User profile and account settings. |
-| Help / Accessibility Statement Page | Accessibility resources. |
-| Messages Page | In-app messaging. |
+| `AuthGatePage` | Sign-in and account registration gate for verified community contributions. |
+| `MapView` & `PlacesPanel` | Interactive Leaflet map engine, category/status filters, and synchronized places directory. |
+| `StorefrontScannerModal` | AI storefront image analyzer for instant accessibility feature detection. |
+| `AddLocationModal` | Guided 2-step modal for pinning and submitting new accessible places with compressed photos. |
+| `LocationDetailDrawer` | Detailed venue breakdown with verified checklist, photo gallery, and community reviews. |
+| `CommunityView` | Live community stats, Top Verified Mappers leaderboard, and recent reports. |
+| `ProfileHubView` | Unified user hub for Account Settings, Contributions, Saved Places, and Community Messages. |
 
 ## Tech Stack
 
-- **Frontend:** React, TypeScript, Vite
-- **Styling:** CSS (neo-brutalist theme), Tailwind (where applicable)
-- **Mapping / Routing:** OSRM, SVG pins, spatial clustering
-- **Tooling:** Git (multi-repo), ESLint/TypeScript
+- **Frontend:** React 19, TypeScript, Vite 6
+- **Styling:** Tailwind CSS v4, Lucide React icons, custom Dark Mode & font-scaling CSS
+- **Mapping:** Leaflet, React-Leaflet, OpenStreetMap tiles
+- **AI & Cloud:** Google Gemini 2.5 Flash (`@google/genai`), Firebase Firestore & Storage
+- **Deployment:** Vercel ([https://tanaw1.vercel.app/](https://tanaw1.vercel.app/)) & GitHub Actions
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (LTS)
-- npm / pnpm
+- npm
 - Git
 
 ### Installation
 
 ```bash
-# Clone the main repository
-git clone https://github.com/David-Py24/AccessMap-.git
-cd AccessMap
+# Clone the repository
+git clone https://github.com/dxctypee/TanAW.git
+cd TanAW
 
 # Install dependencies
 npm install
@@ -94,60 +92,40 @@ npm run dev
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and fill in the required values (see `.env.example`).
+Copy `.env.example` to `.env` and fill in the required values (such as `VITE_GEMINI_API_KEY` and Firebase configuration keys).
 
 ## Project Structure
 
 ```
-AcessMap/
-├── AccessMap/                       # Main Vite + React app
-├── AccessMap-Interactive-Map-Page/   # Map module
-├── AccessMap-Step-Free-Route-Planner-Page/
-├── AccessMap-Saved-Places-Page/
-├── AccessMap-Contribution-History-Page/
-├── AccessMap-Community-Leaderboard-Page/
-├── AccessMap-Landiing-Page/
-├── AccessMap-Help-Accessibility-Statement-Page/
-├── Assets/                          # Brand assets & references
-├── Documentation-Main.md            # Progress / changelog log
-├── RepoHub.md                       # Git activity ledger
-└── .agents/                         # Workspace governance & memory
+TanAW/
+├── src/
+│   ├── components/         # MapView, PlacesPanel, CommunityView, ProfileHubView, AuthGatePage, etc.
+│   ├── context/            # A11yContext (Dark Mode & Text Scaling)
+│   ├── data/               # Seed locations and Mindanao venue data
+│   ├── prompts/            # Gemini AI storefront analysis prompt
+│   ├── services/           # Firebase Firestore & Storage location services
+│   ├── utils/              # Local storage, auth, and client-side image compression
+│   ├── App.tsx             # Main application shell
+│   └── main.tsx            # Entry point
+├── functions/              # Firebase Cloud Functions
+├── index.html
+└── package.json
 ```
 
 ## Development Workflow
 
-- Each module may have its own Git history and branch — identify the owning repo before editing.
-- Keep changes scoped to the requested module; preserve existing UI/behavior elsewhere.
-- Record durable decisions in `.agents/memory/decisions.md`.
-- Log progress in `Documentation-Main.md`.
-
-## Backend & Database Collaboration
-
-- The default `main` branch contains the integrated frontend host app and is the base for backend/database work.
-- Page modules are tracked as separate `feature/*` branches and sibling repositories; they are not automatically merged into `main`.
-- To add backend or database features, branch from `main`:
-  ```bash
-  git checkout main
-  git pull origin main
-  git checkout -b feature/backend-<name>
-  ```
-- Push your branch to `origin` (`https://github.com/David-Py24/AccessMap-.git`) and open a pull request targeting `main`.
-- Keep frontend module changes in their owning repository/branch, then integrate through pull requests.
+- Branch from `first-rev` or `main` for feature updates.
+- Keep commits scoped and descriptive.
+- Run `npm run lint` and `npm run build` before pushing changes.
 - Do not commit secrets or credentials; use `.env.example` for variable names.
 
 ## Contributing
 
-1. Create a feature branch per module.
+1. Create a feature branch (`git checkout -b feature/<name>`).
 2. Keep commits scoped and descriptive.
-3. Run TypeScript checks and a production build before submitting.
-4. Update documentation for any structural change.
-
-## Documentation
-
-- [Documentation-Main.md](Documentation-Main.md) — dated progress/changelog.
-- [RepoHub.md](RepoHub.md) — workspace Git activity ledger.
-- Per-module `README.md` and `Documentation.md` files.
+3. Run TypeScript checks (`npm run lint`) and a production build (`npm run build`) before submitting.
+4. Open a Pull Request targeting the main repository branch.
 
 ## License
 
-TBD.
+MIT / Open Source.
