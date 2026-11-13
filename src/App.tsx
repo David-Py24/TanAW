@@ -30,10 +30,14 @@ import {
   toggleSavedPlaceId,
   loadLocations,
   saveLocations,
-  resetToSeedData,
   getStoredUserVotes,
   saveStoredUserVote,
 } from './utils/storage';
+import {
+  fetchLocations,
+  persistLocation,
+  resetLocationsToSeed,
+} from './services/locationService';
 import {
   MapPin,
   Sparkles,
@@ -133,14 +137,38 @@ function AccessMapApp() {
     barriers?: string[];
   } | null>(null);
 
-  const updateAndSaveLocations = (updater: (prev: LocationPin[]) => LocationPin[]) => {
+  // Helper to persist updates locally and to Firestore
+  const updateAndSaveLocations = (
+    updater: (prev: LocationPin[]) => LocationPin[],
+    affectedPinId?: string
+  ) => {
     setLocations((prev) => {
       const next = updater(prev);
       saveLocations(next);
+      if (affectedPinId) {
+        const pin = next.find((p) => p.id === affectedPinId);
+        if (pin) persistLocation(pin);
+      }
       return next;
     });
   };
 
+  // Sync locations from Firestore on initial mount
+  useEffect(() => {
+    let isMounted = true;
+    fetchLocations().then(({ locations: loaded, source }) => {
+      if (!isMounted) return;
+      setLocations(loaded);
+      if (source === 'firestore') {
+        announce('Connected to Firebase Firestore cloud database.');
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Sync selectedLocation if it was updated in locations array
   useEffect(() => {
     if (selectedLocation) {
       const fresh = locations.find((l) => l.id === selectedLocation.id);
@@ -179,7 +207,8 @@ function AccessMapApp() {
             return { ...tag, confirmations: conf, disputes: disp, userVoted: vote };
           }),
         };
-      })
+      }),
+      pinId
     );
   };
 
@@ -224,7 +253,8 @@ function AccessMapApp() {
           tags: updatedTags,
           updatedAt: new Date().toISOString(),
         };
-      })
+      }),
+      pinId
     );
   };
 
@@ -263,7 +293,8 @@ function AccessMapApp() {
           aiBarriers: analysis.possible_barriers,
           updatedAt: new Date().toISOString(),
         };
-      })
+      }),
+      locationId
     );
   };
 
@@ -283,16 +314,17 @@ function AccessMapApp() {
   };
 
   const handleSaveLocation = (newPin: LocationPin) => {
-    updateAndSaveLocations((prev) => [newPin, ...prev]);
+    updateAndSaveLocations((prev) => [newPin, ...prev], newPin.id);
     setSelectedLocation(newPin);
     setIsAddingLocation(false);
     setNewPinCoords(null);
     setAiNewPinData(null);
   };
 
-  const handleResetData = () => {
+  // Reset to seed data
+  const handleResetData = async () => {
     if (window.confirm('Reset all TanAW pins to initial Cagayan de Oro seed places?')) {
-      const reset = resetToSeedData();
+      const reset = await resetLocationsToSeed();
       setLocations(reset);
       setSelectedLocation(null);
       announce('Database reset to Cagayan de Oro seed data.');
