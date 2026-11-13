@@ -6,28 +6,27 @@
 import React from 'react';
 import { LocationPin } from '../types/accessibility';
 import { calculateDistanceKm } from '../utils/storage';
+import { getTagIcon } from '../utils/tagHelpers';
 import { Badge } from './ui/Badge';
-import {
-  Sparkles,
-  ChevronDown,
-  ExternalLink,
-} from 'lucide-react';
+import { ArrowRight, Bookmark } from 'lucide-react';
 
 interface LocationCardProps {
   location: LocationPin;
   isSelected: boolean;
+  isSaved?: boolean;
+  onToggleSave?: (locationId: string) => void;
   onSelect: (loc: LocationPin) => void;
   onOpenDetails: (loc: LocationPin) => void;
-  onRunAIScan: (loc: LocationPin) => void;
   userCoords?: { lat: number; lng: number } | null;
 }
 
 export const LocationCard: React.FC<LocationCardProps> = ({
   location,
   isSelected,
+  isSaved = false,
+  onToggleSave,
   onSelect,
   onOpenDetails,
-  onRunAIScan,
   userCoords,
 }) => {
   const distanceKm = userCoords
@@ -38,169 +37,25 @@ export const LocationCard: React.FC<LocationCardProps> = ({
     location.tags.some((t) => t.confirmations >= 2 && t.confirmations > t.disputes) &&
     location.averageRating >= 4.0;
 
-  const verifiedTagCount = location.tags.filter(
-    (t) => t.confirmations >= 2 && t.confirmations > t.disputes
-  ).length;
-
-  const topContributor =
-    location.reviews && location.reviews.length > 0
-      ? location.reviews[0].authorName
-      : 'Community Volunteer';
-
   const renderStatusBadge = () => {
     if (isCommunityVerified) {
-      return <Badge variant="verified">VERIFIED ACCESS</Badge>;
+      return <Badge variant="verified" size="xs">VERIFIED</Badge>;
     }
     if (location.aiSummary) {
-      return <Badge variant="ai-suggested">AI STOREFRONT SCAN</Badge>;
+      return <Badge variant="ai-suggested" size="xs">AI SCAN</Badge>;
     }
     if (location.averageRating < 2.5 && location.averageRating > 0) {
-      return <Badge variant="barrier">BARRIER REPORTED</Badge>;
+      return <Badge variant="barrier" size="xs">BARRIER</Badge>;
     }
     return (
-      <Badge variant="neutral">
-        {location.averageRating > 0 ? `${location.averageRating.toFixed(1)} ★` : 'PENDING'}
+      <Badge variant="neutral" size="xs">
+        {location.averageRating > 0 ? `${location.averageRating.toFixed(1)} ★` : 'UNRATED'}
       </Badge>
     );
   };
 
-  // If selected, render the prominent expanded card
-  if (isSelected) {
-    return (
-      <article
-        onClick={() => onSelect(location)}
-        className="w-full bg-white rounded-3xl border-2 border-slate-900 shadow-xl p-4 sm:p-5 transition-all cursor-pointer relative animate-scale-up"
-        role="region"
-        aria-label={`Selected location: ${location.name}`}
-      >
-        {/* Top Place Name & ID */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight truncate">
-              {location.name}
-            </h3>
-            <p className="text-xs text-slate-400 font-mono mt-0.5 truncate">
-              CDO-{location.id.replace('cdo-', '').toUpperCase()}
-            </p>
-          </div>
-        </div>
+  const topTags = location.tags.slice(0, 2);
 
-        {/* Status Pill Badge */}
-        <div className="mt-3 flex items-center justify-start">
-          {renderStatusBadge()}
-        </div>
-
-        {/* Progress / Rating indicator bar */}
-        <div className="mt-3.5 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-          <div
-            className="bg-gradient-to-r from-lime-400 to-emerald-500 h-full rounded-full"
-            style={{
-              width: `${Math.min(100, Math.max(15, (location.averageRating / 5) * 100))}%`,
-            }}
-          />
-        </div>
-
-        {/* 4-Column Metric Grid */}
-        <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-4 gap-2 text-left">
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Category
-            </span>
-            <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-              {location.category.split(' ')[0]}
-            </span>
-          </div>
-
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Score
-            </span>
-            <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-              {location.averageRating > 0 ? `${location.averageRating.toFixed(1)} ★` : '–'}
-            </span>
-          </div>
-
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Distance
-            </span>
-            <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-              {distanceKm} km
-            </span>
-          </div>
-
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Verified
-            </span>
-            <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-              {verifiedTagCount} Tags
-            </span>
-          </div>
-        </div>
-
-        {/* Reviewer / Contributor Row */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-              {topContributor.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                Auditor
-              </span>
-              <span className="block text-xs font-bold text-slate-800 truncate">
-                {topContributor}
-              </span>
-            </div>
-          </div>
-
-          {/* Quick Action Circle Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRunAIScan(location);
-              }}
-              className="w-8 h-8 rounded-full border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 flex items-center justify-center transition-colors cursor-pointer"
-              title="Run Gemini AI Storefront Scan"
-              aria-label="Run Gemini AI Storefront Scan on this location"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-            </button>
-
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="w-8 h-8 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
-              title="Open directions"
-              aria-label="Open Google Maps directions"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
-        </div>
-
-        {/* Accordion / Details button at bottom of active card */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetails(location);
-          }}
-          className="mt-3.5 pt-3 border-t border-slate-100 w-full flex items-center justify-between text-xs font-semibold text-slate-700 hover:text-slate-950 transition-colors cursor-pointer"
-        >
-          <span>Accessibility tags & community reviews</span>
-          <ChevronDown className="w-4 h-4 text-slate-400" />
-        </button>
-      </article>
-    );
-  }
-
-  // Normal Inactive Card
   return (
     <article
       onClick={() => onSelect(location)}
@@ -212,28 +67,83 @@ export const LocationCard: React.FC<LocationCardProps> = ({
       }}
       tabIndex={0}
       role="button"
-      aria-label={`${location.name}, ${location.category}, rating ${
-        location.averageRating > 0 ? location.averageRating.toFixed(1) : 'unrated'
-      }`}
-      className="w-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xs p-4 flex items-center justify-between gap-3 transition-all cursor-pointer text-left focus:outline-2 focus:outline-sky-600"
+      aria-label={`${location.name}, ${location.category}, rating ${location.averageRating > 0 ? location.averageRating.toFixed(1) : 'unrated'
+        }`}
+      className={`w-full rounded-2xl border p-3.5 transition-all cursor-pointer text-left focus:outline-2 focus:outline-sky-600 ${isSelected
+          ? 'bg-white border-2 border-slate-900 shadow-md'
+          : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs'
+        }`}
     >
-      <div className="min-w-0 flex-1">
-        <h4 className="text-sm font-bold text-slate-900 truncate">
-          {location.name}
-        </h4>
-        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500">
-          <span className="font-medium text-slate-600">{location.category}</span>
-          <span>•</span>
-          <span className="font-mono text-slate-400">
-            {distanceKm} km away
-          </span>
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-slate-900 truncate">
+            {location.name}
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5 truncate">
+            {location.category} • {distanceKm} km
+            {location.averageRating > 0 && ` • ${location.averageRating.toFixed(1)}★ (${location.totalReviews})`}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          {renderStatusBadge()}
+          {onToggleSave && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSave(location.id);
+              }}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                isSaved
+                  ? 'text-emerald-700 bg-emerald-50'
+                  : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+              }`}
+              title={isSaved ? 'Remove from Saved Places' : 'Save place'}
+              aria-label={isSaved ? 'Remove from Saved Places' : 'Save place'}
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-emerald-700' : ''}`} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Status Pill on the Right */}
-      <div className="shrink-0">
-        {renderStatusBadge()}
-      </div>
+      {/* Top 2 tags preview */}
+      {topTags.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {topTags.map((tag) => (
+            <span
+              key={tag.name}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 text-[11px] font-medium text-slate-700"
+            >
+              {getTagIcon(tag.name)}
+              <span className="truncate max-w-[160px]">{tag.name}</span>
+            </span>
+          ))}
+          {location.tags.length > 2 && (
+            <span className="px-2 py-0.5 rounded-lg bg-slate-50 text-[11px] font-semibold text-slate-400">
+              +{location.tags.length - 2}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Selected Quick Action */}
+      {isSelected && (
+        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenDetails(location);
+            }}
+            className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <span>View Details, Reviews &amp; Vote</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </article>
   );
 };

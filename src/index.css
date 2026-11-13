@@ -30,37 +30,111 @@
   outline-offset: 2px;
 }
 
-/* Accessibility High Contrast Mode overrides */
-body.high-contrast {
-  background-color: #000000 !important;
-  color: #ffffff !important;
+/* Clean, Consistent Dark Mode Overrides */
+body.dark-mode {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  color-scheme: dark;
 }
 
-body.high-contrast * {
-  border-color: #ffffff !important;
+/* Dark-mode map tiles using free keyless OpenStreetMap tiles (no Carto API key watermark) */
+body.dark-mode .leaflet-tile-pane {
+  filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%);
 }
 
-body.high-contrast .bg-white {
-  background-color: #121212 !important;
-  color: #ffffff !important;
+body.dark-mode .leaflet-container {
+  background-color: #0b1120 !important;
 }
 
-body.high-contrast .bg-slate-50,
-body.high-contrast .bg-slate-100 {
-  background-color: #1a1a1a !important;
+/* Dark surfaces */
+body.dark-mode .bg-white,
+body.dark-mode .bg-white\/95,
+body.dark-mode .bg-white\/90,
+body.dark-mode .bg-white\/98,
+body.dark-mode .bg-white\/70 {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
 }
 
-body.high-contrast .text-slate-600,
-body.high-contrast .text-slate-500,
-body.high-contrast .text-slate-400 {
+body.dark-mode .bg-\[\#f8fafc\],
+body.dark-mode .bg-\[\#f1f5f9\],
+body.dark-mode .bg-slate-50,
+body.dark-mode .bg-slate-50\/80,
+body.dark-mode .bg-slate-100,
+body.dark-mode .bg-slate-200 {
+  background-color: #0f172a !important;
   color: #e2e8f0 !important;
 }
 
-body.high-contrast button,
-body.high-contrast input,
-body.high-contrast select,
-body.high-contrast textarea {
-  outline-color: #facc15 !important;
+body.dark-mode .bg-emerald-50,
+body.dark-mode .bg-emerald-50\/90,
+body.dark-mode .bg-emerald-50\/80,
+body.dark-mode .bg-emerald-50\/70 {
+  background-color: rgba(6, 78, 59, 0.45) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+body.dark-mode .bg-sky-50,
+body.dark-mode .bg-indigo-50\/80 {
+  background-color: rgba(30, 58, 138, 0.4) !important;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+
+/* Active dark buttons/pills become crisp light or emerald in dark mode so they stand out */
+body.dark-mode .bg-slate-900,
+body.dark-mode .bg-slate-950 {
+  background-color: #10b981 !important;
+  color: #052e16 !important;
+  border-color: #10b981 !important;
+}
+
+/* Text colors in Dark Mode */
+body.dark-mode .text-slate-900,
+body.dark-mode .text-slate-800,
+body.dark-mode .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-slate-600,
+body.dark-mode .text-slate-500,
+body.dark-mode .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .text-emerald-800,
+body.dark-mode .text-emerald-700,
+body.dark-mode .text-emerald-900 {
+  color: #6ee7b7 !important;
+}
+
+body.dark-mode .text-sky-700,
+body.dark-mode .text-sky-800 {
+  color: #7dd3fc !important;
+}
+
+/* Subtle dark borders instead of stark white borders */
+body.dark-mode .border-slate-100,
+body.dark-mode .border-slate-200,
+body.dark-mode .border-slate-200\/90,
+body.dark-mode .border-slate-200\/80,
+body.dark-mode .border-slate-200\/60,
+body.dark-mode .border-slate-300 {
+  border-color: #334155 !important;
+}
+
+body.dark-mode .border-slate-900 {
+  border-color: #10b981 !important;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  color: #f8fafc !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #64748b !important;
 }
 
 /* Accessible focus visible outlines */
@@ -118,21 +192,19 @@ body.high-contrast textarea {
   background: rgba(148, 163, 184, 0.6);
 }
 
-/* Sidebar Theme & Neo-brutalist Tokens from sidebar.html */
-:root {
-  --side-bg: #F5FAFD;
-  --side-soft: #EAF3F7;
-  --side-ink: #0F172A;
-  --side-mute: #475569;
-  --side-line: #0F172A;
-  --side-accent: #21524B;
-  --side-accent-l: #E7F2F0;
-  --side-grid: #D5E5EC;
-  --side-on-accent: #FFFFFF;
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-.font-space {
-  font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-
-

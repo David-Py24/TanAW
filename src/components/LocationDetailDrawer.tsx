@@ -10,10 +10,13 @@ import { LocationOverviewCard } from './location-detail/LocationOverviewCard';
 import { AiAnalysisSection } from './location-detail/AiAnalysisSection';
 import { TagVotingList } from './location-detail/TagVotingList';
 import { ReviewSection } from './location-detail/ReviewSection';
-import { X, Share2, Sparkles } from 'lucide-react';
+import { X, Share2, Sparkles, Bookmark } from 'lucide-react';
 
 interface LocationDetailDrawerProps {
   location: LocationPin | null;
+  currentUserName?: string;
+  isSaved?: boolean;
+  onToggleSave?: (locationId: string) => void;
   onClose: () => void;
   onVoteTag: (pinId: string, tagName: string, vote: 'confirm' | 'dispute') => void;
   onAddReview: (pinId: string, review: Omit<Review, 'id' | 'date'>) => void;
@@ -22,6 +25,9 @@ interface LocationDetailDrawerProps {
 
 export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
   location,
+  currentUserName,
+  isSaved = false,
+  onToggleSave,
   onClose,
   onVoteTag,
   onAddReview,
@@ -33,7 +39,7 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
   if (!location) return null;
 
   const handleShare = () => {
-    const shareText = `Check out the accessibility ratings for ${location.name} in Cagayan de Oro on AccessMap!`;
+    const shareText = `Check out the accessibility ratings for ${location.name} in Cagayan de Oro on TanAW!`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(
         `${shareText} (${location.lat.toFixed(4)}, ${location.lng.toFixed(4)})`
@@ -45,12 +51,18 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Accessibility details for ${location.name}`}
-      className="fixed inset-y-0 right-0 w-full sm:w-[480px] lg:w-[520px] bg-white shadow-2xl z-[1000] flex flex-col border-l border-slate-200 overflow-hidden"
-    >
+    <>
+      <div
+        onClick={onClose}
+        className="fixed inset-0 bg-black/40 backdrop-blur-[1px] z-[990]"
+        aria-hidden="true"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Accessibility details for ${location.name}`}
+        className="fixed inset-y-0 right-0 w-full sm:w-[480px] lg:w-[520px] bg-white shadow-2xl z-[1000] flex flex-col border-l border-slate-200 overflow-hidden"
+      >
       {/* Header */}
       <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
         <div className="min-w-0">
@@ -63,6 +75,21 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
+          {onToggleSave && (
+            <button
+              type="button"
+              onClick={() => onToggleSave(location.id)}
+              className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                isSaved
+                  ? 'text-emerald-700 bg-emerald-50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+              }`}
+              title={isSaved ? 'Saved in Profile' : 'Save place'}
+              aria-label={isSaved ? 'Saved in Profile' : 'Save place'}
+            >
+              <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-emerald-700' : ''}`} />
+            </button>
+          )}
           <button
             type="button"
             onClick={handleShare}
@@ -107,6 +134,7 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
 
         <ReviewSection
           location={location}
+          currentUserName={currentUserName}
           onAddReview={onAddReview}
           onAnnounce={announce}
         />
@@ -131,6 +159,7 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
           Close
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 };

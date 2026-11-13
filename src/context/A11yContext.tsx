@@ -53,10 +53,12 @@ export const A11yProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Apply high contrast class to body
+    // Apply dark-mode class to body
     if (highContrast) {
-      document.body.classList.add('high-contrast');
+      document.body.classList.add('dark-mode');
+      document.body.classList.remove('high-contrast');
     } else {
+      document.body.classList.remove('dark-mode');
       document.body.classList.remove('high-contrast');
     }
   }, [highContrast]);

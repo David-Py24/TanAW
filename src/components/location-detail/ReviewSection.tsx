@@ -10,17 +10,19 @@ import { MessageSquare, PlusCircle, Calendar, Send } from 'lucide-react';
 
 interface ReviewSectionProps {
   location: LocationPin;
+  currentUserName?: string;
   onAddReview: (pinId: string, review: Omit<Review, 'id' | 'date'>) => void;
   onAnnounce: (msg: string) => void;
 }
 
 export const ReviewSection: React.FC<ReviewSectionProps> = ({
   location,
+  currentUserName,
   onAddReview,
   onAnnounce,
 }) => {
   const [isAddingReview, setIsAddingReview] = useState(false);
-  const [authorName, setAuthorName] = useState('');
+  const [authorName, setAuthorName] = useState(currentUserName || '');
   const [newRating, setNewRating] = useState(5);
   const [comment, setComment] = useState('');
   const [tagRatings, setTagRatings] = useState<Record<string, number>>({});

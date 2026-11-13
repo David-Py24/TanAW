@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { SAMPLE_STOREFRONTS, SampleStorefront } from '../../data/initialLocations';
+import { compressImageFile } from '../../utils/storage';
 import { Upload, Sparkles, Loader2 } from 'lucide-react';
 
 interface PhotoInputSectionProps {
@@ -20,16 +21,12 @@ export const PhotoInputSection: React.FC<PhotoInputSectionProps> = ({
   isAnalyzing,
   onAnalyze,
 }) => {
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      onSelectImage(result);
-    };
-    reader.readAsDataURL(file);
+    const compressed = await compressImageFile(file);
+    onSelectImage(compressed);
   };
 
   const handleSelectSample = (sample: SampleStorefront) => {
