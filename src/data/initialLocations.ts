@@ -687,7 +687,7 @@ export const SAMPLE_STOREFRONTS: SampleStorefront[] = [
     id: 'sample-mall-entry',
     title: 'Shopping Center Glass Plaza',
     description: 'Wide level threshold entrance with elevator signage, automatic doors, and braille guidance plaques.',
-    imageUrl: 'https://images.unsplash.com/photo-1567449303078-57ad995bd302?auto=format&fit=crop&w=900&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=900&q=80',
     expectedFeatures: ['Wheelchair-accessible entrance', 'Elevator access', 'Accessible parking', 'Wide aisles / pathways'],
     expectedBarriers: [],
   },

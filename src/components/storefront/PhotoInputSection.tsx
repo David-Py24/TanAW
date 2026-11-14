@@ -5,7 +5,8 @@
 
 import React from 'react';
 import { SAMPLE_STOREFRONTS, SampleStorefront } from '../../data/initialLocations';
-import { Upload, Sparkles, Loader2 } from 'lucide-react';
+import { compressImageFile } from '../../utils/storage';
+import { Upload, Camera, Sparkles, Loader2 } from 'lucide-react';
 
 interface PhotoInputSectionProps {
   selectedImage: string | null;
@@ -20,16 +21,12 @@ export const PhotoInputSection: React.FC<PhotoInputSectionProps> = ({
   isAnalyzing,
   onAnalyze,
 }) => {
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      onSelectImage(result);
-    };
-    reader.readAsDataURL(file);
+    const compressed = await compressImageFile(file);
+    onSelectImage(compressed);
   };
 
   const handleSelectSample = (sample: SampleStorefront) => {
@@ -38,41 +35,53 @@ export const PhotoInputSection: React.FC<PhotoInputSectionProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
           1. Provide a Storefront or Entrance Photograph
         </label>
-        {selectedImage && (
-          <button
-            type="button"
-            onClick={() => onSelectImage(null)}
-            className="text-xs text-slate-500 hover:text-rose-600 cursor-pointer"
-          >
-            Change Photo
-          </button>
-        )}
       </div>
 
       {!selectedImage ? (
         <div className="space-y-3">
-          {/* Drag and Drop / File Input Box */}
-          <label className="border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50/40 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors text-center group">
-            <div className="w-12 h-12 rounded-full bg-indigo-100 group-hover:bg-indigo-200 text-indigo-600 flex items-center justify-center transition-colors">
-              <Upload className="w-6 h-6" />
-            </div>
-            <span className="text-sm font-bold text-slate-800">
-              Click to upload storefront photo
-            </span>
-            <span className="text-xs text-slate-500">
-              Supports JPG, PNG, WebP up to 15MB • Shows doors, steps, and ramps
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              className="sr-only"
-            />
-          </label>
+          {/* Camera & File Upload Action Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="border-2 border-dashed border-indigo-300 bg-indigo-50/30 hover:border-indigo-500 hover:bg-indigo-50/70 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors text-center group">
+              <div className="w-12 h-12 rounded-full bg-indigo-600 group-hover:bg-indigo-700 text-white flex items-center justify-center transition-colors shadow-xs">
+                <Camera className="w-6 h-6" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">
+                Take Photo with Camera
+              </span>
+              <span className="text-xs text-slate-500">
+                Opens your mobile rear camera to snap an entrance directly
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileUpload}
+                className="sr-only"
+              />
+            </label>
+
+            <label className="border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50/40 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors text-center group">
+              <div className="w-12 h-12 rounded-full bg-indigo-100 group-hover:bg-indigo-200 text-indigo-600 flex items-center justify-center transition-colors">
+                <Upload className="w-6 h-6" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">
+                Upload Storefront Photo
+              </span>
+              <span className="text-xs text-slate-500">
+                Choose from gallery or files (JPG, PNG, WebP)
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="sr-only"
+              />
+            </label>
+          </div>
 
           {/* Preset sample photo quick picker */}
           <div>

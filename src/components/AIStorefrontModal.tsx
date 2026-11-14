@@ -10,7 +10,7 @@ import { useA11y } from '../context/A11yContext';
 import { Modal } from './ui/Modal';
 import { PhotoInputSection } from './storefront/PhotoInputSection';
 import { AnalysisResultsSection } from './storefront/AnalysisResultsSection';
-import { Sparkles, AlertTriangle, ArrowRight, Plus } from 'lucide-react';
+import { Sparkles, AlertTriangle, ArrowRight, Plus, RefreshCw } from 'lucide-react';
 
 interface AIStorefrontModalProps {
   isOpen: boolean;
@@ -143,26 +143,43 @@ export const AIStorefrontModal: React.FC<AIStorefrontModalProps> = ({
         Cancel
       </button>
 
-      {analysisResult && (
-        <div className="flex items-center gap-2">
+      {selectedImage && (
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={handleCreateNewPin}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-transform active:scale-95"
+            onClick={() => {
+              setSelectedImage(null);
+              setAnalysisResult(null);
+              setErrorMsg(null);
+            }}
+            className="px-4 py-2 border-2 border-slate-300 hover:border-indigo-500 bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            <span>Create New Pin</span>
+            <RefreshCw className="w-4 h-4" />
+            <span>Change Photo</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleApplyToExisting}
-            disabled={!targetLocation && !selectedLocationId}
-            className="px-4 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-40 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-transform active:scale-95"
-          >
-            <span>Apply to Pin</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          {analysisResult && (
+            <>
+              <button
+                type="button"
+                onClick={handleCreateNewPin}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-transform active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create New Pin</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleApplyToExisting}
+                disabled={!targetLocation && !selectedLocationId}
+                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-40 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-transform active:scale-95"
+              >
+                <span>Apply to Pin</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -174,7 +191,7 @@ export const AIStorefrontModal: React.FC<AIStorefrontModalProps> = ({
       onClose={onClose}
       title="AI Storefront Accessibility Analyzer"
       subtitle="Powered by Gemini Vision • Automatic Entrance & Barrier Detection"
-      headerClassName="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50"
+      headerClassName="bg-slate-50"
       maxWidthClassName="max-w-3xl"
       icon={
         <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">

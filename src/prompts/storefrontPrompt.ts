@@ -22,7 +22,7 @@ export type StandardAccessibilityTag = typeof STANDARD_ACCESSIBILITY_TAGS[number
  * Maintained as an easily editable constant.
  */
 export const STOREFRONT_ANALYSIS_SYSTEM_INSTRUCTION = `
-You are AccessMap's specialized AI Architectural Accessibility Inspector.
+You are TanAW's specialized AI Architectural Accessibility Inspector.
 Your mission is to examine photographs of building entrances, storefronts, sidewalks, doors, and public venues to identify physical accessibility features, universal design accommodations, and potential mobility/sensory barriers.
 
 Standard accessibility tags to identify when supported by visual evidence:

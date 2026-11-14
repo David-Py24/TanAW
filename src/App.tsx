@@ -5,12 +5,16 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { A11yProvider, useA11y } from './context/A11yContext';
-import { SidebarRail } from './components/SidebarRail';
-import { PlacesPanel } from './components/PlacesPanel';
+import { SidebarRail, AppViewMode } from './components/SidebarRail';
+import { PlacesPanel, PlacesTab } from './components/PlacesPanel';
 import { MapView } from './components/MapView';
 import { LocationDetailDrawer } from './components/LocationDetailDrawer';
 import { AddLocationModal } from './components/AddLocationModal';
 import { AIStorefrontModal } from './components/AIStorefrontModal';
+import { AuthGatePage } from './components/AuthGatePage';
+import { ProfileHubView } from './components/ProfileHubView';
+import { CommunityView } from './components/CommunityView';
+import { Modal } from './components/ui/Modal';
 import {
   LocationPin,
   CategoryType,
@@ -19,59 +23,65 @@ import {
   LocationTag,
 } from './types/accessibility';
 import {
+  AuthUser,
+  getCurrentUser,
+  setCurrentUserSession,
+  getSavedPlaceIds,
+  toggleSavedPlaceId,
   loadLocations,
   saveLocations,
-  resetToSeedData,
   getStoredUserVotes,
+  getStoredVoteWeight,
   saveStoredUserVote,
 } from './utils/storage';
-import { MapPin, Sparkles, Plus, Layers, ArrowLeft, ExternalLink } from 'lucide-react';
-
-const PROTOTYPE_ROUTES: Record<string, { title: string; subtitle: string; url: string }> = {
-  profile: {
-    title: 'Profile & Account Settings',
-    subtitle: 'Manage your profile, verified accessibility contributions, and badges',
-    url: '/prototypes/profile-account/index.html',
-  },
-  community: {
-    title: 'Community Leaderboard',
-    subtitle: 'Top urban accessibility contributors and community consensus verifiers',
-    url: '/prototypes/leaderboard/index.html',
-  },
-  messages: {
-    title: 'Messages & Outreach',
-    subtitle: 'Direct conversations with local accessibility mappers and community verifiers',
-    url: '/prototypes/messages/index.html',
-  },
-  saved: {
-    title: 'Saved Places',
-    subtitle: 'Bookmarked accessible venues, ramps, and personal collections',
-    url: '/prototypes/saved-places/index.html',
-  },
-  contributions: {
-    title: 'Contribution History',
-    subtitle: 'Your crowdsourced photo uploads, reviews, and community votes',
-    url: '/prototypes/contributions/index.html',
-  },
-  settings: {
-    title: 'Profile Settings',
-    subtitle: 'Accessibility preferences and display configurations',
-    url: '/prototypes/profile-settings/index.html',
-  },
-  landing: {
-    title: 'AccessMap Public Portal',
-    subtitle: 'Urban accessibility showcase and mission overview',
-    url: '/prototypes/landing/index.html',
-  },
-  signin: {
-    title: 'Contributor Sign In',
-    subtitle: 'Authentication and account access portal',
-    url: '/prototypes/sign-in/index.html',
-  },
-};
+import {
+  fetchLocations,
+  persistLocation,
+  resetLocationsToSeed,
+} from './services/locationService';
+import {
+  MapPin,
+  Sparkles,
+  Plus,
+  List,
+  Menu,
+  CheckCircle2,
+  AlertTriangle,
+} from 'lucide-react';
 
 function AccessMapApp() {
   const { announce } = useA11y();
+
+  // Signed-in User State (gates the app to prevent anonymous trolling)
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getCurrentUser());
+
+  // Active primary view ('map' | 'community' | 'profile')
+  const [activeView, setActiveView] = useState<AppViewMode>('map');
+
+  // Saved / Bookmarked Place IDs for current user
+  const [savedPlaceIds, setSavedPlaceIds] = useState<string[]>(() => {
+    const user = getCurrentUser();
+    return user ? getSavedPlaceIds(user.id) : [];
+  });
+
+  useEffect(() => {
+    if (currentUser) {
+      setSavedPlaceIds(getSavedPlaceIds(currentUser.id));
+    } else {
+      setSavedPlaceIds([]);
+    }
+  }, [currentUser?.id]);
+
+  const handleToggleSavePlace = (locationId: string) => {
+    if (!currentUser) return;
+    const next = toggleSavedPlaceId(currentUser.id, locationId);
+    setSavedPlaceIds(next);
+    announce(
+      next.includes(locationId)
+        ? 'Place saved to your Profile.'
+        : 'Place removed from Saved Places.'
+    );
+  };
 
   // Core locations state
   const [locations, setLocations] = useState<LocationPin[]>(() => {
@@ -89,32 +99,34 @@ function AccessMapApp() {
     }));
   });
 
-  // Selected Location
-  const [selectedLocation, setSelectedLocation] = useState<LocationPin | null>(() => {
-    return locations.length > 0 ? locations[0] : null;
-  });
+  // Selected Location (starts null so map is uncluttered until user selects a venue)
+  const [selectedLocation, setSelectedLocation] = useState<LocationPin | null>(null);
 
-  // Detail Drawer Visibility (full drawer with voting & review form)
+  // Detail Drawer Visibility
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
-  // Active navigation tab
-  const [activeNavTab, setActiveNavTab] = useState<string>('map');
+  // Places panel toggle (default open on desktop, closed on mobile so map is visible first)
+  const [isPlacesPanelOpen, setIsPlacesPanelOpen] = useState<boolean>(() => {
+    return typeof window !== 'undefined' ? window.innerWidth >= 768 : true;
+  });
 
-  // Mobile / Filter panel toggle
-  const [isPlacesPanelOpen, setIsPlacesPanelOpen] = useState(true);
+  // Mobile Navigation Drawer & Quick Guide Modal
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState<boolean>(false);
 
-  // Search & Tag Filter states
+  // Single Unified Filter State (shared across PlacesPanel and MapView)
+  const [activeStatusTab, setActiveStatusTab] = useState<PlacesTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'All'>('All');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [userCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // Add Location Flow State
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [newPinCoords, setNewPinCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // AI Storefront Analyzer State
+  // AI Storefront Analyzer State (used when scanning an existing pin from its detail drawer)
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [aiTargetLocation, setAiTargetLocation] = useState<LocationPin | null>(null);
 
@@ -126,14 +138,36 @@ function AccessMapApp() {
     barriers?: string[];
   } | null>(null);
 
-  // Helper to persist updates
-  const updateAndSaveLocations = (updater: (prev: LocationPin[]) => LocationPin[]) => {
+  // Helper to persist updates locally and to Firestore
+  const updateAndSaveLocations = (
+    updater: (prev: LocationPin[]) => LocationPin[],
+    affectedPinId?: string
+  ) => {
     setLocations((prev) => {
       const next = updater(prev);
       saveLocations(next);
+      if (affectedPinId) {
+        const pin = next.find((p) => p.id === affectedPinId);
+        if (pin) persistLocation(pin);
+      }
       return next;
     });
   };
+
+  // Sync locations from Firestore on initial mount
+  useEffect(() => {
+    let isMounted = true;
+    fetchLocations().then(({ locations: loaded, source }) => {
+      if (!isMounted) return;
+      setLocations(loaded);
+      if (source === 'firestore') {
+        announce('Connected to Firebase Firestore cloud database.');
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Sync selectedLocation if it was updated in locations array
   useEffect(() => {
@@ -143,8 +177,14 @@ function AccessMapApp() {
     }
   }, [locations]);
 
-  // Community Voting (Confirm / Dispute)
+  // Community Voting (Confirm / Dispute) — Verified PWD / Caregiver roles carry 2x verification weight
   const handleVoteTag = (pinId: string, tagName: string, vote: 'confirm' | 'dispute') => {
+    const newWeight =
+      currentUser?.role === 'PWD Member / Advocate' || currentUser?.role === 'Caregiver / Family'
+        ? 2
+        : 1;
+    const prevWeight = getStoredVoteWeight(pinId, tagName);
+
     updateAndSaveLocations((prev) =>
       prev.map((loc) => {
         if (loc.id !== pinId) return loc;
@@ -158,23 +198,24 @@ function AccessMapApp() {
             const prevVote = tag.userVoted;
 
             if (prevVote === vote) {
-              if (vote === 'confirm') conf = Math.max(0, conf - 1);
-              if (vote === 'dispute') disp = Math.max(0, disp - 1);
+              if (vote === 'confirm') conf = Math.max(0, conf - prevWeight);
+              if (vote === 'dispute') disp = Math.max(0, disp - prevWeight);
               saveStoredUserVote(pinId, tagName, null);
               return { ...tag, confirmations: conf, disputes: disp, userVoted: undefined };
             }
 
-            if (prevVote === 'confirm') conf = Math.max(0, conf - 1);
-            if (prevVote === 'dispute') disp = Math.max(0, disp - 1);
+            if (prevVote === 'confirm') conf = Math.max(0, conf - prevWeight);
+            if (prevVote === 'dispute') disp = Math.max(0, disp - prevWeight);
 
-            if (vote === 'confirm') conf += 1;
-            if (vote === 'dispute') disp += 1;
+            if (vote === 'confirm') conf += newWeight;
+            if (vote === 'dispute') disp += newWeight;
 
-            saveStoredUserVote(pinId, tagName, vote);
+            saveStoredUserVote(pinId, tagName, vote, newWeight);
             return { ...tag, confirmations: conf, disputes: disp, userVoted: vote };
           }),
         };
-      })
+      }),
+      pinId
     );
   };
 
@@ -219,7 +260,8 @@ function AccessMapApp() {
           tags: updatedTags,
           updatedAt: new Date().toISOString(),
         };
-      })
+      }),
+      pinId
     );
   };
 
@@ -258,11 +300,11 @@ function AccessMapApp() {
           aiBarriers: analysis.possible_barriers,
           updatedAt: new Date().toISOString(),
         };
-      })
+      }),
+      locationId
     );
   };
 
-  // Start new location pin flow pre-populated with AI scan findings
   const handleStartNewPinFromAnalysis = (
     acceptedTags: string[],
     analysis: StorefrontAnalysisResult,
@@ -278,9 +320,8 @@ function AccessMapApp() {
     setIsAddModalOpen(true);
   };
 
-  // Save brand new location pin
   const handleSaveLocation = (newPin: LocationPin) => {
-    updateAndSaveLocations((prev) => [newPin, ...prev]);
+    updateAndSaveLocations((prev) => [newPin, ...prev], newPin.id);
     setSelectedLocation(newPin);
     setIsAddingLocation(false);
     setNewPinCoords(null);
@@ -288,80 +329,117 @@ function AccessMapApp() {
   };
 
   // Reset to seed data
-  const handleResetData = () => {
-    if (window.confirm('Reset all AccessMap pins to initial Cagayan de Oro seed places?')) {
-      const reset = resetToSeedData();
+  const handleResetData = async () => {
+    if (window.confirm('Reset all TanAW pins to initial Cagayan de Oro seed places?')) {
+      const reset = await resetLocationsToSeed();
       setLocations(reset);
-      setSelectedLocation(reset[0] || null);
+      setSelectedLocation(null);
       announce('Database reset to Cagayan de Oro seed data.');
     }
   };
 
-  // Filter locations
-  const filteredLocations = useMemo(() => {
-    let result = [...locations];
+  const handleResetAllFilters = () => {
+    setActiveStatusTab('all');
+    setSearchQuery('');
+    setSelectedCategory('All');
+    setSelectedTags([]);
+    announce('All filters cleared.');
+  };
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (loc) =>
+  // Single Unified Filter Pipeline (List + Map always show the exact same places)
+  const filteredLocations = useMemo(() => {
+    return locations.filter((loc) => {
+      if (activeStatusTab === 'verified') {
+        const isVerified =
+          loc.tags.some((t) => t.confirmations >= 2 && t.confirmations > t.disputes) &&
+          loc.averageRating >= 4.0;
+        if (!isVerified) return false;
+      } else if (activeStatusTab === 'barriers') {
+        const hasBarriers =
+          (loc.aiBarriers && loc.aiBarriers.length > 0) ||
+          (loc.averageRating > 0 && loc.averageRating < 3.0);
+        if (!hasBarriers) return false;
+      }
+
+      if (selectedCategory !== 'All' && loc.category !== selectedCategory) {
+        return false;
+      }
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matches =
           loc.name.toLowerCase().includes(q) ||
           loc.address.toLowerCase().includes(q) ||
           loc.category.toLowerCase().includes(q) ||
-          loc.tags.some((t) => t.name.toLowerCase().includes(q))
-      );
-    }
+          loc.tags.some((t) => t.name.toLowerCase().includes(q));
+        if (!matches) return false;
+      }
 
-    if (selectedCategory !== 'All') {
-      result = result.filter((loc) => loc.category === selectedCategory);
-    }
-
-    if (selectedTags.length > 0) {
-      result = result.filter((loc) => {
+      if (selectedTags.length > 0) {
         const locTagNames = loc.tags.map((t) => t.name);
-        return selectedTags.every((t) => locTagNames.includes(t));
-      });
-    }
+        if (!selectedTags.every((t) => locTagNames.includes(t))) {
+          return false;
+        }
+      }
 
-    return result;
-  }, [locations, searchQuery, selectedCategory, selectedTags]);
+      return true;
+    });
+  }, [locations, activeStatusTab, selectedCategory, searchQuery, selectedTags]);
+
+  if (!currentUser) {
+    return (
+      <AuthGatePage
+        onAuthenticated={(user) => {
+          setCurrentUser(user);
+          announce(`Signed in as ${user.name}. Welcome to TanAW.`);
+        }}
+      />
+    );
+  }
 
   return (
-    <div className="flex h-screen w-screen bg-[#f1f5f9] text-slate-900 overflow-hidden font-sans">
-      {/* Far Left Navigation Rail (Matching Reference UI rail) */}
+    <div className="flex flex-col md:flex-row h-dvh w-screen bg-[#f1f5f9] text-slate-900 overflow-hidden font-sans">
+      {/* Left Navigation Sidebar */}
       <SidebarRail
-        activeTab={activeNavTab}
-        onTabChange={setActiveNavTab}
+        activeView={activeView}
+        onViewChange={setActiveView}
+        currentUser={currentUser}
+        onSignOut={() => {
+          setCurrentUserSession(null);
+          setCurrentUser(null);
+          announce('Signed out of TanAW.');
+        }}
         onOpenAIAnalyzer={() => {
           setAiTargetLocation(null);
           setIsAIModalOpen(true);
         }}
         onOpenAddModal={() => {
+          setActiveView('map');
           setIsAddingLocation(true);
           setNewPinCoords({ lat: 8.4822, lng: 124.6473 });
           setIsAddModalOpen(true);
         }}
-        onResetData={handleResetData}
         onToggleFilterPanel={() => setIsPlacesPanelOpen(!isPlacesPanelOpen)}
         isFilterPanelOpen={isPlacesPanelOpen}
+        isMobileOpen={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
+        onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
       />
 
-      {/* Floating / Docked Places Panel (Matching Reference UI "Packages" panel) */}
-      {!PROTOTYPE_ROUTES[activeNavTab] && (
+      {/* Docked (Desktop) / Full-Sheet (Mobile) Places Panel — visible when on Map view */}
+      {activeView === 'map' && (
         <PlacesPanel
           locations={filteredLocations}
           selectedLocation={selectedLocation}
-          onSelectLocation={(loc) => {
-            setSelectedLocation(loc);
-          }}
+          savedPlaceIds={savedPlaceIds}
+          onToggleSavePlace={handleToggleSavePlace}
+          onSelectLocation={(loc) => setSelectedLocation(loc)}
           onOpenDetails={(loc) => {
             setSelectedLocation(loc);
             setIsDetailDrawerOpen(true);
           }}
-          onRunAIScan={(loc) => {
-            setAiTargetLocation(loc);
-            setIsAIModalOpen(true);
-          }}
+          activeTab={activeStatusTab}
+          onTabChange={setActiveStatusTab}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           selectedCategory={selectedCategory}
@@ -376,97 +454,70 @@ function AccessMapApp() {
           userCoords={userCoords}
           onResetData={handleResetData}
           isOpen={isPlacesPanelOpen}
+          onCloseMobile={() => setIsPlacesPanelOpen(false)}
         />
       )}
 
-      {/* Main Map / Prototype Canvas Area */}
-      <main className="flex-1 h-full relative overflow-hidden bg-slate-200">
-        {PROTOTYPE_ROUTES[activeNavTab] ? (
-          <div className="w-full h-full flex flex-col bg-white">
-            {/* Top Navigation Banner */}
-            <div className="flex items-center justify-between px-5 py-3 bg-[#EAF3F7] border-b-2 border-[#0F172A] z-10 shrink-0">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setActiveNavTab('map')}
-                  className="px-3 py-1.5 rounded-xl bg-white border-[1.5px] border-[#0F172A] text-xs font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-1.5 cursor-pointer"
-                  title="Return to interactive map"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to Map</span>
-                </button>
-                <div>
-                  <h2 className="text-sm font-bold text-[#0F172A] leading-tight">
-                    {PROTOTYPE_ROUTES[activeNavTab].title}
-                  </h2>
-                  <p className="text-[11px] text-[#475569] hidden sm:block">
-                    {PROTOTYPE_ROUTES[activeNavTab].subtitle}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="hidden md:inline-flex text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#E7F2F0] text-[#21524B] border border-[#21524B]/30">
-                  External Repo Linked
-                </span>
-                <a
-                  href={PROTOTYPE_ROUTES[activeNavTab].url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-white border-[1.5px] border-[#0F172A] text-[11px] font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-1.5 cursor-pointer"
-                  title="Open this page in a separate full browser tab"
-                >
-                  <span>Open Fullscreen</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </div>
-
-            {/* Embedded Live Interface from Sibling Repo */}
-            <iframe
-              src={PROTOTYPE_ROUTES[activeNavTab].url}
-              title={PROTOTYPE_ROUTES[activeNavTab].title}
-              className="w-full flex-1 border-none bg-white"
-            />
-          </div>
+      {/* Main Content Area: Map, Community Hub, or Profile Hub */}
+      <main className="flex-1 min-h-0 h-full relative overflow-hidden bg-slate-200">
+        {activeView === 'profile' ? (
+          <ProfileHubView
+            currentUser={currentUser}
+            onUpdateUser={setCurrentUser}
+            locations={locations}
+            savedPlaceIds={savedPlaceIds}
+            onToggleSavePlace={handleToggleSavePlace}
+            userVotes={getStoredUserVotes()}
+            onSelectLocationOnMap={(loc) => {
+              setSelectedLocation(loc);
+              setActiveView('map');
+            }}
+          />
+        ) : activeView === 'community' ? (
+          <CommunityView
+            locations={locations}
+            currentUser={currentUser}
+            userVotesCount={Object.keys(getStoredUserVotes()).length}
+            onSelectLocationOnMap={(loc) => {
+              setSelectedLocation(loc);
+              setActiveView('map');
+            }}
+          />
         ) : (
-          <>
-            <MapView
-              locations={filteredLocations}
-              selectedLocation={selectedLocation}
-              onSelectLocation={(loc) => {
-                setSelectedLocation(loc);
-              }}
-              onOpenDetails={(loc) => {
-                setSelectedLocation(loc);
-                setIsDetailDrawerOpen(true);
-              }}
-              isAddingLocation={isAddingLocation}
-              newPinCoords={newPinCoords}
-              onNewPinCoordsChange={(coords) => {
-                setNewPinCoords(coords);
-                if (isAddingLocation) {
-                  setIsAddModalOpen(true);
-                }
-              }}
-            />
-
-            {/* Mobile toggle button for places panel */}
-            <button
-              type="button"
-              onClick={() => setIsPlacesPanelOpen(!isPlacesPanelOpen)}
-              className="md:hidden absolute bottom-24 right-5 z-[550] px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-full shadow-xl flex items-center gap-1.5 cursor-pointer"
-            >
-              <Layers className="w-4 h-4" />
-              <span>{isPlacesPanelOpen ? 'Hide List' : 'Show List'}</span>
-            </button>
-          </>
+          <MapView
+            locations={filteredLocations}
+            totalLocationsCount={locations.length}
+            selectedLocation={selectedLocation}
+            onSelectLocation={(loc) => setSelectedLocation(loc)}
+            onOpenDetails={(loc) => {
+              setSelectedLocation(loc);
+              setIsDetailDrawerOpen(true);
+            }}
+            isAddingLocation={isAddingLocation}
+            newPinCoords={newPinCoords}
+            onNewPinCoordsChange={(coords) => {
+              setNewPinCoords(coords);
+              if (isAddingLocation) {
+                setIsAddModalOpen(true);
+              }
+            }}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            onResetFilters={handleResetAllFilters}
+            onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
+            isPlacesPanelOpen={isPlacesPanelOpen}
+          />
         )}
 
         {/* Full Details Slide-out Drawer */}
         {isDetailDrawerOpen && (
           <LocationDetailDrawer
             location={selectedLocation}
+            currentUserName={currentUser.name}
+            isSaved={selectedLocation ? savedPlaceIds.includes(selectedLocation.id) : false}
+            onToggleSave={handleToggleSavePlace}
             onClose={() => setIsDetailDrawerOpen(false)}
             onVoteTag={handleVoteTag}
             onAddReview={handleAddReview}
@@ -477,7 +528,7 @@ function AccessMapApp() {
           />
         )}
 
-        {/* Add Location Modal */}
+        {/* Simplified Add Location Modal */}
         <AddLocationModal
           isOpen={isAddModalOpen}
           onClose={() => {
@@ -489,15 +540,11 @@ function AccessMapApp() {
           initialPhotoUrl={aiNewPinData?.photoUrl}
           initialAiSummary={aiNewPinData?.summary}
           initialAiBarriers={aiNewPinData?.barriers}
+          currentUserName={currentUser.name}
           onSaveLocation={handleSaveLocation}
-          onOpenStorefrontScanner={() => {
-            setIsAddModalOpen(false);
-            setAiTargetLocation(null);
-            setIsAIModalOpen(true);
-          }}
         />
 
-        {/* AI Storefront Analyzer Modal */}
+        {/* AI Storefront Analyzer Modal (triggered from Place Details) */}
         <AIStorefrontModal
           isOpen={isAIModalOpen}
           onClose={() => setIsAIModalOpen(false)}
@@ -506,7 +553,148 @@ function AccessMapApp() {
           onApplyTagsToLocation={handleApplyTagsToLocation}
           onStartNewPinFromAnalysis={handleStartNewPinFromAnalysis}
         />
+
+        {/* How TanAW Works Quick Guide Modal */}
+        <Modal
+          isOpen={isHowItWorksOpen}
+          onClose={() => setIsHowItWorksOpen(false)}
+          title="Welcome to TanAW"
+          subtitle="Crowdsourced Accessibility Mapping & Gemini AI Storefront Scanner"
+          maxWidthClassName="max-w-lg"
+          footer={
+            <button
+              type="button"
+              onClick={() => setIsHowItWorksOpen(false)}
+              className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold cursor-pointer"
+            >
+              Got it, start exploring
+            </button>
+          }
+        >
+          <div className="space-y-4 text-xs sm:text-sm text-slate-700">
+            <p className="leading-relaxed">
+              <strong>TanAW</strong> helps people with disabilities, seniors, and families navigate Cagayan de Oro and Mindanao with confidence. Here is how to use it in 3 steps:
+            </p>
+
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-bold text-slate-900">1. Check Pin Colors &amp; Verified Tags</h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    <strong className="text-emerald-700">Green pins (4.0★+)</strong> have community-verified ramps, elevators, or accessible entrances.{' '}
+                    <strong className="text-amber-700">Amber pins</strong> have partial access, and{' '}
+                    <strong className="text-rose-700">Red pins</strong> have reported physical barriers.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-200 flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-bold text-slate-900">2. Auto-Tag Storefront Photos with AI</h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    When pinning or reviewing a place, upload a storefront photo to let Gemini Vision automatically detect ramps, door width, and step barriers.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-bold text-slate-900">3. Vote Confirm or Dispute</h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Open any venue’s details drawer to confirm accurate accessibility tags, report barriers, or write a review.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
       </main>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav
+        aria-label="Mobile Primary Navigation"
+        className="md:hidden h-16 bg-white border-t border-slate-200 z-[650] grid grid-cols-5 items-center px-1 shrink-0 select-none"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setActiveView('map');
+            setIsPlacesPanelOpen(false);
+            setIsMobileMenuOpen(false);
+          }}
+          className={`h-full flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold cursor-pointer transition-colors ${
+            activeView === 'map' && !isPlacesPanelOpen
+              ? 'text-emerald-700'
+              : 'text-slate-500 hover:text-slate-900'
+          }`}
+        >
+          <MapPin className="w-5 h-5" />
+          <span>Map</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveView('map');
+            setIsPlacesPanelOpen(!isPlacesPanelOpen);
+            setIsMobileMenuOpen(false);
+          }}
+          className={`h-full flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold cursor-pointer transition-colors ${
+            activeView === 'map' && isPlacesPanelOpen
+              ? 'text-emerald-700'
+              : 'text-slate-500 hover:text-slate-900'
+          }`}
+        >
+          <List className="w-5 h-5" />
+          <span>Places ({filteredLocations.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveView('map');
+            setIsAddingLocation(true);
+            setNewPinCoords({ lat: 8.4822, lng: 124.6473 });
+            setIsAddModalOpen(true);
+            setIsPlacesPanelOpen(false);
+            setIsMobileMenuOpen(false);
+          }}
+          className="h-11 mx-1 rounded-2xl bg-slate-900 text-white flex flex-col items-center justify-center gap-0.5 text-[10px] font-extrabold shadow-md active:scale-95 transition-transform cursor-pointer"
+          aria-label="Pin a new accessible place"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Pin Place</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAiTargetLocation(null);
+            setIsAIModalOpen(true);
+            setIsMobileMenuOpen(false);
+          }}
+          className="h-full flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 cursor-pointer transition-colors"
+        >
+          <Sparkles className="w-5 h-5" />
+          <span>AI Scan</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className={`h-full flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold cursor-pointer transition-colors ${
+            isMobileMenuOpen ? 'text-emerald-700' : 'text-slate-500 hover:text-slate-900'
+          }`}
+          aria-expanded={isMobileMenuOpen}
+          aria-label="Open accessibility settings and help"
+        >
+          <Menu className="w-5 h-5" />
+          <span>Settings</span>
+        </button>
+      </nav>
     </div>
   );
 }
