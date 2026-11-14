@@ -328,3 +328,22 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
   - Added clear Vision, Target Audience, Core Values, and Stakeholder sections to improve onboarding.
   - Streamlined introductory description for brevity and impact.
 - **Impact**: Improves first‑time reader comprehension and aligns documentation with project goals.
+
+---
+
+## `2026-11-14 07:40:00` — Consolidated Single Top Menu Bar
+- **Event**: Merged multi-layer top headers for embedded sibling pages into one unified top menu row.
+- **Decisions**:
+  - Combined `Back to Map`, Page Title & Subtitle, `Report a barrier`, `+ Add a place`, `Messages`, `Notifications`, `External Repo Linked` badge, and `Open Fullscreen` into a single neo-brutalist header bar in `src/App.tsx`.
+  - Suppressed duplicate `<header class="top">` inside active embedded prototypes and added dynamic iframe onload style injection.
+  - Linked header actions (`Report a barrier`, `Add a place`) directly to prototype dialogs and toast alerts with fallback to parent modal controls.
+- **Impact**: Eliminates redundant stacked header rows across prototype views, saving vertical screen real estate and creating a clean, unified user interface.
+
+---
+
+## `2026-11-14 11:15:00` — Removed Floating Bottom Summary Card
+- **Event**: Removed `MapFloatingCard` overlay from the interactive map view.
+- **Decisions**:
+  - Unmounted `MapFloatingCard` and cleaned up unused `showSummaryCard` state and handlers in `src/components/MapView.tsx`.
+  - Kept location selection and search navigation directly delegated to the collapsible `PlacesPanel` and `LocationDetailDrawer`.
+- **Impact**: Removes the large card obscuring the bottom map area and preventing visual clutter during map navigation.

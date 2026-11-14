@@ -19,7 +19,6 @@ import {
   fetchAccessibleRoute,
 } from '../utils/routingAndSpatial';
 import { useA11y } from '../context/A11yContext';
-import { MapFloatingCard } from './MapFloatingCard';
 import {
   ACCESSIBILITY_QUICK_FILTERS,
   MapSearchFilterBar,
@@ -115,7 +114,6 @@ export const MapView: React.FC<MapViewProps> = ({
   const { highContrast, announce } = useA11y();
   const [isLocating, setIsLocating] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [showSummaryCard, setShowSummaryCard] = useState(false);
 
   // Viewport & Clustering state
   const [currentZoom, setCurrentZoom] = useState<number>(DEFAULT_ZOOM);
@@ -336,7 +334,6 @@ export const MapView: React.FC<MapViewProps> = ({
 
         marker.on('click', () => {
           onSelectLocation(loc);
-          setShowSummaryCard(true);
           announce(`Selected location: ${loc.name}, rated ${ratingText} stars.`);
         });
 
@@ -353,7 +350,6 @@ export const MapView: React.FC<MapViewProps> = ({
         Math.max(mapInstanceRef.current.getZoom(), 15),
         { duration: 0.8 }
       );
-      setShowSummaryCard(true);
     }
   }, [selectedLocation]);
 
@@ -597,27 +593,6 @@ export const MapView: React.FC<MapViewProps> = ({
     if (mapInstanceRef.current) mapInstanceRef.current.zoomOut();
   };
 
-  const activeCardLocation =
-    selectedLocation || (filteredLocations.length > 0 ? filteredLocations[0] : null);
-
-  const currentFilteredIndex = useMemo(() => {
-    if (!activeCardLocation) return 0;
-    const idx = filteredLocations.findIndex((l) => l.id === activeCardLocation.id);
-    return idx >= 0 ? idx : 0;
-  }, [activeCardLocation, filteredLocations]);
-
-  const handleNavigateRelative = (direction: 'prev' | 'next') => {
-    if (filteredLocations.length === 0) return;
-    const nextIdx =
-      direction === 'next'
-        ? (currentFilteredIndex + 1) % filteredLocations.length
-        : (currentFilteredIndex - 1 + filteredLocations.length) % filteredLocations.length;
-    const nextLoc = filteredLocations[nextIdx];
-    onSelectLocation(nextLoc);
-    setShowSummaryCard(true);
-    announce(`Viewing ${nextLoc.name} (${nextIdx + 1} of ${filteredLocations.length})`);
-  };
-
   return (
     <div className="relative w-full h-full flex flex-col bg-[#e5e5e5] overflow-hidden select-none">
       {/* Interactive Leaflet container */}
@@ -674,7 +649,6 @@ export const MapView: React.FC<MapViewProps> = ({
         totalLocationsCount={locations.length}
         onSelectLocationFromSearch={(loc) => {
           onSelectLocation(loc);
-          setShowSummaryCard(true);
         }}
         activeCityId={activeCity.id}
         onSelectCityPreset={handleSelectCityPreset}
@@ -858,22 +832,6 @@ export const MapView: React.FC<MapViewProps> = ({
             Click anywhere on the map or drag the gold marker to position your new location pin.
           </p>
         </div>
-      )}
-
-      {/* Floating Bottom Details Card */}
-      {showSummaryCard && activeCardLocation && !isAddingLocation && (
-        <MapFloatingCard
-          location={activeCardLocation}
-          onOpenDetails={onOpenDetails}
-          onClose={() => setShowSummaryCard(false)}
-          userCoords={userCoords}
-          activeRoute={activeRoute}
-          isRoutingLoading={isRoutingLoading}
-          onToggleRoutePreview={(loc) => handlePreviewRoute(loc)}
-          onNavigateRelative={handleNavigateRelative}
-          currentIndex={currentFilteredIndex}
-          totalFilteredCount={filteredLocations.length}
-        />
       )}
     </div>
   );

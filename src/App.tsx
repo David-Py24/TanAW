@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { A11yProvider, useA11y } from './context/A11yContext';
 import { SidebarRail } from './components/SidebarRail';
 import { PlacesPanel } from './components/PlacesPanel';
@@ -25,7 +25,17 @@ import {
   getStoredUserVotes,
   saveStoredUserVote,
 } from './utils/storage';
-import { MapPin, Sparkles, Plus, Layers, ArrowLeft, ExternalLink } from 'lucide-react';
+import {
+  MapPin,
+  Sparkles,
+  Plus,
+  Layers,
+  ArrowLeft,
+  ExternalLink,
+  Flag,
+  MessageSquare,
+  Bell,
+} from 'lucide-react';
 
 const PROTOTYPE_ROUTES: Record<string, { title: string; subtitle: string; url: string }> = {
   profile: {
@@ -113,6 +123,61 @@ function AccessMapApp() {
     summary?: string;
     barriers?: string[];
   } | null>(null);
+
+  // Prototype iframe ref & notification toast
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [notificationToast, setNotificationToast] = useState<string | null>(null);
+
+  // Top header actions for embedded prototypes
+  const handleReportBarrierFromHeader = () => {
+    try {
+      if (iframeRef.current?.contentDocument) {
+        const reportBtn = iframeRef.current.contentDocument.querySelector('#reportTop') as HTMLElement;
+        if (reportBtn) {
+          reportBtn.click();
+          return;
+        }
+      }
+    } catch {
+      // Cross-origin fallback
+    }
+    announce('Barrier reporting opens in the mobile app.');
+    setNotificationToast('Barrier reporting opens in the mobile app.');
+    setTimeout(() => setNotificationToast(null), 3000);
+  };
+
+  const handleAddPlaceFromHeader = () => {
+    try {
+      if (iframeRef.current?.contentDocument) {
+        const addBtn = iframeRef.current.contentDocument.querySelector('[data-open="dlg"]') as HTMLElement;
+        if (addBtn) {
+          addBtn.click();
+          return;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+    setIsAddingLocation(true);
+    setNewPinCoords({ lat: 8.4822, lng: 124.6473 });
+    setIsAddModalOpen(true);
+  };
+
+  const handleIframeLoad = () => {
+    try {
+      if (iframeRef.current?.contentDocument) {
+        const doc = iframeRef.current.contentDocument;
+        if (!doc.getElementById('accessmap-unified-header-style')) {
+          const style = doc.createElement('style');
+          style.id = 'accessmap-unified-header-style';
+          style.textContent = '.top { display: none !important; }';
+          doc.head.appendChild(style);
+        }
+      }
+    } catch (e) {
+      console.debug('Frame header style injection skipped:', e);
+    }
+  };
 
   // Helper to persist updates
   const updateAndSaveLocations = (updater: (prev: LocationPin[]) => LocationPin[]) => {
@@ -372,32 +437,94 @@ function AccessMapApp() {
       <main className="flex-1 h-full relative overflow-hidden bg-slate-200">
         {PROTOTYPE_ROUTES[activeNavTab] ? (
           <div className="w-full h-full flex flex-col bg-white">
-            {/* Top Navigation Banner */}
-            <div className="flex items-center justify-between px-5 py-3 bg-[#EAF3F7] border-b-2 border-[#0F172A] z-10 shrink-0">
-              <div className="flex items-center gap-3">
+            {/* Consolidated Single Top Menu Bar */}
+            <header className="flex items-center justify-between px-4 sm:px-6 py-2.5 bg-[#EAF3F7] border-b-2 border-[#0F172A] z-10 shrink-0 gap-3">
+              {/* Left: Back to Map & Page Identity */}
+              <div className="flex items-center gap-3 min-w-0">
                 <button
                   type="button"
                   onClick={() => setActiveNavTab('map')}
-                  className="px-3 py-1.5 rounded-xl bg-white border-[1.5px] border-[#0F172A] text-xs font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-white border-[1.5px] border-[#0F172A] text-xs font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
                   title="Return to interactive map"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to Map</span>
+                  <span className="hidden sm:inline">Back to Map</span>
                 </button>
-                <div>
-                  <h2 className="text-sm font-bold text-[#0F172A] leading-tight">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-bold text-[#0F172A] leading-tight truncate">
                     {PROTOTYPE_ROUTES[activeNavTab].title}
                   </h2>
-                  <p className="text-[11px] text-[#475569] hidden sm:block">
+                  <p className="text-[11px] text-[#475569] hidden md:block truncate">
                     {PROTOTYPE_ROUTES[activeNavTab].subtitle}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="hidden md:inline-flex text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#E7F2F0] text-[#21524B] border border-[#21524B]/30">
+              {/* Right: Consolidated Action Controls */}
+              <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                {/* Report a barrier */}
+                <button
+                  type="button"
+                  onClick={handleReportBarrierFromHeader}
+                  className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer"
+                  title="Report an accessibility barrier"
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                  <span>Report a barrier</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
+                </button>
+
+                {/* Add a place */}
+                <button
+                  type="button"
+                  onClick={handleAddPlaceFromHeader}
+                  className="px-3 py-1.5 rounded-full bg-white border-[1.8px] border-[#0F172A] text-xs font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-1.5 cursor-pointer"
+                  title="Add a place"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add a place</span>
+                </button>
+
+                {/* Messages */}
+                <button
+                  type="button"
+                  onClick={() => setActiveNavTab('messages')}
+                  className={`w-8 h-8 rounded-full border-[1.5px] flex items-center justify-center transition-all cursor-pointer ${
+                    activeNavTab === 'messages'
+                      ? 'border-[#0F172A] bg-[#21524B] text-white shadow-[0_2px_0_#0F172A]'
+                      : 'border-transparent text-[#475569] hover:border-[#0F172A] hover:bg-white hover:text-[#0F172A]'
+                  }`}
+                  title="Messages"
+                  aria-label="Messages"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
+
+                {/* Notifications */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    announce('You are all caught up on notifications.');
+                    setNotificationToast('You are all caught up on notifications.');
+                    setTimeout(() => setNotificationToast(null), 3000);
+                  }}
+                  className="w-8 h-8 rounded-full border-[1.5px] border-transparent text-[#475569] hover:border-[#0F172A] hover:bg-white hover:text-[#0F172A] flex items-center justify-center transition-all cursor-pointer relative"
+                  title="Notifications"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EF4444] border border-white" />
+                </button>
+
+                {/* Divider */}
+                <div className="h-5 w-[1.5px] bg-[#0F172A]/20 mx-0.5 hidden lg:block" />
+
+                {/* External Repo Linked Badge */}
+                <span className="hidden lg:inline-flex text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#E7F2F0] text-[#21524B] border border-[#21524B]/30">
                   External Repo Linked
                 </span>
+
+                {/* Fullscreen Button */}
                 <a
                   href={PROTOTYPE_ROUTES[activeNavTab].url}
                   target="_blank"
@@ -405,18 +532,27 @@ function AccessMapApp() {
                   className="px-3 py-1.5 rounded-xl bg-white border-[1.5px] border-[#0F172A] text-[11px] font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-1.5 cursor-pointer"
                   title="Open this page in a separate full browser tab"
                 >
-                  <span>Open Fullscreen</span>
+                  <span className="hidden sm:inline">Open Fullscreen</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
-            </div>
+            </header>
 
             {/* Embedded Live Interface from Sibling Repo */}
             <iframe
+              ref={iframeRef}
+              onLoad={handleIframeLoad}
               src={PROTOTYPE_ROUTES[activeNavTab].url}
               title={PROTOTYPE_ROUTES[activeNavTab].title}
               className="w-full flex-1 border-none bg-white"
             />
+
+            {/* Notification Toast */}
+            {notificationToast && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0F172A] text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg border border-slate-700 pointer-events-none">
+                {notificationToast}
+              </div>
+            )}
           </div>
         ) : (
           <>
