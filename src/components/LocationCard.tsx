@@ -5,10 +5,10 @@
 
 import React from 'react';
 import { LocationPin } from '../types/accessibility';
-import { calculateDistanceKm } from '../utils/storage';
+import { calculateDistanceKm, getVenuePatronPerk } from '../utils/storage';
 import { getTagIcon } from '../utils/tagHelpers';
 import { Badge } from './ui/Badge';
-import { ArrowRight, Bookmark } from 'lucide-react';
+import { ArrowRight, Bookmark, Ticket } from 'lucide-react';
 
 interface LocationCardProps {
   location: LocationPin;
@@ -55,6 +55,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   };
 
   const topTags = location.tags.slice(0, 2);
+  const patronPerk = getVenuePatronPerk(location);
 
   return (
     <article
@@ -125,6 +126,14 @@ export const LocationCard: React.FC<LocationCardProps> = ({
               +{location.tags.length - 2}
             </span>
           )}
+        </div>
+      )}
+
+      {/* TanAW Verified Accessible Business Seal + Patron Voucher preview */}
+      {patronPerk && (
+        <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] font-bold">
+          <Ticket className="w-3 h-3 text-emerald-700 shrink-0" />
+          <span className="truncate">Patron Voucher: {patronPerk.code}</span>
         </div>
       )}
 

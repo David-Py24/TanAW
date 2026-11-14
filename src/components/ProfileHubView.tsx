@@ -11,6 +11,8 @@ import {
   getCommunityMessages,
   sendCommunityMessage,
   updateUserProfile,
+  getClaimedVouchers,
+  getUserBadges,
 } from '../utils/storage';
 import {
   User,
@@ -26,6 +28,9 @@ import {
   Trash2,
   ArrowRight,
   Check,
+  Ticket,
+  Award,
+  Copy,
 } from 'lucide-react';
 
 export type ProfileSubTab = 'account' | 'contributions' | 'saved' | 'messages';
@@ -102,6 +107,21 @@ export const ProfileHubView: React.FC<ProfileHubViewProps> = ({
       .filter((item): item is NonNullable<typeof item> => item !== null);
   }, [userVotes, locations]);
 
+  const claimedVouchers = useMemo(() => getClaimedVouchers(currentUser.id), [currentUser.id, subTab]);
+  const userBadges = useMemo(
+    () => getUserBadges(currentUser.role, userReviews.length, userVotesList.length, true),
+    [currentUser.role, userReviews.length, userVotesList.length]
+  );
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const handleCopyVoucher = (code: string) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    }
+  };
+
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameInput.trim()) return;
@@ -128,45 +148,65 @@ export const ProfileHubView: React.FC<ProfileHubViewProps> = ({
     <div className="w-full h-full overflow-y-auto bg-[#f8fafc] p-4 sm:p-8 select-none">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Top Profile Header Card */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-800 text-white font-extrabold text-2xl grid place-items-center shrink-0 uppercase shadow-xs">
-              {currentUser.name.charAt(0)}
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                  {currentUser.name}
-                </h1>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {currentUser.role}
-                </span>
+        <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-800 text-white font-extrabold text-2xl grid place-items-center shrink-0 uppercase shadow-xs">
+                {currentUser.name.charAt(0)}
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{currentUser.email}</p>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                    {currentUser.name}
+                  </h1>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    {currentUser.role}
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{currentUser.email}</p>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-center">
+              <div className="px-2">
+                <span className="block text-lg font-extrabold text-slate-900">
+                  {userReviews.length}
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500">Reviews/Pins</span>
+              </div>
+              <div className="px-2 border-x border-slate-200">
+                <span className="block text-lg font-extrabold text-slate-900">
+                  {userVotesList.length}
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500">Tag Votes</span>
+              </div>
+              <div className="px-2">
+                <span className="block text-lg font-extrabold text-emerald-700">
+                  {claimedVouchers.length}
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500">Vouchers</span>
+              </div>
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-center">
-            <div className="px-2">
-              <span className="block text-lg font-extrabold text-slate-900">
-                {userReviews.length}
+          {/* Unlocked Contributor Badges */}
+          <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-slate-600 flex items-center gap-1">
+              <Award className="w-4 h-4 text-indigo-600" />
+              <span>Unlocked Badges:</span>
+            </span>
+            {userBadges.map((b) => (
+              <span
+                key={b.id}
+                title={b.description}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-bold ${b.colorClass}`}
+              >
+                <ShieldCheck className="w-3 h-3" />
+                {b.label}
               </span>
-              <span className="text-[11px] font-semibold text-slate-500">Reviews/Pins</span>
-            </div>
-            <div className="px-2 border-x border-slate-200">
-              <span className="block text-lg font-extrabold text-slate-900">
-                {userVotesList.length}
-              </span>
-              <span className="text-[11px] font-semibold text-slate-500">Tag Votes</span>
-            </div>
-            <div className="px-2">
-              <span className="block text-lg font-extrabold text-slate-900">
-                {savedLocations.length}
-              </span>
-              <span className="text-[11px] font-semibold text-slate-500">Saved</span>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -314,6 +354,64 @@ export const ProfileHubView: React.FC<ProfileHubViewProps> = ({
         {/* 2. CONTRIBUTION HISTORY TAB */}
         {subTab === 'contributions' && (
           <div className="space-y-6">
+            {/* Claimed Partner & AI Vouchers Wallet */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Ticket className="w-5 h-5 text-emerald-600" />
+                  <h2 className="text-base font-bold text-slate-900">
+                    Your Claimed Partner &amp; AI Vouchers ({claimedVouchers.length})
+                  </h2>
+                </div>
+                <span className="text-xs text-slate-400">Redeem more in Community Hub</span>
+              </div>
+
+              {claimedVouchers.length === 0 ? (
+                <p className="text-xs sm:text-sm text-slate-500 py-3">
+                  You haven’t redeemed any partner or AI vouchers yet. Visit the <strong>Community</strong> tab to spend your Impact Score on local discounts and AI audit credits!
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {claimedVouchers.map((v) => (
+                    <div
+                      key={v.code}
+                      className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between gap-2.5"
+                    >
+                      <div>
+                        <span className="text-[11px] font-bold text-emerald-800">
+                          {v.partner}
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-900">{v.title}</h3>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-white border border-emerald-200 rounded-xl px-3 py-1.5">
+                        <span className="font-mono text-xs font-extrabold text-emerald-900">
+                          {v.code}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyVoucher(v.code)}
+                          className="text-emerald-800 hover:text-emerald-950 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          {copiedCode === v.code ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Code</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Pinned Places & Reviews */}
             <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
               <h2 className="text-base font-bold text-slate-900">

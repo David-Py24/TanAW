@@ -31,6 +31,7 @@ import {
   loadLocations,
   saveLocations,
   getStoredUserVotes,
+  getStoredVoteWeight,
   saveStoredUserVote,
 } from './utils/storage';
 import {
@@ -176,8 +177,14 @@ function AccessMapApp() {
     }
   }, [locations]);
 
-  // Community Voting (Confirm / Dispute)
+  // Community Voting (Confirm / Dispute) — Verified PWD / Caregiver roles carry 2x verification weight
   const handleVoteTag = (pinId: string, tagName: string, vote: 'confirm' | 'dispute') => {
+    const newWeight =
+      currentUser?.role === 'PWD Member / Advocate' || currentUser?.role === 'Caregiver / Family'
+        ? 2
+        : 1;
+    const prevWeight = getStoredVoteWeight(pinId, tagName);
+
     updateAndSaveLocations((prev) =>
       prev.map((loc) => {
         if (loc.id !== pinId) return loc;
@@ -191,19 +198,19 @@ function AccessMapApp() {
             const prevVote = tag.userVoted;
 
             if (prevVote === vote) {
-              if (vote === 'confirm') conf = Math.max(0, conf - 1);
-              if (vote === 'dispute') disp = Math.max(0, disp - 1);
+              if (vote === 'confirm') conf = Math.max(0, conf - prevWeight);
+              if (vote === 'dispute') disp = Math.max(0, disp - prevWeight);
               saveStoredUserVote(pinId, tagName, null);
               return { ...tag, confirmations: conf, disputes: disp, userVoted: undefined };
             }
 
-            if (prevVote === 'confirm') conf = Math.max(0, conf - 1);
-            if (prevVote === 'dispute') disp = Math.max(0, disp - 1);
+            if (prevVote === 'confirm') conf = Math.max(0, conf - prevWeight);
+            if (prevVote === 'dispute') disp = Math.max(0, disp - prevWeight);
 
-            if (vote === 'confirm') conf += 1;
-            if (vote === 'dispute') disp += 1;
+            if (vote === 'confirm') conf += newWeight;
+            if (vote === 'dispute') disp += newWeight;
 
-            saveStoredUserVote(pinId, tagName, vote);
+            saveStoredUserVote(pinId, tagName, vote, newWeight);
             return { ...tag, confirmations: conf, disputes: disp, userVoted: vote };
           }),
         };

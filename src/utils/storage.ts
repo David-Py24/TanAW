@@ -12,6 +12,183 @@ const CURRENT_USER_KEY = 'accessmap_current_user_v1';
 const USERS_LIST_KEY = 'accessmap_registered_users_v1';
 const SAVED_PLACES_KEY = 'accessmap_saved_places_v1';
 const MESSAGES_KEY = 'accessmap_community_messages_v1';
+const VOUCHERS_KEY = 'tanaw_claimed_vouchers_v1';
+
+export interface RewardVoucher {
+  id: string;
+  title: string;
+  partner: string;
+  description: string;
+  costPoints: number;
+  codePrefix: string;
+  badgeText: string;
+}
+
+export interface ClaimedVoucher {
+  voucherId: string;
+  title: string;
+  partner: string;
+  code: string;
+  claimedAt: string;
+  costPoints: number;
+}
+
+export interface ContributorBadge {
+  id: string;
+  label: string;
+  description: string;
+  colorClass: string;
+}
+
+export const REWARD_VOUCHERS: RewardVoucher[] = [
+  {
+    id: 'vch-iligan-cafe',
+    title: '₱50 Off + Free Upsize Voucher',
+    partner: 'Inclusive Cafés (Iligan & CDO Partner Network)',
+    description: 'Stackable on top of your statutory 20% PWD/Senior discount at TanAW-verified step-free cafés.',
+    costPoints: 40,
+    codePrefix: 'TANAW-CAFE',
+    badgeText: 'Dining Perk',
+  },
+  {
+    id: 'vch-pharmacy-pass',
+    title: 'Free Priority Medicine Delivery Pass',
+    partner: 'Mindanao Accessible Pharmacy Partners',
+    description: 'Zero delivery fee for prescription & maintenance medicine orders within Iligan City & CDO.',
+    costPoints: 60,
+    codePrefix: 'TANAW-MEDS',
+    badgeText: 'Healthcare',
+  },
+  {
+    id: 'vch-ai-audit-credit',
+    title: 'AI Storefront Certification Credit',
+    partner: 'TanAW Business Accessibility Program',
+    description: 'Sponsor or claim a priority Gemini AI Storefront Accessibility Seal for a local Mindanao shop.',
+    costPoints: 50,
+    codePrefix: 'TANAW-AISEAL',
+    badgeText: 'AI Voucher',
+  },
+  {
+    id: 'vch-ride-assist',
+    title: '₱40 Step-Free Ride / Tricycle Assist Rebate',
+    partner: 'Mindanao Inclusive Commute Initiative',
+    description: 'Fare discount voucher for accessible terminal drop-offs at verified hospitals and public hubs.',
+    costPoints: 75,
+    codePrefix: 'TANAW-RIDE',
+    badgeText: 'Transport',
+  },
+];
+
+export function getClaimedVouchers(userId: string): ClaimedVoucher[] {
+  try {
+    const raw = localStorage.getItem(`${VOUCHERS_KEY}_${userId}`);
+    return raw ? (JSON.parse(raw) as ClaimedVoucher[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function claimRewardVoucher(userId: string, voucher: RewardVoucher): ClaimedVoucher[] {
+  const current = getClaimedVouchers(userId);
+  const existing = current.find((c) => c.voucherId === voucher.id);
+  if (existing) return current;
+
+  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+  const claimed: ClaimedVoucher = {
+    voucherId: voucher.id,
+    title: voucher.title,
+    partner: voucher.partner,
+    code: `${voucher.codePrefix}-${randomSuffix}`,
+    claimedAt: new Date().toISOString().split('T')[0],
+    costPoints: voucher.costPoints,
+  };
+  const next = [claimed, ...current];
+  try {
+    localStorage.setItem(`${VOUCHERS_KEY}_${userId}`, JSON.stringify(next));
+  } catch (e) {
+    console.error('Failed to save claimed voucher:', e);
+  }
+  return next;
+}
+
+export function getUserBadges(
+  role: string,
+  reviewsCount: number,
+  votesCount: number,
+  hasAiScans = true
+): ContributorBadge[] {
+  const badges: ContributorBadge[] = [];
+
+  if (role === 'PWD Member / Advocate' || role === 'Caregiver / Family') {
+    badges.push({
+      id: 'lived-exp',
+      label: '2x PWD Trust Weight',
+      description: 'Verified PWD / Caregiver — tag confirmations carry 2x verification weight.',
+      colorClass: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    });
+  }
+
+  if (hasAiScans) {
+    badges.push({
+      id: 'ai-pioneer',
+      label: 'AI Vision Pioneer',
+      description: 'Uses Gemini Vision AI to inspect entrances, steps, and ramps.',
+      colorClass: 'bg-indigo-100 text-indigo-900 border-indigo-300',
+    });
+  }
+
+  if (votesCount >= 1 || reviewsCount >= 1) {
+    badges.push({
+      id: 'ramp-scout',
+      label: 'Ramp & Curb Scout',
+      description: 'Actively confirms step-free entrances and accessibility tags across Mindanao.',
+      colorClass: 'bg-amber-100 text-amber-900 border-amber-300',
+    });
+  }
+
+  badges.push({
+    id: 'trailblazer',
+    label: 'Iligan & Mindanao Mapper',
+    description: 'Verified contributor building a troll-free accessibility map.',
+    colorClass: 'bg-sky-100 text-sky-900 border-sky-300',
+  });
+
+  return badges;
+}
+
+export function getVenuePatronPerk(location: LocationPin): {
+  sealTitle: string;
+  offer: string;
+  code: string;
+} | null {
+  const hasVerifiedTags = location.tags.some(
+    (t) => t.confirmations >= 2 && t.confirmations > t.disputes
+  );
+  const isQualifying =
+    location.averageRating >= 4.0 && (hasVerifiedTags || Boolean(location.aiSummary));
+
+  if (!isQualifying) return null;
+
+  if (location.category === 'Dining & Cafe') {
+    return {
+      sealTitle: 'TanAW Verified Accessible Seal',
+      offer: 'Free drink upsize or extra 5% patron perk on top of your 20% PWD/Senior discount.',
+      code: 'TANAW-DINE5',
+    };
+  }
+  if (location.category === 'Healthcare') {
+    return {
+      sealTitle: 'TanAW Verified Accessible Seal',
+      offer: 'Priority step-free courtesy lane & zero-step drop-off assistance.',
+      code: 'TANAW-CARE',
+    };
+  }
+  return {
+    sealTitle: 'TanAW Verified Accessible Seal',
+    offer: 'Verified step-free entrance + priority PWD/Senior courtesy assistance at reception.',
+    code: 'TANAW-ACCESS',
+  };
+}
 
 export interface AuthUser {
   id: string;
@@ -254,6 +431,8 @@ export function resetToSeedData(): LocationPin[] {
   return INITIAL_LOCATIONS;
 }
 
+const VOTE_WEIGHTS_KEY = 'accessmap_user_vote_weights_v1';
+
 export function getStoredUserVotes(): Record<string, 'confirm' | 'dispute'> {
   try {
     const raw = localStorage.getItem(VOTES_KEY);
@@ -263,16 +442,36 @@ export function getStoredUserVotes(): Record<string, 'confirm' | 'dispute'> {
   }
 }
 
-export function saveStoredUserVote(pinId: string, tagName: string, vote: 'confirm' | 'dispute' | null): void {
+export function getStoredVoteWeight(pinId: string, tagName: string): number {
+  try {
+    const raw = localStorage.getItem(VOTE_WEIGHTS_KEY);
+    const weights: Record<string, number> = raw ? JSON.parse(raw) : {};
+    return weights[`${pinId}__${tagName}`] || 1;
+  } catch {
+    return 1;
+  }
+}
+
+export function saveStoredUserVote(
+  pinId: string,
+  tagName: string,
+  vote: 'confirm' | 'dispute' | null,
+  weight = 1
+): void {
   try {
     const votes = getStoredUserVotes();
+    const rawWeights = localStorage.getItem(VOTE_WEIGHTS_KEY);
+    const weights: Record<string, number> = rawWeights ? JSON.parse(rawWeights) : {};
     const key = `${pinId}__${tagName}`;
     if (vote === null) {
       delete votes[key];
+      delete weights[key];
     } else {
       votes[key] = vote;
+      weights[key] = weight;
     }
     localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
+    localStorage.setItem(VOTE_WEIGHTS_KEY, JSON.stringify(weights));
   } catch (e) {
     console.error('Failed to save vote', e);
   }
