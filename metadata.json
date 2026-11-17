@@ -1,5 +1,5 @@
 {
-  "name": "AccessMap - Crowdsourced Accessibility Map & AI Storefront Analyzer",
+  "name": "TanAW - Crowdsourced Accessibility Map & AI Storefront Analyzer",
   "description": "Crowdsourced accessibility mapping platform for Cagayan de Oro with community-rated accessibility tags and Gemini AI storefront analysis.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Messages • AccessMap</title>
+<title>Messages • TanAW</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F5FAFD;--soft:#EAF3F7;--ink:#0F172A;--mute:#475569;--line:#0F172A;--accent:#21524B;--accent-hover:#2B6860;--accent-deep:#13332E;--accent-light:#E7F2F0;--card:#fff;--grid:#D5E5EC;--amber:#F59E0B;--red:#EF4444;--blue:#3B82F6;--shadow-line:0 3px 0 var(--line);--shadow-hover:0 5px 0 var(--line);--side:248px}
@@ -257,7 +257,7 @@ dialog .row{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
 <div class="bg"><i></i></div>
 <div class="app">
 <aside class="side">
-  <div class="brand"><div class="logo"><div class="logo-mark"><svg class="i "><use href="#i-pin"/></svg></div><span>AccessMap</span></div>
+  <div class="brand"><div class="logo"><div class="logo-mark"><svg class="i "><use href="#i-pin"/></svg></div><span>TanAW</span></div>
   <button class="icon-btn" id="collapse" aria-label="Collapse sidebar"><svg class="i "><use href="#i-sidebar"/></svg></button></div>
   <button class="ws" type="button"><span class="av">AD</span><div><b>My workspace</b><small>Alex David</small></div><svg class="i "><use href="#i-chev"/></svg></button>
   <a class="nav" href="community.html" title="Community"><svg class="i"><use href="#i-globe"/></svg><span>Community</span><span class="beta">BETA</span></a>
@@ -340,7 +340,7 @@ let C=[
 {id:'dg',n:'Downtown South audit',ini:'DS',c:'d g',role:'Group · 5 members',grp:1,on:0,un:0,pl:'dts',time:'Mon',
  m:[['t','Meet at the Maharlika Bridge side at 8?','Mon'],['t','I’ll bring the slope gauge.','Mon'],['m','Count me in. I’ll take the photos for the AI audit.','Mon']],
  r:['Great, see everyone Saturday.','Remember to charge your phones.']},
-{id:'ai',n:'AccessMap AI',ini:'AI',c:'',role:'Vision model v3.4',on:1,un:0,pl:null,time:'Mon',
+{id:'ai',n:'TanAW AI',ini:'AI',c:'',role:'Vision model v3.4',on:1,un:0,pl:null,time:'Mon',
  m:[['t','Scan finished for Storefront #4092 in under 2 seconds.','Mon'],['t',{scan:1},'Mon'],['t','Ramp: 1:12 incline (pass). Door: 36" auto-sensor (pass).','Mon']],
  r:['Upload another storefront photo and I’ll audit it.']},
 {id:'ct',n:'CivicTech Lab',ini:'CT',c:'d',role:'Partner',on:0,un:0,pl:null,time:'Sun',
@@ -360,7 +360,7 @@ function list(){
 function bub(m){
   const [w,x,t]=m,me=w==='m';
   if(typeof x==='object'&&x.pl){const p=PLC[x.pl];return `<div class="bub card2 ${me?'me':''}"><strong>${esc(p.n)}</strong><span class="tagv ${tier(p.s)}" style="margin:6px 0 0 8px">${sm(p.s>=4?'check':'flag',11)}${p.s.toFixed(1)} ★ ${lbl(p.s)}</span><div class="chips">${p.tags.map(t=>`<span class="tc on">${t}</span>`).join('')}</div><small>${esc(p.sub)}</small></div>`}
-  if(typeof x==='object'&&x.scan)return `<div class="bub card2"><strong>Storefront AI audit</strong><div class="scan">${SCAN.map(s=>`<div><span class="ck">${icon('check')}</span>${s[0]}<em>${s[1]} match</em></div>`).join('')}</div><small>AccessMap AI · Model v3.4</small></div>`;
+  if(typeof x==='object'&&x.scan)return `<div class="bub card2"><strong>Storefront AI audit</strong><div class="scan">${SCAN.map(s=>`<div><span class="ck">${icon('check')}</span>${s[0]}<em>${s[1]} match</em></div>`).join('')}</div><small>TanAW AI · Model v3.4</small></div>`;
   return `<div class="bub ${me?'me':''}">${esc(x)}<small>${t}</small></div>`;
 }
 function thread(){

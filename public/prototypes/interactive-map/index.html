@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interactive Map Engine • AccessMap Mindanao & CDO</title>
+  <title>Interactive Map Engine • TanAW Mindanao & CDO</title>
   <link rel="icon" type="image/png" href="./Assets/favicon.png" />
 
   <!-- Tailwind CSS CDN -->
@@ -43,6 +43,10 @@
       background: none !important;
       border: none !important;
     }
+    .custom-pin-marker:hover .accessmap-pin-img {
+      content: url('./Assets/logo-green.png') !important;
+      filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.8));
+    }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -74,35 +78,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 overflow-hidden relative select-none">
 
-  <!-- Top-Left Dynamic City Watermark & Service Status -->
-  <header class="absolute top-4 left-4 z-20 flex flex-col gap-1.5 pointer-events-none">
-    <div class="flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-700/80 shadow-2xl pointer-events-auto">
-      <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-extrabold text-emerald-400 text-sm shrink-0">
-        AM
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 id="header-city-name" class="text-base sm:text-lg font-extrabold tracking-tight text-white leading-none">
-            Mindanao Island
-          </h1>
-          <span class="text-[10px] uppercase font-bold tracking-wider bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
-            Live Engine
-          </span>
-        </div>
-        <p id="header-city-subtitle" class="text-[11px] text-slate-400 font-medium mt-0.5">
-          All Regions • <span id="header-venue-count">37</span> Accessible Venues
-        </p>
-      </div>
-    </div>
-
-    <div class="hidden sm:flex items-center gap-1.5 pl-1">
-      <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-900/90 backdrop-blur-md text-emerald-300 border border-slate-700/80 shadow-lg pointer-events-auto flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-        <span>OpenStreetMap + Leaflet</span>
-        <span class="text-slate-400 font-normal" id="header-zoom-badge">| Zoom 7</span>
-      </span>
-    </div>
-  </header>
+  <!-- Center-Top Floating Search, Category & Accessibility Filter HUD -->
 
   <!-- Center-Top Floating Search, Category & Accessibility Filter HUD -->
   <section
@@ -200,8 +176,8 @@
     </div>
   </section>
 
-  <!-- Top-Right Map Layer, Proximity Radar & GPS Controls -->
-  <aside class="absolute top-4 right-4 z-20 flex items-center gap-2">
+  <!-- Map Controls Relocated to Bottom Right -->
+  <aside class="absolute bottom-6 right-6 z-20 flex items-center flex-wrap-reverse justify-end gap-2">
     <!-- Map Style Dropdown -->
     <div class="relative">
       <button
@@ -214,7 +190,7 @@
         <span id="active-layer-label" class="hidden lg:inline">Standard OSM</span>
       </button>
 
-      <div id="layer-menu" class="hidden absolute top-12 right-0 w-56 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-700/90 shadow-2xl p-2 flex flex-col gap-1 z-50">
+      <div id="layer-menu" class="hidden absolute bottom-12 right-0 w-56 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-700/90 shadow-2xl p-2 flex flex-col gap-1 z-50">
         <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 pt-1">
           Open-Source Map Style
         </div>
@@ -246,7 +222,7 @@
         <span id="radar-status-label" class="hidden md:inline">Radar</span>
       </button>
 
-      <div id="radar-menu" class="hidden absolute top-12 right-0 w-60 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-700/90 shadow-2xl p-2.5 flex flex-col gap-1 z-50">
+      <div id="radar-menu" class="hidden absolute bottom-12 right-0 w-60 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-700/90 shadow-2xl p-2.5 flex flex-col gap-1 z-50">
         <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 pt-0.5">
           GPS Proximity Radius Ring
         </div>
@@ -843,47 +819,62 @@
           display: flex;
           flex-direction: column;
           align-items: center;
-          transform: ${isSelected ? 'scale(1.2) translateY(-4px)' : 'scale(1)'};
+          transform: ${isSelected ? 'scale(1.18) translateY(-4px)' : 'scale(1)'};
           transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
           cursor: pointer;
         ">
           <div style="
             position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 14px 14px 14px 4px;
-            transform: rotate(-45deg);
-            background: ${tier.hex};
-            border: ${isSelected ? '3px solid #0f172a' : '2.5px solid #ffffff'};
-            box-shadow: ${isSelected ? '0 10px 24px rgba(0,0,0,0.5), 0 0 0 3px #ffffff' : '0 6px 14px rgba(0,0,0,0.35)'};
+            width: 38px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
+            filter: ${isSelected ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.5))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'};
           ">
             ${isSelected ? `<span class="pin-pulse-ring" style="position:absolute;inset:-8px;border-radius:9999px;border:3px solid ${tier.hex};pointer-events:none;"></span>` : ''}
+            <!-- Official Location Pin Icon (Switches to Green on hover or when selected) -->
+            <img
+              src="${isSelected ? './Assets/logo-green.png' : './Assets/logo-dark.png'}"
+              alt="Location Pin"
+              class="accessmap-pin-img"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                pointer-events: none;
+                transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+              "
+            />
+            <!-- Inner Category & Accessibility Rating Token in center aperture -->
             <div style="
-              transform: rotate(45deg);
-              width: 26px;
-              height: 26px;
+              position: absolute;
+              top: 6px;
+              left: 50%;
+              transform: translateX(-50%);
+              width: 20px;
+              height: 20px;
               border-radius: 9999px;
-              background: #ffffff;
-              color: ${tier.hex};
+              background: ${tier.hex};
+              border: 1.5px solid #ffffff;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.25);
               display: flex;
               align-items: center;
               justify-content: center;
+              color: #ffffff;
             ">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 ${svgInner}
               </svg>
             </div>
-            ${isVerified ? `<span style="transform:rotate(45deg);position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:9999px;background:#bef264;color:#0f172a;border:2px solid #0f172a;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;">✓</span>` : ''}
+            ${isVerified ? `<span style="position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:9999px;background:#bef264;color:#0f172a;border:2px solid #0f172a;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;box-shadow:0 2px 4px rgba(0,0,0,0.25);" title="Community Verified">✓</span>` : ''}
           </div>
           ${(showPill || isSelected) ? `
             <div style="
               margin-top: 2px;
               padding: 1px 6px;
               border-radius: 9999px;
-              background: rgba(15, 23, 42, 0.94);
+              background: ${isSelected ? '#0f172a' : 'rgba(15, 23, 42, 0.94)'};
               color: #ffffff;
               font-size: 10px;
               font-weight: 800;

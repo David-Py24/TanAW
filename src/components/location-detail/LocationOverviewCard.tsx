@@ -11,9 +11,13 @@ import { MapPin, ExternalLink } from 'lucide-react';
 
 interface LocationOverviewCardProps {
   location: LocationPin;
+  onTogglePin?: (pinId: string) => void;
 }
 
-export const LocationOverviewCard: React.FC<LocationOverviewCardProps> = ({ location }) => {
+export const LocationOverviewCard: React.FC<LocationOverviewCardProps> = ({
+  location,
+  onTogglePin,
+}) => {
   const ratingMeta = getRatingColor(location.averageRating, location.totalReviews);
 
   return (
@@ -52,6 +56,44 @@ export const LocationOverviewCard: React.FC<LocationOverviewCardProps> = ({ loca
           <span>Directions</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
+      </div>
+
+      {/* Pin Count & Community Interest Banner */}
+      <div className="bg-emerald-50/80 p-3.5 rounded-xl border border-emerald-200 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+            📌
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs font-bold text-emerald-950 flex items-center gap-1.5 flex-wrap">
+              <span>Pinned by {location.pinCount ?? 1} {location.pinCount === 1 ? 'user' : 'users'}</span>
+              {location.isPinnedByMe && (
+                <span className="text-[10px] bg-emerald-700 text-white font-extrabold px-1.5 py-0.2 rounded-full">
+                  PINNED BY YOU
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-emerald-700 font-medium truncate mt-0.5">
+              Community interest and bookmark indicator
+            </p>
+          </div>
+        </div>
+
+        {onTogglePin && (
+          <button
+            type="button"
+            onClick={() => onTogglePin(location.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 shrink-0 shadow-2xs ${
+              location.isPinnedByMe
+                ? 'bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-800'
+                : 'bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100/60'
+            }`}
+            title={location.isPinnedByMe ? 'Click to unpin this location' : 'Click to pin this location'}
+          >
+            <span>📌</span>
+            <span>{location.isPinnedByMe ? 'Pinned' : 'Pin Place'}</span>
+          </button>
+        )}
       </div>
 
       {/* Overall Accessibility Score Banner */}

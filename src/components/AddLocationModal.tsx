@@ -255,7 +255,7 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({
     const newId = `pin-${Date.now()}`;
     const initialReview: Review = {
       id: `rev-${Date.now()}`,
-      authorName: authorName.trim() || 'AccessMap Auditor',
+      authorName: authorName.trim() || 'TanAW Auditor',
       rating: avgScore,
       comment: description.trim() || `Verified accessibility features for ${name.trim()}.`,
       date: new Date().toISOString().split('T')[0],
@@ -283,7 +283,7 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({
     };
 
     onSaveLocation(newPin);
-    announce(`Location "${newPin.name}" pinned to Cagayan de Oro AccessMap!`);
+    announce(`Location "${newPin.name}" pinned to Cagayan de Oro TanAW!`);
     onClose();
   };
 

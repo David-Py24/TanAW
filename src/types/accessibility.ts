@@ -58,6 +58,8 @@ export interface LocationPin {
   aiBarriers?: string[];
   createdAt: string;
   updatedAt: string;
+  pinCount?: number;
+  isPinnedByMe?: boolean;
 }
 
 export interface DetectedFeature {

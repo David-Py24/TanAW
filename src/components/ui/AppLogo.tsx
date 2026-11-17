@@ -36,7 +36,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 truncate">
-                AccessMap
+                TanAW
               </span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-100 text-sky-800">
                 CDO
@@ -77,7 +77,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 truncate">
-            AccessMap
+            TanAW
           </span>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-100 text-sky-800">
             CDO

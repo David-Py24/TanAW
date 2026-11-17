@@ -129,15 +129,17 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
             type="button"
             onClick={() => handleNavClick('map')}
             className="flex items-center gap-2.5 font-bold text-[20px] tracking-[-0.02em] text-[#0F172A] text-left cursor-pointer group"
-            title="AccessMap Home"
-            aria-label="AccessMap Home"
+            title="TanAW Home"
+            aria-label="TanAW Home"
           >
-            <div className="w-[30px] h-[30px] rounded-[9px] bg-[#21524B] text-white grid place-items-center border-[1.5px] border-[#0F172A] shadow-[0_2px_0_#0F172A] shrink-0 group-hover:scale-105 transition-transform">
-              <svg className="w-[17px] h-[17px] fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-                <use href="#i-pin" />
-              </svg>
+            <div className="w-[30px] h-[30px] rounded-[9px] bg-[#0F172A] text-white grid place-items-center border-[1.5px] border-[#0F172A] shadow-[0_2px_0_#0F172A] shrink-0 group-hover:scale-105 transition-transform p-1">
+              <img
+                src="/logo-green.png"
+                alt="TanAW Official Green Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
-            {!isCollapsed && <span className="whitespace-nowrap">AccessMap</span>}
+            {!isCollapsed && <span className="whitespace-nowrap">TanAW</span>}
           </button>
 
           <button
@@ -185,29 +187,6 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
         <div className="flex flex-col gap-1">
           <button
             type="button"
-            onClick={(e) => handleNavClick('community', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'community'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Community (BETA)"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-globe" />
-            </svg>
-            {!isCollapsed && (
-              <>
-                <span>Community</span>
-                <span className="ml-auto text-[9px] font-bold text-[#21524B] bg-[#E7F2F0] rounded-[6px] px-1.5 py-0.5 border border-[#21524B]/35">
-                  BETA
-                </span>
-              </>
-            )}
-          </button>
-
-          <button
-            type="button"
             onClick={(e) => handleNavClick('dashboard', e)}
             className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
               activeTab === 'dashboard'
@@ -220,22 +199,6 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
               <use href="#i-grid" />
             </svg>
             {!isCollapsed && <span>Dashboard</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('messages', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'messages'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Messages"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-chat" />
-            </svg>
-            {!isCollapsed && <span>Messages</span>}
           </button>
         </div>
 
@@ -342,22 +305,6 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
             {!isCollapsed && <span>AI vision</span>}
           </button>
 
-          {/* Quick Add Pin action */}
-          {onOpenAddModal && (
-            <button
-              type="button"
-              onClick={onOpenAddModal}
-              className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all border-transparent font-medium hover:bg-[#EAF3F7] ${
-                isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'
-              }`}
-              title="Add New Location Pin"
-            >
-              <svg className="w-[18px] h-[18px] shrink-0 text-teal-700 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-                <use href="#i-plus" />
-              </svg>
-              {!isCollapsed && <span>Add place</span>}
-            </button>
-          )}
         </div>
 
         {/* SETTINGS Group */}
@@ -374,34 +321,18 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
         <div className="flex flex-col gap-1">
           <button
             type="button"
-            onClick={(e) => handleNavClick('tags', e)}
+            onClick={(e) => handleNavClick('settings', e)}
             className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'tags'
+              activeTab === 'settings'
                 ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
                 : 'border-transparent font-medium hover:bg-[#EAF3F7]'
             } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Tags & badges"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-tag" />
-            </svg>
-            {!isCollapsed && <span>Tags &amp; badges</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('filters', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              isFilterPanelOpen
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Filter settings"
+            title="Settings & Accessibility Preferences"
           >
             <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
               <use href="#i-sliders" />
             </svg>
-            {!isCollapsed && <span>Filter settings</span>}
+            {!isCollapsed && <span>Settings</span>}
           </button>
         </div>
 

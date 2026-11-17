@@ -62,7 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 truncate">
-                AccessMap
+                TanAW
               </h1>
               <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800">
                 CDO

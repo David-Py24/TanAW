@@ -18,6 +18,7 @@ interface LocationDetailDrawerProps {
   onVoteTag: (pinId: string, tagName: string, vote: 'confirm' | 'dispute') => void;
   onAddReview: (pinId: string, review: Omit<Review, 'id' | 'date'>) => void;
   onRunAIScanOnPin: (location: LocationPin) => void;
+  onTogglePin?: (pinId: string) => void;
 }
 
 export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
@@ -26,6 +27,7 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
   onVoteTag,
   onAddReview,
   onRunAIScanOnPin,
+  onTogglePin,
 }) => {
   const { announce } = useA11y();
   const [copySuccess, setCopySuccess] = useState(false);
@@ -33,7 +35,7 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
   if (!location) return null;
 
   const handleShare = () => {
-    const shareText = `Check out the accessibility ratings for ${location.name} in Cagayan de Oro on AccessMap!`;
+    const shareText = `Check out the accessibility ratings for ${location.name} in Cagayan de Oro on TanAW!`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(
         `${shareText} (${location.lat.toFixed(4)}, ${location.lng.toFixed(4)})`
@@ -92,7 +94,7 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
 
       {/* Scrollable Body */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-        <LocationOverviewCard location={location} />
+        <LocationOverviewCard location={location} onTogglePin={onTogglePin} />
 
         <AiAnalysisSection
           summary={location.aiSummary}

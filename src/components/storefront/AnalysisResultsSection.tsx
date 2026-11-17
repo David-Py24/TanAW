@@ -164,7 +164,7 @@ export const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({
       <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 flex items-start gap-2 text-[11px] text-slate-600">
         <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
         <p>
-          <strong>Disclaimer:</strong> AI analysis is based on photographic visual inspection only and may be inaccurate or incomplete. All AI-suggested tags will display an "AI-suggested" badge on AccessMap until confirmed on-site by community members.
+          <strong>Disclaimer:</strong> AI analysis is based on photographic visual inspection only and may be inaccurate or incomplete. All AI-suggested tags will display an "AI-suggested" badge on TanAW until confirmed on-site by community members.
         </p>
       </div>
 

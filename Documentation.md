@@ -1,6 +1,6 @@
-# AccessMap - Project Documentation & Progress Log
+# TanAW - Project Documentation & Progress Log
 
-**Application**: AccessMap  
+**Application**: TanAW  
 **Purpose**: Crowdsourced Accessibility Mapping Platform with Multimodal Gemini AI Storefront Analysis  
 **Region of Focus**: Cagayan de Oro, Northern Mindanao, Philippines  
 **Repository & Tech Stack**: React 19, TypeScript, Vite, Tailwind CSS, Leaflet, OpenStreetMap, Express, Google GenAI SDK (`gemini-3.8-flash`)  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-AccessMap is an open-source, crowdsourced urban accessibility platform designed to catalog, rate, and verify physical and sensory accessibility features for buildings, venues, and public spaces in Cagayan de Oro, Philippines. The platform incorporates:
+TanAW is an open-source, crowdsourced urban accessibility platform designed to catalog, rate, and verify physical and sensory accessibility features for buildings, venues, and public spaces in Cagayan de Oro, Philippines. The platform incorporates:
 - **Zero-Cost Open-Source Mapping**: Powered by Leaflet and OpenStreetMap (no paid Google Maps API keys required).
 - **Gemini Multimodal AI Storefront Analyzer**: Automatic computer vision inspection of doors, ramps, thresholds, and stairs with strict JSON output.
 - **Community Verification Engine**: Dual "Confirm" / "Dispute" consensus voting with automated trust badging.
@@ -71,7 +71,7 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
 ### `2026-11-06 00:30:00` — OpenStreetMap & Leaflet Layer Switcher Integration
 - **Event**: User inquiry regarding OpenStreetMap + Leaflet services.
 - **Decisions**:
-  - Clarified that AccessMap already runs on 100% free OpenStreetMap & Leaflet with no Google Maps billing.
+  - Clarified that TanAW already runs on 100% free OpenStreetMap & Leaflet with no Google Maps billing.
   - Added interactive **Map Layer Switcher** button in floating map controls with choices:
     1. **OpenStreetMap (Standard)** (official vibrant tiles)
     2. **OpenStreetMap Humanitarian (HOT)** (optimized for infrastructure & accessibility)
@@ -92,7 +92,7 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
     - **Footer Buttons**: Clean `Cancel` button alongside solid black `[💾 Save location]` button.
 
 ### `2026-11-06 00:50:00` — Domain Tailoring of Add Location Flow to Real Accessibility Workflow
-- **Event**: Refined the form reference recreation so that it is tailored directly to AccessMap's physical accessibility purpose rather than generic project management terms.
+- **Event**: Refined the form reference recreation so that it is tailored directly to TanAW's physical accessibility purpose rather than generic project management terms.
 - **Decisions**:
   - **In-Form AI Vision Trigger**: Uploading a photo to the dashed dropzone immediately provides an interactive **"Scan with AI"** button powered by `gemini-3.8-flash`, parsing entrance doors, stairs, and thresholds, and showing immediate architectural summaries and barrier alerts.
   - **Individual Tag Star Ratings (1–5★)**: Each removable tag pill now includes interactive 1–5 star ratings directly inside the chip, enabling users to rate specific features (e.g., 5★ ramp, 4★ doorway).
@@ -195,6 +195,15 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
   - Removed the bottom utility button container and unneeded SVG symbols (`#i-type`, `#i-eye`, `#i-refresh`) from `src/components/SidebarRail.tsx`.
   - Streamlined `SidebarRail.tsx` imports and component props, maintaining high performance and zero lint warnings.
   - Re-verified full project compilation with `npm run lint` (`0` errors) and `npm run build` (**633ms**).
+
+### `2026-11-17 18:35:00` — Declutter Map Viewport: Removal of Redundant Top Floating Filters & Cities Buttons
+- **Event**: Cleaned up top-of-map quick buttons (`Filters` and `Cities`) that overlapped and visually cluttered the map canvas.
+- **Decisions & Implementation**:
+  - Removed the floating `Filters` popover button and `Cities` region switcher pill from `src/components/MapSearchFilterBar.tsx` (and synchronized with `AccessMap-Interactive-Map-Page/Src/components/MapSearchFilterBar.tsx`).
+  - Streamlined the top bar to focus purely on the clean, collapsible location Search bar (`Search ('/')`) and live autocomplete dropdown, avoiding duplication with the docked left `PlacesPanel` where category and tag filters are already available.
+  - Removed dead popover drawers (`showFilterMenu`, `showCityPills`, `showTagDrawer`) and unused Lucide icon imports.
+  - Repositioned the search bar closer to the sidebar (`top-4 left-4 sm:top-4.5 sm:left-5` with `items-start`) for convenient access next to the left navigation/places panel while remaining fully visible in the open map canvas.
+  - Verified compilation and bundle integrity via `npm run lint` (0 errors) and `npm run build` (**666ms**).
 
 ---
 
@@ -347,3 +356,69 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
   - Unmounted `MapFloatingCard` and cleaned up unused `showSummaryCard` state and handlers in `src/components/MapView.tsx`.
   - Kept location selection and search navigation directly delegated to the collapsible `PlacesPanel` and `LocationDetailDrawer`.
 - **Impact**: Removes the large card obscuring the bottom map area and preventing visual clutter during map navigation.
+
+---
+
+## `2026-11-17 11:15:00` — Right-Click Context Menu, Pin Count Indicator & Pin Hover Preview Cards
+- **Event**: Executed map interaction updates requested in `Updates_and_Improvements__DocsID_.md`.
+- **Decisions**:
+  - Implemented right-click `contextmenu` listener on map canvas and individual Leaflet markers with **Pin** and **Details** action options.
+  - Built an adjacent compound side panel showing placeholder forms for pinning (name, category, tags, notes) and inspection details (door width, step-free access, sensory rating).
+  - Extended `LocationPin` with `pinCount?: number` and `isPinnedByMe?: boolean`, with dynamic real-time toggling and storage normalization.
+  - Added pin count badges and indicators to map pins (`buildInteractivePinHtml`), `LocationCard.tsx`, and `LocationOverviewCard.tsx`.
+  - Implemented zero-latency hover preview cards (`.gui-card`) beside pins on mouseover with venue name, category, rating, pin count indicator, brief summary, top verified accessibility tags, and dismiss on mouseout.
+- **Impact**: Delivers instant contextual pinning and rich at-a-glance venue accessibility inspection without requiring full navigation drawer slide-outs.
+
+---
+
+## `2026-11-17 14:20:00` — Collapsible Search Bar, Top Location Filters, Bottom-Right Menu Controls & Official Pin/Logo
+- **Event**: Executed map UX and brand modernization requested in `Docs/DOCS-524551-20261117-e9f1-MAP-SEARCH-BAR-FILTERS-MENU-PIN-LOGO.md`.
+- **Decisions**:
+  - **Collapsible Search Bar**: Integrated compact circular magnifying-glass button into `MapSearchFilterBar.tsx` that stays collapsed by default. Clicking or pressing `/` expands the animated search input with auto-focus; pressing Escape, clicking Close, or clicking outside collapses it back.
+  - **Location Filters at Top of Map**: Surfaced category pill buttons (`All Categories`, `Shopping & Retail`, `Healthcare & Medical`, `Dining & Cafe`, `Education & Library`, `Public Spaces & Parks`) and high-impact quick accessibility filter chips (`4.0★+`, `Wheelchair Accessible`, `Ramp Access`) directly in the top area of the map for instant 1-click filtering.
+  - **Reposition Top Menu Controls**: Relocated all Leaflet control buttons (tile layer selector, proximity radar, GPS locate, center reset, zoom in/out) from the top-right to `absolute bottom-6 right-6 z-[500]` with upward-expanding menus (`bottom-12 right-0`), preventing collisions with floating sidebar toggles.
+  - **Official Pin Marker and Logo**: Processed `Assets/Abstract Black Location Pin Icon Design Element Symbol Stock Vector _ Adobe Stock.jpg`, cropped bounding box, generated transparent PNGs (`logo-dark.png`, `logo-white.png`, `app-icon.png`, `favicon.png`), and integrated into the sidebar navigation brand mark, web application favicon, and Leaflet interactive SVG pin markers with colored center rating aperture and verified badges.
+  - Synchronized changes to `AccessMap-Interactive-Map-Page` and mounted prototypes.
+- **Impact**: Significantly reduces cartographic clutter, enables instant category and accessibility filtering, and unifies application visual identity with the official location pin asset.
+
+---
+
+## `2026-11-17 15:30:00` — Green Pin Logo, Top Area Filter Icon Popover, De-cluttered Sidebar & Left Fused Place Details
+- **Event**: Executed map UI decluttering, branding, and navigation improvements requested in `Docs-Main/DOCS-524551-20261117-e9f1-UI-IMPROVEMENTS-PIN-LOGO-SIDEBAR-DECLUTTER.md`.
+- **Decisions**:
+  - **Green Pin Logo**: Generated brand-colored emerald green vector silhouette assets (`logo-green.png`, `app-icon.png`, `favicon.png`, `favicon-32x32.png`) and updated the web app brand mark in `SidebarRail.tsx` and HTML headers.
+  - **Filter Icon Popover**: Replaced horizontal category and quick-filter pills across the top map bar with a compact `Filters` icon button and floating popover drawer, completely de-cluttering the map's top area while preserving active filter indicator pills.
+  - **De-cluttered SidebarRail**: Removed `Messages`, `Community (BETA)`, and `Add place` buttons from the navigation rail, and fused tags/badges and filter configurations into a single unified `Settings` icon.
+  - **Docked Sidebar Pages**: Changed embedded pages (Profile, Saved Places, Settings, Contributions) to render as docked left sidebar panels alongside the active `MapView` instead of full-page overlays, preserving live map context.
+  - **Fused Left Sidebar Place Details**: Fused the complete location inspection view (`LocationOverviewCard`, `AiAnalysisSection`, `TagVotingList`, `ReviewSection`) directly into `PlacesPanel.tsx`, eliminating the right-side drawer completely.
+  - **Interactive Pinning & Hover Micro-Interactions**: Added direct 1-click pin buttons (`📌 Pin Place`) to hover preview cards (`gui-card`), location cards, and detail panels; updated Leaflet markers and CSS to dynamically switch pin silhouettes from black to green on hover and when selected.
+  - Added smooth CSS cubic-bezier slide transitions (`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]`) for opening and closing all sidebars.
+- **Impact**: Completely eliminates right-side UI clutter, frees the map canvas, provides instant direct pinning from any card or hover popup, and modernizes the application brand with the emerald green pin identity.
+
+---
+
+## `2026-11-17 16:00:00` — Removed Redundant Map City Header Watermark
+- **Event**: Removed top-left city watermark overlay from the map canvas per user UI review.
+- **Decisions**:
+  - Removed the floating city title, region subtitle, logo badge, and "OpenStreetMap + Leaflet | Zoom" service tag overlay from [MapView.tsx](file:///C:/Users/Ghing/Documents/AcessMap/AccessMap/src/components/MapView.tsx).
+  - Synchronized removal to [AccessMap-Interactive-Map-Page](file:///C:/Users/Ghing/Documents/AcessMap/AccessMap-Interactive-Map-Page) and public prototypes.
+- **Impact**: Eliminates visual collisions and overlaps between the city watermark and the top filter/search controls when docked left sidebars are open.
+
+---
+
+## `2026-11-17 16:05:00` — Resolved Phantom Blank White Sidebar Area Bug
+- **Event**: Fixed blank white layout gap persisting between `SidebarRail` and `MapView` when `isPlacesPanelOpen` was false.
+- **Decisions**:
+  - Added early guard `if (!isOpen) return null;` in `PlacesPanel.tsx` and conditional rendering `{activeNavTab === 'map' && isPlacesPanelOpen && <PlacesPanel ... />}` in `App.tsx`.
+  - Replaced persistent relative flex layout reservation with CSS keyframe animation `.animate-slide-in-left` (`@keyframes slideInLeft`).
+- **Impact**: When locations are hidden, the map cleanly expands full-width directly adjacent to `SidebarRail` with zero white gap or phantom layout margins. When opened, the panel smoothly slides in from the left.
+
+---
+
+## `2026-11-17 18:00:00` — Fixed Detail Preview GUI Tooltip Positioning Bug
+- **Event**: Resolved issue where pin hover preview cards (`.gui-card`) were misplaced near the top-left corner instead of floating directly beside the hovered pin.
+- **Decisions**:
+  - Identified root cause in `index.css`: `@keyframes guiCardPop` on `.leaflet-tooltip.gui-card` used `transform: translateY(0) scale(1)` with `animation-fill-mode: forwards`, which overrode Leaflet's inline `transform: translate3d(x, y, 0)` calculation and reset the card's position to `(0, 0)`.
+  - Moved the scale entrance animation from the outer `.leaflet-tooltip` container to the child `.gui-card-inner` element, preserving Leaflet's spatial coordinate transforms.
+  - Set tooltip options in [MapView.tsx](file:///C:/Users/Ghing/Documents/AcessMap/AccessMap/src/components/MapView.tsx) to `{ direction: 'top', offset: [0, -44], interactive: true }` to position the card centered directly above the pin marker with interactive hover support for the direct "Pin Place" button.
+- **Impact**: Detail preview GUI cards now position centered right above the hovered pin marker with zero coordinate drift or top-left snapping.

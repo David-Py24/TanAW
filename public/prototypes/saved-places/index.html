@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Saved places • AccessMap</title>
+<title>Saved places • TanAW</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F5FAFD;--soft:#EAF3F7;--ink:#0F172A;--mute:#475569;--line:#0F172A;--accent:#21524B;--accent-hover:#2B6860;--accent-deep:#13332E;--accent-light:#E7F2F0;--card:#fff;--grid:#D5E5EC;--amber:#F59E0B;--red:#EF4444;--blue:#3B82F6;--shadow-line:0 3px 0 var(--line);--shadow-hover:0 5px 0 var(--line);--side:248px}
@@ -192,7 +192,7 @@ dialog .row{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
 <div class="bg"><i></i></div>
 <div class="app">
 <aside class="side">
-  <div class="brand"><div class="logo"><div class="logo-mark"><svg class="i "><use href="#i-pin"/></svg></div><span>AccessMap</span></div>
+  <div class="brand"><div class="logo"><div class="logo-mark"><svg class="i "><use href="#i-pin"/></svg></div><span>TanAW</span></div>
   <button class="icon-btn" id="collapse" aria-label="Collapse sidebar"><svg class="i "><use href="#i-sidebar"/></svg></button></div>
   <button class="ws" type="button"><span class="av">AD</span><div><b>My workspace</b><small>Alex David</small></div><svg class="i "><use href="#i-chev"/></svg></button>
   <a class="nav" href="#" title="Community"><svg class="i"><use href="#i-globe"/></svg><span>Community</span><span class="beta">BETA</span></a>
@@ -328,7 +328,7 @@ function card(p){
   ${p.score!=null?`<div class="bar ${cls}"><span style="width:${p.score/5*100}%"></span></div>`:''}
   ${kv.length?`<div class="kv">${kv.map(k=>`<div><small>${k[0]}</small><strong>${esc(k[1])}</strong></div>`).join('')}</div>`:''}
   ${p.chips?`<div class="chips">${p.chips.map(c=>`<span class="tc ${c[1]?'on':''}">${c[0]}</span>`).join('')}</div>`:''}
-  ${p.note?`<div class="foot"><span>Photo analyzed by AccessMap AI</span><b>${p.note}</b></div>`:''}
+  ${p.note?`<div class="foot"><span>Photo analyzed by TanAW AI</span><b>${p.note}</b></div>`:''}
   </article>`;
 }
 function drawFeed(){

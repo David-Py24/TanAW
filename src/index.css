@@ -91,12 +91,27 @@ body.high-contrast textarea {
   }
 }
 
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .animate-slide-up {
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-scale-up {
   animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Custom subtle scrollbars */
@@ -134,5 +149,73 @@ body.high-contrast textarea {
 .font-space {
   font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+
+/* Leaflet custom hover preview card (gui-card) */
+.leaflet-tooltip.gui-card {
+  background: #ffffff !important;
+  border: 2px solid #0F172A !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
+  box-shadow: 4px 4px 0px #0F172A, 0 16px 32px -4px rgba(15, 23, 42, 0.25) !important;
+  color: #0F172A !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+  overflow: visible !important;
+}
+
+/* Animate the inner container only, so Leaflet's translate3d positioning transform is not overridden */
+.leaflet-tooltip.gui-card .gui-card-inner {
+  animation: guiCardPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: bottom center;
+}
+
+@keyframes guiCardPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Pin color changes from black to green when selected or hovered */
+.accessmap-pin-wrapper:hover .accessmap-pin-img,
+.accessmap-pin-wrapper.is-selected .accessmap-pin-img {
+  content: url('/logo-green.png') !important;
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.8));
+}
+
+.accessmap-pin-wrapper:hover,
+.accessmap-pin-wrapper.is-selected {
+  z-index: 999;
+}
+
+.leaflet-tooltip-right.gui-card::before {
+  border-right-color: #0F172A !important;
+  border-width: 8px !important;
+  margin-top: -8px !important;
+}
+
+.leaflet-tooltip-left.gui-card::before {
+  border-left-color: #0F172A !important;
+  border-width: 8px !important;
+  margin-top: -8px !important;
+}
+
+.leaflet-tooltip-top.gui-card::before {
+  border-top-color: #0F172A !important;
+  border-width: 8px !important;
+  margin-left: -8px !important;
+}
+
+.leaflet-tooltip-bottom.gui-card::before {
+  border-bottom-color: #0F172A !important;
+  border-width: 8px !important;
+  margin-left: -8px !important;
+}
+
 
 

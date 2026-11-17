@@ -1,6 +1,6 @@
-# AccessMap
+# TanAW
 
-> **AccessMap** – An accessibility‑first navigation and community platform for Mindanao, helping everyone find step‑free routes, accessible places, and community support.
+> **TanAW** – An accessibility‑first navigation and community platform for Mindanao, helping everyone find step‑free routes, accessible places, and community support.
 
 ---
 
@@ -34,7 +34,7 @@
 
 ## About
 
-AccessMap is a web application focused on accessible navigation and community engagement. It combines an interactive map with step-free route planning, saved places, contribution history, a community leaderboard, messaging, and accessibility resources — all wrapped in a neo-brutalist UI.
+TanAW is a web application focused on accessible navigation and community engagement. It combines an interactive map with step-free route planning, saved places, contribution history, a community leaderboard, messaging, and accessibility resources — all wrapped in a neo-brutalist UI.
 
 ## Features
 
@@ -51,7 +51,7 @@ AccessMap is a web application focused on accessible navigation and community en
 
 | Module | Description |
 |---|---|
-| AccessMap (main) | Vite + React host app, sidebar, prototype mounting. |
+| TanAW (main) | Vite + React host app, sidebar, prototype mounting. |
 | Interactive Map Page | Map engine, markers, routing, viewport switcher. |
 | Step-Free Route Planner Page | Accessible route planning UI. |
 | Saved Places Page | Saved locations management. |

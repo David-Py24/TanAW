@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Community • AccessMap</title>
+<title>Community • TanAW</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F5FAFD;--soft:#EAF3F7;--ink:#0F172A;--mute:#475569;--line:#0F172A;--accent:#21524B;--accent-hover:#2B6860;--accent-deep:#13332E;--accent-light:#E7F2F0;--card:#fff;--grid:#D5E5EC;--amber:#F59E0B;--red:#EF4444;--blue:#3B82F6;--shadow-line:0 3px 0 var(--line);--shadow-hover:0 5px 0 var(--line);--side:248px}
@@ -217,7 +217,7 @@ textarea{resize:vertical;min-height:90px}
 <div class="bg"><i></i></div>
 <div class="app">
 <aside class="side">
-  <div class="brand"><div class="logo"><div class="logo-mark"><svg class="i "><use href="#i-pin"/></svg></div><span>AccessMap</span></div>
+  <div class="brand"><div class="logo"><div class="logo-mark"><svg class="i "><use href="#i-pin"/></svg></div><span>TanAW</span></div>
   <button class="icon-btn" id="collapse" aria-label="Collapse sidebar"><svg class="i "><use href="#i-sidebar"/></svg></button></div>
   <button class="ws" type="button"><span class="av">AD</span><div><b>My workspace</b><small>Alex David</small></div><svg class="i "><use href="#i-chev"/></svg></button>
   <a class="nav on" href="community.html" title="Community" aria-current="page"><svg class="i"><use href="#i-globe"/></svg><span>Community</span><span class="beta">BETA</span></a>
@@ -362,7 +362,7 @@ function post(p){
   <p class="pbody">${esc(p.text)}</p>
   ${p.tags.length?`<div class="chips">${p.tags.map(x=>`<span class="tc on">${esc(x)}</span>`).join('')}</div>`:''}
   <button class="pl" data-pl="${p.pl}">${sm('pin',14)}${esc(pl.name)}<span>${pl.score.toFixed(1)} ★</span></button>
-  ${p.ai?`<div class="foot"><span>Photo analyzed by AccessMap AI</span><b>${esc(p.ai)}</b></div>`:''}
+  ${p.ai?`<div class="foot"><span>Photo analyzed by TanAW AI</span><b>${esc(p.ai)}</b></div>`:''}
   <div class="ar"><button class="ab ${liked.has(p.id)?'on':''}" data-up="${p.id}">${sm('up',15)}Helpful ${p.up+(liked.has(p.id)?1:0)}</button>
   <button class="ab" data-cm="${p.id}">${sm('chat',15)}${p.cm}</button>
   <button class="ab ${saved.has(p.id)?'on':''}" data-sv="${p.id}" aria-label="Save post">${sm('bookmark',15)}</button>

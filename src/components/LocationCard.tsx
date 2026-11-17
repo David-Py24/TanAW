@@ -20,6 +20,7 @@ interface LocationCardProps {
   onOpenDetails: (loc: LocationPin) => void;
   onRunAIScan: (loc: LocationPin) => void;
   userCoords?: { lat: number; lng: number } | null;
+  onTogglePin?: (id: string) => void;
 }
 
 export const LocationCard: React.FC<LocationCardProps> = ({
@@ -29,6 +30,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   onOpenDetails,
   onRunAIScan,
   userCoords,
+  onTogglePin,
 }) => {
   const distanceKm = userCoords
     ? calculateDistanceKm(userCoords.lat, userCoords.lng, location.lat, location.lng)
@@ -86,9 +88,26 @@ export const LocationCard: React.FC<LocationCardProps> = ({
           </div>
         </div>
 
-        {/* Status Pill Badge */}
-        <div className="mt-3 flex items-center justify-start">
+        {/* Status Pill Badge & Pin Count Action */}
+        <div className="mt-3 flex items-center justify-between gap-2">
           {renderStatusBadge()}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePin?.(location.id);
+            }}
+            className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+              location.isPinnedByMe
+                ? 'bg-emerald-500 text-white border-emerald-600 shadow-2xs scale-[1.02]'
+                : 'text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border-emerald-200'
+            }`}
+            title={location.isPinnedByMe ? 'Pinned to my places (Click to unpin)' : 'Click to pin this place directly'}
+          >
+            <span>📌</span>
+            <span>{location.isPinnedByMe ? 'Pinned' : 'Pin'}</span>
+            <span className="text-[10px] opacity-80">({location.pinCount ?? 1})</span>
+          </button>
         </div>
 
         {/* Progress / Rating indicator bar */}
@@ -229,6 +248,22 @@ export const LocationCard: React.FC<LocationCardProps> = ({
           <span className="font-mono text-slate-400">
             {distanceKm} km away
           </span>
+          <span>•</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePin?.(location.id);
+            }}
+            className={`font-bold px-2 py-0.5 rounded-full text-[11px] border transition-all cursor-pointer ${
+              location.isPinnedByMe
+                ? 'bg-emerald-500 text-white border-emerald-600 shadow-2xs'
+                : 'text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border-emerald-200'
+            }`}
+            title={location.isPinnedByMe ? 'Pinned to my places (Click to unpin)' : 'Click to pin this place'}
+          >
+            📌 {location.isPinnedByMe ? 'Pinned' : (location.pinCount ?? 1)}
+          </button>
         </div>
       </div>
 

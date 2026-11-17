@@ -359,6 +359,171 @@ export function computeMapClusters(
   return result;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Generates rich HTML for the hover preview card (.gui-card) positioned beside a pin.
+ */
+export function buildGuiCardHtml(loc: LocationPin): string {
+  const colorMeta = getRatingColor(loc.averageRating, loc.totalReviews);
+  const ratingText = loc.averageRating > 0 ? `${loc.averageRating.toFixed(1)}★` : 'Unrated';
+  const pinCount = loc.pinCount ?? 1;
+  const isVerified =
+    loc.tags.some((t) => t.confirmations >= 2 && t.confirmations > t.disputes) &&
+    loc.averageRating >= 4.0;
+
+  const topTags = loc.tags
+    .filter((t) => t.confirmations >= t.disputes)
+    .slice(0, 3)
+    .map(
+      (t) => `<span style="
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+      ">✓ ${escapeHtml(t.name)}</span>`
+    )
+    .join('');
+
+  const summary =
+    loc.aiSummary || loc.description || 'Accessibility-rated location in Northern Mindanao.';
+  const truncatedSummary = summary.length > 130 ? `${summary.slice(0, 127)}...` : summary;
+
+  return `
+    <div class="gui-card-inner" style="
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      width: 275px;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 16px;
+      overflow: hidden;
+      text-align: left;
+    ">
+      <!-- Top banner / header -->
+      <div style="
+        background: #0f172a;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      ">
+        <div style="min-width: 0;">
+          <div style="
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+          ">${escapeHtml(loc.category)}</div>
+          <div style="
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+          ">${escapeHtml(loc.name)}</div>
+        </div>
+        <div style="
+          background: ${colorMeta.hex};
+          color: #ffffff;
+          font-size: 11px;
+          font-weight: 900;
+          padding: 2px 7px;
+          border-radius: 9999px;
+          border: 1.5px solid rgba(255,255,255,0.4);
+          white-space: nowrap;
+          shrink: 0;
+        ">${ratingText}</div>
+      </div>
+
+      <!-- Body -->
+      <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Interactive Direct Pin Action Row -->
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 6px;
+          background: ${loc.isPinnedByMe ? '#ecfdf5' : '#f8fafc'};
+          border: 1px solid ${loc.isPinnedByMe ? '#a7f3d0' : '#e2e8f0'};
+          padding: 6px 8px;
+          border-radius: 10px;
+        ">
+          <button
+            type="button"
+            onclick="event.stopPropagation(); if (window.accessMapTogglePin) window.accessMapTogglePin('${loc.id}', event);"
+            style="
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              font-size: 11px;
+              font-weight: 800;
+              padding: 3px 8px;
+              border-radius: 9999px;
+              cursor: pointer;
+              border: 1px solid ${loc.isPinnedByMe ? '#059669' : '#cbd5e1'};
+              background: ${loc.isPinnedByMe ? '#10b981' : '#ffffff'};
+              color: ${loc.isPinnedByMe ? '#ffffff' : '#0f172a'};
+              box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+              transition: all 0.15s ease;
+            "
+            title="${loc.isPinnedByMe ? 'Pinned to your places (Click to unpin)' : 'Click to pin this place'}"
+          >
+            <span>📌</span>
+            <span>${loc.isPinnedByMe ? 'Pinned' : 'Pin Place'}</span>
+            <span style="opacity: 0.85; font-size: 10px;">(${pinCount})</span>
+          </button>
+          ${isVerified ? '<span style="font-size: 8.5px; font-weight: 900; background: #22c55e; color: #ffffff; padding: 2px 6px; border-radius: 6px;">VERIFIED ACCESS</span>' : '<span style="font-size: 9.5px; color: #64748b; font-weight: 700;">Community Verified</span>'}
+        </div>
+
+        <!-- Summary -->
+        <p style="
+          margin: 0;
+          font-size: 11px;
+          line-height: 1.4;
+          color: #475569;
+          font-weight: 500;
+        ">${escapeHtml(truncatedSummary)}</p>
+
+        <!-- Feature chips -->
+        ${topTags ? `<div style="display: flex; flex-wrap: wrap; gap: 4px;">${topTags}</div>` : ''}
+
+        <!-- Footer quick actions hint -->
+        <div style="
+          margin-top: 2px;
+          padding-top: 6px;
+          border-top: 1px dashed #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 9.5px;
+          color: #64748b;
+          font-weight: 600;
+        ">
+          <span>🖱️ Click to select</span>
+          <span>⚡ Right-click for options</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 /**
  * Generates HTML for an interactive category-aware SVG pin with rating badge and pulse ring.
  */
@@ -370,6 +535,7 @@ export function buildInteractivePinHtml(
   const colorMeta = getRatingColor(loc.averageRating, loc.totalReviews);
   const ratingText = loc.averageRating > 0 ? `${loc.averageRating.toFixed(1)}★` : 'NEW';
   const categorySvg = getCategoryIconSvg(loc.category);
+  const pinCount = loc.pinCount ?? 1;
 
   const isVerified =
     loc.tags.some((t) => t.confirmations >= 2 && t.confirmations > t.disputes) &&
@@ -407,6 +573,27 @@ export function buildInteractivePinHtml(
       " title="Community Verified">✓</span>`
     : '';
 
+  const pinCountBadge = `<span style="
+    position: absolute;
+    bottom: -3px;
+    right: -8px;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 8.5px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 9999px;
+    border: 1.5px solid #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 10;
+  " title="${pinCount} users pinning this location">📌${pinCount}</span>`;
+
+  const pillContent = `${ratingText} • 📌${pinCount}`;
+
   const pillHtml =
     showRatingPill || isSelected
       ? `<div style="
@@ -422,12 +609,12 @@ export function buildInteractivePinHtml(
           white-space: nowrap;
           border: 1.5px solid ${colorMeta.hex};
           box-shadow: 0 2px 6px rgba(0,0,0,0.28);
-        ">${ratingText}</div>`
+        ">${pillContent}</div>`
       : '';
 
   return `
     <div
-      class="accessmap-pin-wrapper"
+      class="accessmap-pin-wrapper ${isSelected ? 'is-selected' : ''}"
       style="
         position: relative;
         display: flex;
@@ -437,43 +624,59 @@ export function buildInteractivePinHtml(
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
         cursor: pointer;
       "
-      aria-label="${loc.name}, ${loc.category}, Rating: ${ratingText}"
+      aria-label="${loc.name}, ${loc.category}, Rating: ${ratingText}, Pinned by ${pinCount} users"
     >
       <div style="
         position: relative;
-        width: 40px;
-        height: 40px;
-        border-radius: 14px 14px 14px 4px;
-        transform: rotate(-45deg);
-        background: ${colorMeta.hex};
-        border: ${isSelected ? '3px solid #0f172a' : '2.5px solid #ffffff'};
-        box-shadow: ${
-          isSelected
-            ? '0 10px 22px -4px rgba(0,0,0,0.45), 0 0 0 3px rgba(255,255,255,0.9)'
-            : '0 6px 14px -2px rgba(0,0,0,0.32)'
-        };
+        width: 38px;
+        height: 48px;
         display: flex;
         align-items: center;
         justify-content: center;
+        filter: ${
+          isSelected
+            ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.5))'
+            : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
+        };
       ">
         ${pulseRing}
+        <!-- Official Location Pin Icon (Switches to Green on hover or when selected) -->
+        <img
+          src="${isSelected ? '/logo-green.png' : '/logo-dark.png'}"
+          alt="Location Pin"
+          class="accessmap-pin-img"
+          style="
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+          "
+        />
+        <!-- Inner Category & Accessibility Rating Token in center aperture -->
         <div style="
-          transform: rotate(45deg);
-          width: 26px;
-          height: 26px;
+          position: absolute;
+          top: 6px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 20px;
+          height: 20px;
           border-radius: 9999px;
-          background: rgba(255, 255, 255, 0.96);
-          color: ${colorMeta.hex === '#94a3b8' ? '#334155' : colorMeta.hex};
+          background: ${colorMeta.hex};
+          border: 1.5px solid #ffffff;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.25);
           display: flex;
           align-items: center;
           justify-content: center;
+          color: #ffffff;
         ">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             ${categorySvg}
           </svg>
         </div>
-        <div style="transform: rotate(45deg); position: absolute; inset: 0; pointer-events: none;">
+        <div style="position: absolute; inset: 0; pointer-events: none;">
           ${verifiedDot}
+          ${pinCountBadge}
         </div>
       </div>
       ${pillHtml}

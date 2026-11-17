@@ -25,12 +25,15 @@ export function loadLocations(): LocationPin[] {
     // user edits, ratings, or saved community contributions.
     const existingIds = new Set(parsed.map((location: LocationPin) => location.id));
     const newlySeeded = INITIAL_LOCATIONS.filter((location) => !existingIds.has(location.id));
+    const baseList: LocationPin[] = newlySeeded.length > 0 ? [...parsed, ...newlySeeded] : parsed;
+    const normalized = baseList.map((loc) => ({
+      ...loc,
+      pinCount: typeof loc.pinCount === 'number' ? loc.pinCount : Math.max(1, (loc.totalReviews || 1) * 2 + 5),
+    }));
     if (newlySeeded.length > 0) {
-      const merged = [...parsed, ...newlySeeded];
-      saveLocations(merged);
-      return merged;
+      saveLocations(normalized);
     }
-    return parsed;
+    return normalized;
   } catch (err) {
     console.error('Failed to load locations from localStorage:', err);
     return INITIAL_LOCATIONS;

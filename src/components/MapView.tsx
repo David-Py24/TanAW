@@ -13,6 +13,7 @@ import {
   MINDANAO_CITY_PRESETS,
   RoutePreviewResult,
   buildClusterPinHtml,
+  buildGuiCardHtml,
   buildInteractivePinHtml,
   computeMapClusters,
   detectActiveCityPreset,
@@ -33,6 +34,10 @@ import {
   Check,
   Radar,
   Navigation,
+  Info,
+  X,
+  Sparkles,
+  Plus,
 } from 'lucide-react';
 
 interface MapViewProps {
@@ -43,6 +48,15 @@ interface MapViewProps {
   isAddingLocation: boolean;
   newPinCoords: { lat: number; lng: number } | null;
   onNewPinCoordsChange: (coords: { lat: number; lng: number }) => void;
+  onQuickAddPin?: (pin: {
+    lat: number;
+    lng: number;
+    name: string;
+    category?: CategoryType;
+    tags?: string[];
+    description?: string;
+  }) => void;
+  onTogglePinLocation?: (pinId: string) => void;
 }
 
 export type MapTileStyle = 'osm' | 'positron' | 'dark' | 'hot';
@@ -102,6 +116,8 @@ export const MapView: React.FC<MapViewProps> = ({
   isAddingLocation,
   newPinCoords,
   onNewPinCoordsChange,
+  onQuickAddPin,
+  onTogglePinLocation,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -114,6 +130,67 @@ export const MapView: React.FC<MapViewProps> = ({
   const { highContrast, announce } = useA11y();
   const [isLocating, setIsLocating] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Context Menu & Adjacent Side Panel State
+  const [contextMenu, setContextMenu] = useState<{
+    lat: number;
+    lng: number;
+    x: number;
+    y: number;
+    location: LocationPin | null;
+    activeSidePanel: 'pin' | 'details' | null;
+  } | null>(null);
+
+  // Form states for Pin placeholder form
+  const [pinFormName, setPinFormName] = useState('');
+  const [pinFormCategory, setPinFormCategory] = useState<CategoryType>('Shopping');
+  const [pinFormTags, setPinFormTags] = useState<string[]>([
+    'Wheelchair-accessible entrance',
+    'Ramp available',
+  ]);
+  const [pinFormNotes, setPinFormNotes] = useState('');
+
+  // Form states for Details placeholder form
+  const [detailsFormTitle, setDetailsFormTitle] = useState('');
+  const [detailsFormArea, setDetailsFormArea] = useState('');
+  const [detailsFormDoorWidth, setDetailsFormDoorWidth] = useState('95 cm');
+  const [detailsFormStepFree, setDetailsFormStepFree] = useState(true);
+  const [detailsFormAuditor, setDetailsFormAuditor] = useState('');
+  const [detailsFormSensory, setDetailsFormSensory] = useState('Quiet / low-sensory zone');
+
+  // Helper to open context menu and initialize placeholder forms
+  const openContextMenu = (
+    lat: number,
+    lng: number,
+    x: number,
+    y: number,
+    loc: LocationPin | null
+  ) => {
+    setContextMenu({
+      lat,
+      lng,
+      x,
+      y,
+      location: loc,
+      activeSidePanel: null,
+    });
+    setPinFormName(loc ? loc.name : '');
+    setPinFormCategory(loc ? loc.category : 'Shopping');
+    setPinFormNotes(loc?.description || '');
+    setDetailsFormTitle(loc ? loc.name : `Location at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+    setDetailsFormArea(loc ? loc.address : 'Downtown District, Northern Mindanao');
+  };
+
+  // Close context menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setContextMenu(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Viewport & Clustering state
   const [currentZoom, setCurrentZoom] = useState<number>(DEFAULT_ZOOM);
@@ -133,6 +210,23 @@ export const MapView: React.FC<MapViewProps> = ({
   // Active Map Tile Style state (defaults to standard OpenStreetMap)
   const [mapStyle, setMapStyle] = useState<MapTileStyle>('osm');
   const [showLayerPicker, setShowLayerPicker] = useState(false);
+
+  // Global window handler for direct pinning from hover GUI cards
+  useEffect(() => {
+    (window as unknown as { accessMapTogglePin?: (id: string, e?: Event) => void }).accessMapTogglePin = (
+      id: string,
+      e?: Event
+    ) => {
+      e?.stopPropagation();
+      e?.preventDefault();
+      if (onTogglePinLocation) {
+        onTogglePinLocation(id);
+      }
+    };
+    return () => {
+      delete (window as unknown as { accessMapTogglePin?: unknown }).accessMapTogglePin;
+    };
+  }, [onTogglePinLocation]);
 
   // Filter locations based on search query, category, accessibility tags, and proximity radius
   const filteredLocations = useMemo(() => {
@@ -225,9 +319,22 @@ export const MapView: React.FC<MapViewProps> = ({
     map.on('zoomend', updateViewportState);
     map.on('moveend', updateViewportState);
 
-    // Map click handler for adding location
+    // Right-click context menu handler on the map canvas
+    map.on('contextmenu', (e: L.LeafletMouseEvent) => {
+      e.originalEvent.preventDefault();
+      const pt = map.latLngToContainerPoint(e.latlng);
+      openContextMenu(e.latlng.lat, e.latlng.lng, pt.x, pt.y, null);
+      announce(`Map context menu opened at ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}.`);
+    });
+
+    // Map click handler for adding location and dismissing context menu
     map.on('click', (e: L.LeafletMouseEvent) => {
+      setContextMenu(null);
       onNewPinCoordsChange({ lat: e.latlng.lat, lng: e.latlng.lng });
+    });
+
+    map.on('movestart', () => {
+      setContextMenu(null);
     });
 
     // Invalidate map size when container dimensions change (e.g. sidebar collapse/expand)
@@ -323,18 +430,46 @@ export const MapView: React.FC<MapViewProps> = ({
         });
 
         marker.bindTooltip(
-          `<div style="font-weight:800;font-size:12px;color:#0f172a;">${loc.name}</div>
-           <div style="font-size:10px;font-weight:600;color:#475569;">${loc.category} • ${ratingText}★</div>`,
+          buildGuiCardHtml(loc),
           {
             direction: 'top',
-            offset: [0, -42],
-            opacity: 0.96,
+            offset: [0, -44],
+            opacity: 1,
+            className: 'gui-card',
+            interactive: true,
           }
         );
 
+        // Turn pin green on hover, restore to dark on mouseout (unless selected)
+        marker.on('mouseover', () => {
+          const el = marker.getElement();
+          const img = el?.querySelector('.accessmap-pin-img') as HTMLImageElement | null;
+          if (img) img.src = '/logo-green.png';
+        });
+
+        marker.on('mouseout', () => {
+          const el = marker.getElement();
+          const img = el?.querySelector('.accessmap-pin-img') as HTMLImageElement | null;
+          if (img && selectedLocation?.id !== loc.id) {
+            img.src = '/logo-dark.png';
+          }
+        });
+
         marker.on('click', () => {
           onSelectLocation(loc);
-          announce(`Selected location: ${loc.name}, rated ${ratingText} stars.`);
+          announce(
+            `Selected location: ${loc.name}, rated ${ratingText} stars, pinned by ${
+              loc.pinCount ?? 1
+            } users.`
+          );
+        });
+
+        marker.on('contextmenu', (e: L.LeafletMouseEvent) => {
+          e.originalEvent.preventDefault();
+          e.originalEvent.stopPropagation();
+          const pt = map.latLngToContainerPoint(e.latlng);
+          openContextMenu(loc.lat, loc.lng, pt.x, pt.y, loc);
+          announce(`Context menu opened for ${loc.name}.`);
         });
 
         marker.addTo(layer);
@@ -600,41 +735,8 @@ export const MapView: React.FC<MapViewProps> = ({
         ref={mapContainerRef}
         className="w-full h-full min-h-[350px]"
         tabIndex={0}
-        aria-label={`Interactive OpenStreetMap and Leaflet map of ${activeCity.name}`}
+        aria-label="Interactive OpenStreetMap and Leaflet map"
       />
-
-      {/* Prominent Dynamic City Header Watermark & OpenStreetMap + Leaflet service badge */}
-      <div className="absolute top-4 left-4 sm:top-5 sm:left-6 z-[500] pointer-events-none select-none flex flex-col gap-1.5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-slate-950 text-white flex items-center justify-center font-bold text-sm shadow-lg pointer-events-auto p-1.5">
-            <img
-              src="/logo-white.png"
-              alt="AccessMap Logo"
-              className="w-5 h-5 object-contain"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 drop-shadow-xs leading-none">
-              {activeCity.name}
-            </h2>
-            <p className="text-[10px] sm:text-[11px] font-bold text-slate-600 mt-0.5">
-              {activeCity.region} • {filteredLocations.length} Venues
-            </p>
-          </div>
-        </div>
-
-        {/* Free OpenStreetMap + Leaflet Service Tag */}
-        <div className="hidden sm:flex items-center gap-1.5 pl-1">
-          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-white/95 text-emerald-800 border border-emerald-300 shadow-xs pointer-events-auto flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
-            <span>OpenStreetMap + Leaflet</span>
-            <span className="text-slate-400 font-normal">| Zoom {currentZoom}</span>
-          </span>
-        </div>
-      </div>
 
       {/* Floating Interactive Search, Category & Accessibility Filter Bar */}
       <MapSearchFilterBar
@@ -656,8 +758,8 @@ export const MapView: React.FC<MapViewProps> = ({
         nearbyRadiusKm={nearbyRadiusKm}
       />
 
-      {/* Floating Map Controls in Top Right */}
-      <div className="absolute top-4 right-4 sm:top-5 sm:right-6 z-[500] flex items-center gap-2">
+      {/* Floating Map Controls Relocated to Bottom Right */}
+      <div className="absolute bottom-6 right-6 z-[500] flex items-center flex-wrap-reverse justify-end gap-2 pointer-events-auto">
         {/* Layer Switcher (OpenStreetMap Standard / Positron / Humanitarian / Dark) */}
         <div className="relative">
           <button
@@ -677,9 +779,9 @@ export const MapView: React.FC<MapViewProps> = ({
             <span className="hidden lg:inline">{TILE_CONFIGS[mapStyle].label}</span>
           </button>
 
-          {/* Layer selection dropdown menu */}
+          {/* Layer selection dropdown menu - Opens Upward */}
           {showLayerPicker && (
-            <div className="absolute top-12 right-0 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 space-y-1 z-[600] animate-scale-up">
+            <div className="absolute bottom-12 right-0 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 space-y-1 z-[600] animate-scale-up">
               <span className="block px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Choose Free Map Service:
               </span>
@@ -713,7 +815,7 @@ export const MapView: React.FC<MapViewProps> = ({
           )}
         </div>
 
-        {/* Proximity Radar & GPS Simulation Picker */}
+        {/* Proximity Radar & GPS Simulation Picker - Opens Upward */}
         <div className="relative">
           <button
             type="button"
@@ -735,7 +837,7 @@ export const MapView: React.FC<MapViewProps> = ({
           </button>
 
           {showRadiusPicker && (
-            <div className="absolute top-12 right-0 w-60 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2.5 space-y-1.5 z-[600] animate-scale-up">
+            <div className="absolute bottom-12 right-0 w-60 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2.5 space-y-1.5 z-[600] animate-scale-up">
               <span className="block px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 GPS Proximity Radar Ring
               </span>
@@ -832,6 +934,503 @@ export const MapView: React.FC<MapViewProps> = ({
             Click anywhere on the map or drag the gold marker to position your new location pin.
           </p>
         </div>
+      )}
+
+      {/* Context Menu & Side Panel Overlay */}
+      {contextMenu && (
+        <>
+          {/* Transparent Backdrop to dismiss on outside click */}
+          <div
+            className="absolute inset-0 z-[580]"
+            onClick={() => setContextMenu(null)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setContextMenu(null);
+            }}
+          />
+
+          {/* Context Menu Popup */}
+          <div
+            className="absolute z-[590] bg-white border-2 border-[#0F172A] rounded-2xl shadow-[4px_4px_0px_#0F172A,0_20px_35px_-4px_rgba(15,23,42,0.3)] p-2 w-[220px] animate-scale-up font-sans select-none"
+            style={{
+              left: Math.max(
+                12,
+                Math.min(
+                  contextMenu.x,
+                  (mapContainerRef.current?.clientWidth || 800) - 235
+                )
+              ),
+              top: Math.max(
+                12,
+                Math.min(
+                  contextMenu.y,
+                  (mapContainerRef.current?.clientHeight || 600) - 170
+                )
+              ),
+            }}
+            role="menu"
+            aria-label="Map location context menu"
+          >
+            {/* Header info */}
+            <div className="px-2.5 py-1.5 border-b border-slate-200 mb-1 flex items-center justify-between gap-1.5">
+              <div className="min-w-0">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {contextMenu.location ? 'Venue Point' : 'Map Coordinate'}
+                </div>
+                <div className="text-xs font-mono font-bold text-slate-800 truncate">
+                  {contextMenu.location
+                    ? contextMenu.location.name
+                    : `${contextMenu.lat.toFixed(4)}, ${contextMenu.lng.toFixed(4)}`}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setContextMenu(null)}
+                className="w-5 h-5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer"
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Option 1: Pin */}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenu((prev) =>
+                  prev ? { ...prev, activeSidePanel: 'pin' } : null
+                );
+                announce('Opened Pin placeholder form side panel.');
+              }}
+              className={`w-full px-3 py-2 rounded-xl text-left font-bold text-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                contextMenu.activeSidePanel === 'pin'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-800 hover:bg-emerald-50 hover:text-emerald-950'
+              }`}
+            >
+              <div
+                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                  contextMenu.activeSidePanel === 'pin'
+                    ? 'bg-emerald-700 text-white'
+                    : 'bg-emerald-100 text-emerald-700'
+                }`}
+              >
+                <MapPin className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="leading-tight">Pin</div>
+                <div
+                  className={`text-[10px] font-medium truncate ${
+                    contextMenu.activeSidePanel === 'pin'
+                      ? 'text-emerald-100'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  Placeholder form to pin
+                </div>
+              </div>
+            </button>
+
+            {/* Option 2: Details */}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenu((prev) =>
+                  prev ? { ...prev, activeSidePanel: 'details' } : null
+                );
+                announce('Opened Details placeholder form side panel.');
+              }}
+              className={`w-full px-3 py-2 rounded-xl text-left font-bold text-xs flex items-center gap-2.5 transition-all cursor-pointer mt-1 ${
+                contextMenu.activeSidePanel === 'details'
+                  ? 'bg-sky-700 text-white shadow-xs'
+                  : 'text-slate-800 hover:bg-sky-50 hover:text-sky-950'
+              }`}
+            >
+              <div
+                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                  contextMenu.activeSidePanel === 'details'
+                    ? 'bg-sky-800 text-white'
+                    : 'bg-sky-100 text-sky-700'
+                }`}
+              >
+                <Info className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="leading-tight">Details</div>
+                <div
+                  className={`text-[10px] font-medium truncate ${
+                    contextMenu.activeSidePanel === 'details'
+                      ? 'text-sky-100'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  Placeholder form details
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Adjacent Side Panel for Placeholder Forms */}
+          {contextMenu.activeSidePanel && (
+            <aside
+              className="absolute z-[600] bg-white border-2 border-[#0F172A] rounded-2xl shadow-[5px_5px_0px_#0F172A,0_24px_45px_-6px_rgba(15,23,42,0.35)] p-4 sm:p-5 w-[320px] max-w-[90vw] animate-scale-up font-sans overflow-hidden flex flex-col max-h-[85vh]"
+              style={{
+                left: (() => {
+                  const cWidth = mapContainerRef.current?.clientWidth || 800;
+                  const menuW = 220;
+                  const panelW = 320;
+                  const spaceOnRight = cWidth - (contextMenu.x + menuW + 16);
+                  return spaceOnRight >= panelW
+                    ? contextMenu.x + menuW + 12
+                    : Math.max(12, contextMenu.x - panelW - 12);
+                })(),
+                top: Math.max(
+                  12,
+                  Math.min(
+                    contextMenu.y,
+                    (mapContainerRef.current?.clientHeight || 600) - 520
+                  )
+                ),
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={
+                contextMenu.activeSidePanel === 'pin'
+                  ? 'Pin Location Placeholder Form'
+                  : 'Location Details Placeholder Form'
+              }
+            >
+              {/* Side Panel Header */}
+              <div className="flex items-start justify-between gap-3 pb-3 border-b-2 border-slate-900 shrink-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-black text-slate-900 tracking-tight">
+                      {contextMenu.activeSidePanel === 'pin'
+                        ? '📍 Pin Location'
+                        : 'ℹ️ Place Details'}
+                    </span>
+                    <span className="text-[9.5px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
+                      Placeholder Form
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-bold">
+                    GPS: {contextMenu.lat.toFixed(4)}, {contextMenu.lng.toFixed(4)}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setContextMenu((prev) =>
+                      prev ? { ...prev, activeSidePanel: null } : null
+                    )
+                  }
+                  className="w-7 h-7 rounded-xl border border-slate-300 hover:border-slate-900 hover:bg-slate-100 text-slate-600 hover:text-slate-900 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer shrink-0"
+                  aria-label="Close side panel"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Side Panel Scrollable Form Body */}
+              <div className="flex-1 overflow-y-auto py-3 space-y-3.5 pr-0.5">
+                {contextMenu.activeSidePanel === 'pin' ? (
+                  /* ======================================================== */
+                  /* PLACEHOLDER FORM FOR PINNING                             */
+                  /* ======================================================== */
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (contextMenu.location) {
+                        onTogglePinLocation?.(contextMenu.location.id);
+                        announce(`Toggled pin for ${contextMenu.location.name}.`);
+                      } else {
+                        onQuickAddPin?.({
+                          lat: contextMenu.lat,
+                          lng: contextMenu.lng,
+                          name: pinFormName.trim() || 'Pinned Coordinate',
+                          category: pinFormCategory,
+                          tags: pinFormTags,
+                          description: pinFormNotes,
+                        });
+                      }
+                      setContextMenu(null);
+                    }}
+                    className="space-y-3"
+                  >
+                    {/* Place Name Field */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                        Place Name
+                      </label>
+                      <input
+                        type="text"
+                        value={pinFormName}
+                        onChange={(e) => setPinFormName(e.target.value)}
+                        placeholder="e.g., Xavier Gate 2, Corrales Ave..."
+                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                      />
+                    </div>
+
+                    {/* Category Selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                        Category
+                      </label>
+                      <select
+                        value={pinFormCategory}
+                        onChange={(e) => setPinFormCategory(e.target.value as CategoryType)}
+                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-white font-bold text-slate-800 focus:outline-none"
+                      >
+                        <option value="Shopping">Shopping</option>
+                        <option value="Dining & Cafe">Dining & Cafe</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Education">Education</option>
+                        <option value="Public Space">Public Space</option>
+                        <option value="Hotel & Lodging">Hotel & Lodging</option>
+                        <option value="Service">Service</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {/* Pin Count Indicator */}
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">📌</span>
+                        <div>
+                          <div className="text-xs font-bold text-emerald-950">
+                            {contextMenu.location
+                              ? `${contextMenu.location.pinCount ?? 1} users pinning this place`
+                              : '1 user pinning (You)'}
+                          </div>
+                          <div className="text-[10px] text-emerald-700">
+                            Current active community pin count
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                        {contextMenu.location ? contextMenu.location.pinCount ?? 1 : 1}
+                      </span>
+                    </div>
+
+                    {/* Accessibility Features Checklist */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                        Accessibility Features (Quick Tag)
+                      </label>
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {[
+                          'Wheelchair-accessible entrance',
+                          'Ramp available',
+                          'Accessible restroom',
+                          'Elevator access',
+                        ].map((tag) => {
+                          const checked = pinFormTags.includes(tag);
+                          return (
+                            <label
+                              key={tag}
+                              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-colors ${
+                                checked
+                                  ? 'bg-emerald-50 border-emerald-400 text-emerald-900 font-bold'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setPinFormTags((prev) => [...prev, tag]);
+                                  } else {
+                                    setPinFormTags((prev) => prev.filter((t) => t !== tag));
+                                  }
+                                }}
+                                className="rounded text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5"
+                              />
+                              <span>{tag}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Notes Textarea */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                        Notes / Accessibility Observations
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={pinFormNotes}
+                        onChange={(e) => setPinFormNotes(e.target.value)}
+                        placeholder="Add notes about slope, entrance obstacles, or pavement condition..."
+                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium resize-none"
+                      />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="pt-2 flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setContextMenu(null)}
+                        className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold border-2 border-slate-900 shadow-[2px_2px_0px_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>Save Pin</span>
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  /* ======================================================== */
+                  /* PLACEHOLDER FORM FOR DETAILS                             */
+                  /* ======================================================== */
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      announce(`Recorded place details for ${detailsFormTitle || 'location'}.`);
+                      setContextMenu(null);
+                    }}
+                    className="space-y-3"
+                  >
+                    {/* Place Reference Field */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                        Place / Venue Reference
+                      </label>
+                      <input
+                        type="text"
+                        value={detailsFormTitle}
+                        onChange={(e) => setDetailsFormTitle(e.target.value)}
+                        placeholder="e.g. Centrio Mall North Entrance..."
+                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium"
+                      />
+                    </div>
+
+                    {/* District / Address */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                        District / Area
+                      </label>
+                      <input
+                        type="text"
+                        value={detailsFormArea}
+                        onChange={(e) => setDetailsFormArea(e.target.value)}
+                        placeholder="e.g. Downtown CDO, Northern Mindanao..."
+                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium"
+                      />
+                    </div>
+
+                    {/* Pin Count Indicator */}
+                    <div className="bg-sky-50 border border-sky-200 rounded-xl p-2.5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">📌</span>
+                        <div>
+                          <div className="text-xs font-bold text-sky-950">
+                            {contextMenu.location
+                              ? `${contextMenu.location.pinCount ?? 1} users pinning this place`
+                              : '0 users currently pinning this point'}
+                          </div>
+                          <div className="text-[10px] text-sky-700">
+                            Live mapper activity tracking
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black bg-sky-700 text-white px-2 py-0.5 rounded-full">
+                        {contextMenu.location ? contextMenu.location.pinCount ?? 1 : 0}
+                      </span>
+                    </div>
+
+                    {/* Inspection Fields */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-800">
+                        Physical Accessibility Inspection Form
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                            Door Width
+                          </span>
+                          <input
+                            type="text"
+                            value={detailsFormDoorWidth}
+                            onChange={(e) => setDetailsFormDoorWidth(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 font-medium bg-slate-50"
+                            placeholder="e.g. 90 cm"
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                            Auditor ID
+                          </span>
+                          <input
+                            type="text"
+                            value={detailsFormAuditor}
+                            onChange={(e) => setDetailsFormAuditor(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 font-medium bg-slate-50"
+                            placeholder="Volunteer Mapper"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 pt-1">
+                        <label className="flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={detailsFormStepFree}
+                            onChange={(e) => setDetailsFormStepFree(e.target.checked)}
+                            className="rounded text-sky-600 focus:ring-sky-500 w-3.5 h-3.5"
+                          />
+                          <span>Step-free ground clearance verified</span>
+                        </label>
+                      </div>
+
+                      <div>
+                        <span className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                          Sensory Rating Category
+                        </span>
+                        <select
+                          value={detailsFormSensory}
+                          onChange={(e) => setDetailsFormSensory(e.target.value)}
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium"
+                        >
+                          <option value="Quiet / low-sensory zone">Quiet / low-sensory zone</option>
+                          <option value="Moderate noise / accessible lighting">Moderate noise / accessible lighting</option>
+                          <option value="High sensory / loud commercial">High sensory / loud commercial</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="pt-2 flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setContextMenu(null)}
+                        className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+                      >
+                        Close
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold border-2 border-slate-900 shadow-[2px_2px_0px_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                        <span>Submit Details</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </aside>
+          )}
+        </>
       )}
     </div>
   );
