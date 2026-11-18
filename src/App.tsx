@@ -35,6 +35,8 @@ import {
   MessageSquare,
   Bell,
   X,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 
 const PROTOTYPE_ROUTES: Record<string, { title: string; subtitle: string; url: string }> = {
@@ -43,29 +45,24 @@ const PROTOTYPE_ROUTES: Record<string, { title: string; subtitle: string; url: s
     subtitle: 'Manage your profile, verified accessibility contributions, and badges',
     url: '/prototypes/profile-account/index.html',
   },
-  community: {
-    title: 'Community Leaderboard',
-    subtitle: 'Top urban accessibility contributors and community consensus verifiers',
-    url: '/prototypes/leaderboard/index.html',
-  },
-  messages: {
-    title: 'Messages & Outreach',
-    subtitle: 'Direct conversations with local accessibility mappers and community verifiers',
-    url: '/prototypes/messages/index.html',
-  },
   saved: {
     title: 'Saved Places',
     subtitle: 'Bookmarked accessible venues, ramps, and personal collections',
     url: '/prototypes/saved-places/index.html',
   },
+  vision: {
+    title: 'AI Vision · Storefront Analyzer',
+    subtitle: 'Multimodal Gemini AI automated entrance, ramp, and threshold inspection',
+    url: '/prototypes/ai-vision/index.html',
+  },
   contributions: {
-    title: 'Contribution History',
+    title: 'Profile & Contribution History',
     subtitle: 'Your crowdsourced photo uploads, reviews, and community votes',
-    url: '/prototypes/contributions/index.html',
+    url: '/prototypes/profile-account/index.html#contributions',
   },
   settings: {
-    title: 'Profile Settings',
-    subtitle: 'Accessibility preferences and display configurations',
+    title: 'Settings & Preferences',
+    subtitle: 'Accessibility routing preferences and display configurations',
     url: '/prototypes/profile-settings/index.html',
   },
 };
@@ -94,6 +91,11 @@ function AccessMapApp() {
 
   // Active navigation tab
   const [activeNavTab, setActiveNavTab] = useState<string>('map');
+  const [isMobilePageExpanded, setIsMobilePageExpanded] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsMobilePageExpanded(false);
+  }, [activeNavTab]);
 
   // Mobile / Filter panel toggle
   const [isPlacesPanelOpen, setIsPlacesPanelOpen] = useState(false);
@@ -505,9 +507,22 @@ function AccessMapApp() {
         />
       )}
 
-      {/* Pages rendered as a docked left sidebar instead of full page overlay */}
+      {/* Prototype Pages: Docked left sidebar on desktop, Partial-opened bottom sheet on mobile */}
       {activeNavTab !== 'map' && PROTOTYPE_ROUTES[activeNavTab] && (
-        <aside className="w-full sm:w-[400px] md:w-[460px] lg:w-[480px] bg-white border-r-[1.5px] border-[#0F172A] flex flex-col h-full shrink-0 z-30 shadow-2xl animate-slide-in-left">
+        <aside
+          className={`fixed inset-x-0 bottom-0 z-[600] md:relative md:inset-auto md:z-30 w-full md:w-[460px] lg:w-[480px] bg-white rounded-t-[32px] md:rounded-none border-t md:border-t-0 md:border-r-[1.5px] border-[#0F172A] shadow-[0_-12px_45px_rgba(15,23,42,0.25)] md:shadow-2xl flex flex-col transition-all duration-300 animate-slide-up md:animate-slide-in-left overflow-hidden shrink-0 ${
+            isMobilePageExpanded ? 'h-[85vh]' : 'h-[52vh]'
+          } md:h-full`}
+        >
+          {/* Mobile Drag Handle Bar */}
+          <div
+            onClick={() => setIsMobilePageExpanded(!isMobilePageExpanded)}
+            className="pt-2.5 pb-1 shrink-0 flex items-center justify-center cursor-pointer md:hidden group"
+            title={isMobilePageExpanded ? 'Collapse to half-sheet' : 'Expand full page'}
+          >
+            <div className="w-12 h-1.5 bg-slate-300 group-hover:bg-slate-400 rounded-full transition-colors" />
+          </div>
+
           {/* Header */}
           <div className="p-3.5 sm:p-4 border-b-[1.5px] border-[#0F172A] bg-[#EAF3F7] flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -531,6 +546,21 @@ function AccessMapApp() {
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
+              {/* Mobile Expand / Partial Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setIsMobilePageExpanded(!isMobilePageExpanded)}
+                className="md:hidden p-1.5 rounded-xl border border-slate-300 hover:border-[#0F172A] bg-white text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title={isMobilePageExpanded ? 'Collapse to half-sheet' : 'Expand full page'}
+                aria-label={isMobilePageExpanded ? 'Collapse to half-sheet' : 'Expand full page'}
+              >
+                {isMobilePageExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronUp className="w-4 h-4" />
+                )}
+              </button>
+
               <a
                 href={PROTOTYPE_ROUTES[activeNavTab].url}
                 target="_blank"
@@ -544,7 +574,7 @@ function AccessMapApp() {
                 type="button"
                 onClick={() => setActiveNavTab('map')}
                 className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 transition-colors cursor-pointer"
-                title="Close sidebar"
+                title="Close page"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -587,16 +617,23 @@ function AccessMapApp() {
           }}
           onQuickAddPin={handleQuickAddPin}
           onTogglePinLocation={handleTogglePinLocation}
+          onRunAIScan={(loc) => {
+            setAiTargetLocation(loc);
+            setIsAIModalOpen(true);
+          }}
+          onNavigateTab={(tab) => {
+            setActiveNavTab(tab);
+          }}
         />
 
-        {/* Floating toggle button for location details panel */}
+        {/* Floating toggle button for location details panel - Desktop Only */}
         <button
           type="button"
           onClick={() => {
             if (activeNavTab !== 'map') setActiveNavTab('map');
             setIsPlacesPanelOpen(!isPlacesPanelOpen);
           }}
-          className="absolute bottom-20 right-6 z-[550] px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-full shadow-xl flex items-center gap-1.5 cursor-pointer transition-all border border-slate-700"
+          className="hidden md:flex absolute bottom-20 right-6 z-[550] px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-full shadow-xl items-center gap-1.5 cursor-pointer transition-all border border-slate-700"
           title={isPlacesPanelOpen ? 'Collapse location details' : 'Show location details'}
           aria-label={isPlacesPanelOpen ? 'Collapse location details' : 'Show location details'}
         >

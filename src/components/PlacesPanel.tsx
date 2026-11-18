@@ -130,7 +130,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
   return (
     <aside
       aria-label="Locations list and filters"
-      className="w-full sm:w-[380px] md:w-[420px] lg:w-[440px] bg-[#f8fafc] border-r border-slate-200/90 flex flex-col h-full shrink-0 z-30 select-none shadow-xl md:shadow-xs animate-slide-in-left"
+      className="hidden md:flex w-full sm:w-[380px] md:w-[420px] lg:w-[440px] bg-[#f8fafc] border-r border-slate-200/90 flex-col h-full shrink-0 z-30 select-none shadow-xl md:shadow-xs animate-slide-in-left"
     >
       {/* If viewing details and a location is selected, display fused details in the left sidebar */}
       {isViewingDetails && selectedLocation ? (

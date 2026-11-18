@@ -205,6 +205,14 @@ TanAW is an open-source, crowdsourced urban accessibility platform designed to c
   - Repositioned the search bar closer to the sidebar (`top-4 left-4 sm:top-4.5 sm:left-5` with `items-start`) for convenient access next to the left navigation/places panel while remaining fully visible in the open map canvas.
   - Verified compilation and bundle integrity via `npm run lint` (0 errors) and `npm run build` (**666ms**).
 
+### `2026-11-19 00:28:00` — Partial-Opened Bottom Sheet Architecture for Mobile Pages & Missions
+- **Event**: Re-architected mobile page and mission drawer openings to use partially-opened bottom sheets instead of covering the entire viewport.
+- **Decisions & Implementation**:
+  - Configured `src/components/mobile/MobileRiftFloraLayout.tsx` bottom sheets (`missions` and `details`) to default to partial-opened height (`h-[50vh]`), exposing the upper half of the spatial map canvas, route trails, waypoints, and top HUD without visual occlusion.
+  - Added tap-to-expand drag handle and header chevron toggle buttons (`ChevronUp` / `ChevronDown`) allowing seamless switching between partial (`h-[50vh]`) and full-expanded (`h-[84vh]`) sheets.
+  - Updated `App.tsx` prototype routes aside: on mobile viewports (`< 768px`), pages (Profile, Saved Places, AI Vision, Contributions, Settings) now open as `fixed inset-x-0 bottom-0` partial bottom sheets (`h-[52vh]`, expandable to `h-[85vh]`) with top drag handle and header toggles, keeping `<main>` Leaflet map active and visible in the background.
+  - Verified compilation and production build via `npm run build` (built in 1.64s, 0 errors).
+
 ---
 
 ## 3. Architecture & File Structure
@@ -422,3 +430,38 @@ TanAW is an open-source, crowdsourced urban accessibility platform designed to c
   - Moved the scale entrance animation from the outer `.leaflet-tooltip` container to the child `.gui-card-inner` element, preserving Leaflet's spatial coordinate transforms.
   - Set tooltip options in [MapView.tsx](file:///C:/Users/Ghing/Documents/AcessMap/AccessMap/src/components/MapView.tsx) to `{ direction: 'top', offset: [0, -44], interactive: true }` to position the card centered directly above the pin marker with interactive hover support for the direct "Pin Place" button.
 - **Impact**: Detail preview GUI cards now position centered right above the hovered pin marker with zero coordinate drift or top-left snapping.
+
+---
+
+## `2026-11-18 22:00:00` — Design System Harmonization across Pages, Contribution History Embedded in Profile & Sidebar Declutter
+- **Event**: Standardized design system across pages, integrated Contribution History into Profile, and removed Dashboard sidebar button.
+- **Decisions**:
+  - **Removed Dashboard Navigation Button**: Removed the top "Dashboard" icon-button from `SidebarRail.tsx` and reference files, cleanly decluttering the rail above the `IDENTITY` section.
+  - **Embedded Contribution History in Profile Page**: Enhanced `public/prototypes/profile-account/index.html` with an accessible tabbed navigator (`[Public Profile]` and `[Contribution History (42)]`), housing the user's complete crowdsourced audit trail, verified tags, barrier flags, photo submissions, and filter pills (`All`, `Photo Audits`, `Pins`, `Barriers`). Deep linking via `#contributions` and postMessage API is fully supported.
+  - **Standardized Saved Places**: Completely redesigned `public/prototypes/saved-places/index.html` with the Profile design system (Space Grotesk, 1.8px neo-grotesque solid ink borders, motion texture background, 4-column metric stats, category filter pills, search input, and responsive single-column venue cards with instant map focus and unsave actions).
+  - **Created Dedicated AI Vision Page**: Created `public/prototypes/ai-vision/index.html` using the Profile design system, featuring interactive storefront photo upload/dropzone, quick Cagayan de Oro venue samples (Centrio Mall, Cafe Laguna, Mercury Drug, Cogon Market), instant Gemini AI inspection trigger, detected architectural feature confidence meters, barrier alerts, and selectable accessibility tags. Connected `SidebarRail.tsx` "AI vision" tab directly to dock the page.
+  - **Standardized Settings Page**: Completely redesigned `public/prototypes/profile-settings/index.html` with the Profile design system, providing unified toggle switches and styled dropdowns for mobility routing rules (Step-Free, slope thresholds, stair avoidances), sensory display options (contrast, font scale, reduced motion, approach chimes), and offline tile cache controls.
+  - **Synchronized Prototypes & Sibling Repositories**: Propagated modernized prototypes into `TanAW/dist/prototypes/` and respective sibling repositories (`TanAW-Saved-Places-Page`, `TanAW-Profile-Settings-Page`, `TanAW-Profile-Account-Page`).
+- **Impact**: Achieves 100% visual and interactive cohesion across all docked secondary pages in TanAW, retains live cartographic context, eliminates orphaned sidebar buttons, and consolidates contributor achievements inside Profile.
+
+---
+
+## `2026-11-18 22:20:00` — Adopted Profile Design System for Map Right-Click GUIs
+- **Event**: Restyled the map canvas right-click context menu and adjacent placeholder forms (Pin & Details) to match the Profile neo-grotesque design system.
+- **Decisions**:
+  - **Context Menu Popup**: Upgraded container styling in [MapView.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/MapView.tsx) to use `font-space`, `border-[1.8px] border-[#0F172A]`, `rounded-[16px]`, and `shadow-[4px_4px_0px_#0F172A]`. Restyled coordinate header with dashed divider (`border-[#9DBBC7]`), round ink-bordered close button, and unified `#21524B` deep teal / `#E7F2F0` soft accent styling for Pin and Details menu buttons.
+  - **Adjacent Side Panel Forms**: Transformed the Pin Location and Place Details panels with `border-[1.8px] border-[#0F172A]`, `rounded-[20px]`, `shadow-[5px_5px_0px_#0F172A]`, dashed dividers, and rounded pill badges.
+  - **Form Fields & Controls**: Styled all inputs, dropdowns, and textareas with 1.8px solid ink borders, `shadow-[0_2px_0_#0F172A]`, and focus rings; converted quick accessibility tag checkboxes into interactive tactile pills; redesigned live pin count indicator with solid ink container and badge pill; unified primary buttons with `#21524B` fill and `shadow-[0_3px_0_#0F172A]`.
+  - **Synchronized to Map Repository**: Mirrored updated `MapView.tsx` to `TanAW-Interactive-Map-Page/Src/components/MapView.tsx`.
+- **Impact**: Map right-click contextual actions and pinning forms now harmonize seamlessly with the Profile neo-grotesque visual design language.
+
+---
+
+## `2026-11-18 23:15:00` — Adopted Profile Design System for Pin Hover Preview Cards & Repositioned to Right Side
+- **Event**: Repositioned map pin hover preview cards (`.gui-card`) to the right side of pins and overhauled their visual styling to match the Profile neo-grotesque design system.
+- **Decisions**:
+  - **Repositioned to Right Side**: Updated Leaflet tooltip binding in [MapView.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/MapView.tsx) from `{ direction: 'top', offset: [0, -44] }` to `{ direction: 'right', offset: [16, -10] }`.
+  - **Smooth Left-Origin Pop Animation**: Updated `index.css` `@keyframes guiCardPop` and `.gui-card-inner` to use `transform-origin: center left` with `scale(0.94) translateX(-6px)` entrance transition for natural lateral emergence from the pin.
+  - **Profile Design System Styling**: Rebuilt `buildGuiCardHtml` in [routingAndSpatial.ts](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/utils/routingAndSpatial.ts) with Space Grotesk typography, `#EAF3F7` header with dashed `#9DBBC7` divider, `#E7F2F0` category badge pill, solid ink bordered rating pill, `#21524B` deep teal / `#E7F2F0` pin button with tactile drop shadow, `#E7F2F0` verified accessibility tag chips with solid ink borders, and a dashed footer quick actions hint.
+  - **Synchronized to Map Repository**: Propagated changes to `TanAW-Interactive-Map-Page/Src/components/MapView.tsx` and `TanAW-Interactive-Map-Page/Src/utils/routingAndSpatial.ts`.
+- **Impact**: Hovering over any map pin now cleanly displays venue accessibility details to the right of the pin without covering the pin icon or northern map context, with 100% design system uniformity across the entire application.

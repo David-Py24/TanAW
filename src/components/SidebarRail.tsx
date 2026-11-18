@@ -39,10 +39,6 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
 
   const handleNavClick = (tabId: string, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    if (tabId === 'vision') {
-      onOpenAIAnalyzer();
-      return;
-    }
     if (tabId === 'filters') {
       onToggleFilterPanel();
       return;
@@ -112,7 +108,7 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
 
       <aside
         aria-label="Primary Navigation"
-        className={`bg-white border-r-[1.5px] border-[#0F172A] flex flex-col shrink-0 select-none overflow-y-auto overflow-x-hidden min-h-0 z-40 font-space transition-all duration-200 ${
+        className={`hidden md:flex bg-white border-r-[1.5px] border-[#0F172A] flex-col shrink-0 select-none overflow-y-auto overflow-x-hidden min-h-0 z-40 font-space transition-all duration-200 ${
           isCollapsed ? 'w-[68px] p-[16px_10px]' : 'w-[248px] p-[16px_12px]'
         }`}
         style={{
@@ -183,24 +179,7 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
           )}
         </button>
 
-        {/* Top Navigation Items */}
-        <div className="flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('dashboard', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'dashboard'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Dashboard"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-grid" />
-            </svg>
-            {!isCollapsed && <span>Dashboard</span>}
-          </button>
-        </div>
+
 
         {/* IDENTITY Group */}
         <div
@@ -294,9 +273,11 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
           <button
             type="button"
             onClick={(e) => handleNavClick('vision', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all border-transparent font-medium hover:bg-[#EAF3F7] ${
-              isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'
-            }`}
+            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
+              activeTab === 'vision'
+                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
+                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
+            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
             title="AI vision (Gemini Storefront Analyzer)"
           >
             <svg className="w-[18px] h-[18px] shrink-0 text-emerald-700 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">

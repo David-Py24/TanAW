@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Vision · Storefront Analyzer · TanAW</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --soft:#EAF3F7; --ink:#0F172A; --mute:#475569; --faint:#586E7D;
+  --accent:#21524B; --accent-hover:#2B6860; --accent-light:#E7F2F0; --card:#FFFFFF; --grid:#9DBBC7;
+  --amber:#F59E0B; --amber-light:#FEF3C7; --red:#EF4444; --red-light:#FEE2E2; --blue:#38BDF8;
+  --shadow:0 3px 0 var(--ink); --shadow-up:0 6px 0 var(--ink);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.5 "Space Grotesk",system-ui,sans-serif;overflow-x:hidden}
+
+/* Background Motion Texture Layer */
+.bg-motion-texture {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.038'/%3E%3C/svg%3E");
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+}
+
+.bg-grid-drift {
+  position: absolute;
+  inset: -80px;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1.2px, transparent 0),
+    linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px, 72px 72px, 72px 72px;
+  animation: gridDrift 45s linear infinite;
+  opacity: 0.9;
+}
+
+.bg-topo-drift {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600' fill='none'%3E%3Cpath d='M-100 200 C 150 120, 300 350, 600 250 S 850 150, 1000 280' stroke='rgba(33,82,75,0.08)' stroke-width='2' stroke-dasharray='8 6' fill='none'/%3E%3Cpath d='M-100 280 C 180 200, 340 420, 640 320 S 880 220, 1000 350' stroke='rgba(15,23,42,0.04)' stroke-width='1.5' fill='none'/%3E%3Cpath d='M-100 360 C 210 280, 380 490, 680 390 S 910 290, 1000 420' stroke='rgba(56,189,248,0.07)' stroke-width='2' stroke-dasharray='12 8' fill='none'/%3E%3C/svg%3E");
+  background-size: 800px 600px;
+  animation: topoFloat 60s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(85px);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.orb-1 {
+  top: -8%;
+  right: -5%;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(33, 82, 75, 0.25) 0%, rgba(33, 82, 75, 0.05) 60%, transparent 80%);
+  animation: floatOrb1 24s ease-in-out infinite alternate;
+}
+.orb-2 {
+  top: 38%;
+  left: -10%;
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0.04) 60%, transparent 80%);
+  animation: floatOrb2 28s ease-in-out infinite alternate;
+}
+.orb-3 {
+  top: 72%;
+  right: -8%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(33, 82, 75, 0.2) 0%, rgba(251, 191, 36, 0.12) 50%, transparent 80%);
+  animation: floatOrb3 32s ease-in-out infinite alternate;
+}
+
+.bg-radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(33, 82, 75, 0.16);
+  pointer-events: none;
+  animation: radarPulse 18s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+.ring-1 {
+  top: 14%;
+  left: 18%;
+  width: 360px;
+  height: 360px;
+  animation-delay: 0s;
+}
+.ring-2 {
+  top: 62%;
+  right: 12%;
+  width: 440px;
+  height: 440px;
+  animation-delay: 9s;
+}
+
+@keyframes gridDrift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(72px, 72px); }
+}
+@keyframes topoFloat {
+  0% { transform: scale(1) translateY(0); }
+  100% { transform: scale(1.06) translateY(-40px); }
+}
+@keyframes floatOrb1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-60px, 50px) scale(1.12); }
+  100% { transform: translate(-30px, 90px) scale(0.95); }
+}
+@keyframes floatOrb2 {
+  0% { transform: translate(0, 0) scale(0.95); }
+  50% { transform: translate(70px, -40px) scale(1.1); }
+  100% { transform: translate(40px, 50px) scale(1.02); }
+}
+@keyframes floatOrb3 {
+  0% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-50px, -60px) scale(0.92); }
+  100% { transform: translate(-80px, -20px) scale(1.1); }
+}
+@keyframes radarPulse {
+  0% { transform: scale(0.6) rotate(0deg); opacity: 0; }
+  25% { opacity: 0.65; }
+  75% { opacity: 0.3; }
+  100% { transform: scale(1.6) rotate(60deg); opacity: 0; }
+}
+
+.page{position:relative;z-index:1;min-height:100%;display:flex;padding:clamp(20px,4vw,40px) clamp(16px,4vw,36px) 120px}
+.card{width:100%;max-width:1040px;margin:0 auto;display:flex;flex-direction:column;animation:rise .7s cubic-bezier(.16,1,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}}
+
+.body{flex:1;display:flex;flex-direction:column;gap:22px}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.icon-box{width:64px;height:64px;border-radius:18px;border:1.8px solid var(--ink);box-shadow:var(--shadow);background:var(--accent-light);display:grid;place-items:center;color:var(--accent);flex-shrink:0}
+.icon-box svg{width:32px;height:32px;stroke-width:2;stroke:currentColor;fill:none}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 13px "Space Grotesk",sans-serif;padding:10px 20px;border-radius:99px;border:1.8px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:var(--shadow);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-up)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.btn.sm{padding:7px 16px;font-size:12px}
+.btn.accent{background:var(--accent);color:#fff}
+.btn.accent:hover{background:var(--accent-hover)}
+.btn.soft{background:var(--soft)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--shadow)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:3px}
+
+.title-area h1{margin:12px 0 2px;font-size:clamp(26px,3.8vw,36px);font-weight:700;letter-spacing:-.025em;line-height:1.2}
+.title-area p{margin:0;color:var(--faint);font-size:14px}
+
+/* Stats Strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin:4px 0 0;padding-bottom:18px;border-bottom:1.5px dashed var(--grid)}
+.stat{padding:0 18px;border-left:1.5px solid var(--grid)}
+.stat:first-child{padding-left:0;border-left:0}
+.stat:last-child{padding-right:0}
+.stat small{display:block;color:var(--faint);font-size:11.5px;font-weight:500;margin-bottom:2px}
+.stat b{font-size:clamp(17px,2vw,22px);font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+
+/* Dropzone & Samples */
+.dropzone{border:2px dashed var(--ink);border-radius:18px;background:#fff;box-shadow:var(--shadow);padding:24px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:all .18s ease}
+.dropzone:hover{background:var(--soft);border-color:var(--accent)}
+.drop-icon{width:48px;height:48px;border-radius:50%;background:var(--accent-light);border:1.5px solid var(--ink);display:grid;place-items:center;color:var(--accent)}
+.drop-icon svg{width:22px;height:22px;stroke-width:2;stroke:currentColor;fill:none}
+.drop-title{font-size:16px;font-weight:700;color:var(--ink);margin:0}
+.drop-hint{font-size:12px;color:var(--faint);margin:0}
+.image-preview{max-height:220px;width:100%;object-fit:cover;border-radius:12px;border:1.5px solid var(--ink);display:none;margin-top:8px}
+
+.samples-row{display:flex;flex-direction:column;gap:6px}
+.samples-label{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.06em}
+.samples-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sample-btn{padding:5px 12px;border-radius:8px;border:1.5px solid var(--ink);background:#fff;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;box-shadow:0 1.5px 0 var(--ink);transition:all .15s}
+.sample-btn:hover{background:var(--accent-light);transform:translateY(-1px)}
+
+/* Analysis Results Card */
+.results-card{border:1.8px solid var(--ink);border-radius:18px;background:#fff;box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:14px;animation:rise .4s ease-out both}
+.results-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1.5px dashed var(--grid)}
+.results-header h3{margin:0;font-size:16px;font-weight:700}
+.confidence-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;background:var(--accent-light);color:var(--accent);padding:3px 9px;border-radius:99px;border:1px solid rgba(33,82,75,.3)}
+
+.summary-box{background:var(--soft);border:1px solid var(--grid);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.45;color:var(--ink)}
+
+.features-list{display:flex;flex-direction:column;gap:8px}
+.feature-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border:1.5px solid var(--ink);border-radius:10px;background:#fff;box-shadow:0 2px 0 var(--ink)}
+.feature-chk{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;flex-shrink:0;margin-top:1px}
+.feature-chk svg{width:12px;height:12px;stroke-width:2.5;stroke:currentColor;fill:none}
+.feature-info{flex:1;min-width:0}
+.feature-name{font-size:13px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between}
+.feature-match{font-size:11.5px;color:var(--accent);font-weight:700}
+.feature-desc{font-size:11.5px;color:var(--mute);margin:2px 0 0}
+
+.barriers-box{border:1.5px solid var(--amber);background:var(--amber-light);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.barriers-title{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#92400E}
+.barriers-title svg{width:16px;height:16px;stroke-width:2;stroke:currentColor;fill:none}
+.barriers-list{margin:0;padding-left:18px;font-size:12px;color:#92400E;line-height:1.4}
+
+.tags-suggest{display:flex;flex-direction:column;gap:8px}
+.tags-chips{display:flex;flex-wrap:wrap;gap:6px}
+.tag-toggle{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--ink);background:var(--soft);color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1.5px 0 var(--ink);transition:all .15s}
+.tag-toggle.checked{background:var(--accent);color:#fff}
+
+.action-row{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;padding-top:12px;border-top:1.5px dashed var(--grid)}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;z-index:50;background:var(--ink);color:#fff;padding:9px 18px;border-radius:99px;font-weight:600;font-size:13px;transition:.25s cubic-bezier(.16,1,.3,1);pointer-events:none;box-shadow:0 4px 12px rgba(15,23,42,.3)}
+.toast.on{transform:translate(-50%,0);opacity:1}
+
+@media (max-width:560px){
+  .stats{grid-template-columns:1fr 1fr;gap:14px 0}
+  .stat:nth-child(3){padding-left:0;border-left:0}
+  .stat{padding:0 12px}
+}
+@media (prefers-reduced-motion:reduce){.bg-grid-drift,.bg-topo-drift,.bg-orb,.bg-radar-ring,.card{animation:none!important}*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="bg-motion-texture" aria-hidden="true">
+  <div class="bg-noise"></div>
+  <div class="bg-grid-drift"></div>
+  <div class="bg-topo-drift"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="bg-radar-ring ring-1"></div>
+  <div class="bg-radar-ring ring-2"></div>
+</div>
+
+<main class="page">
+  <div class="card">
+    <div class="body">
+      <!-- Top Bar -->
+      <div class="top">
+        <div class="icon-box" role="img" aria-label="AI Vision icon">
+          <svg viewBox="0 0 24 24"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></svg>
+        </div>
+        <button type="button" class="btn sm" id="camTrigger">📷 Live Camera</button>
+      </div>
+
+      <!-- Title Area -->
+      <div class="title-area">
+        <h1>AI Vision · Storefront Analyzer</h1>
+        <p>Multimodal Gemini 3.8 Flash automated entrance, ramp, door, and threshold inspection.</p>
+      </div>
+
+      <!-- 4-Column Metric Stats -->
+      <div class="stats">
+        <div class="stat"><small>Scans completed</small><b>86</b></div>
+        <div class="stat"><small>Model precision</small><b>94.2%</b></div>
+        <div class="stat"><small>Barriers flagged</small><b>19</b></div>
+        <div class="stat"><small>Tags generated</small><b>312</b></div>
+      </div>
+
+      <!-- Interactive Photo Dropzone -->
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <div class="dropzone" id="dropArea" tabindex="0" role="button" aria-label="Upload storefront photo">
+        <div class="drop-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <h3 class="drop-title" id="dropTitle">Drop storefront photo or click to browse</h3>
+        <p class="drop-hint">Supports high-res JPG, PNG photos of building entrances, steps, and ramps.</p>
+        <img id="previewImg" class="image-preview" alt="Selected storefront preview">
+      </div>
+
+      <!-- Sample Storefront Selectors -->
+      <div class="samples-row">
+        <span class="samples-label">Quick samples (Cagayan de Oro)</span>
+        <div class="samples-chips">
+          <button type="button" class="sample-btn" data-sample="centrio">🏢 Centrio Mall (Ramp)</button>
+          <button type="button" class="sample-btn" data-sample="laguna">☕ Cafe Laguna (Threshold)</button>
+          <button type="button" class="sample-btn" data-sample="mercury">💊 Mercury Drug (Curb-cut)</button>
+          <button type="button" class="sample-btn" data-sample="cogon">🏪 Cogon Market (Steps)</button>
+        </div>
+      </div>
+
+      <!-- Analyze Trigger Button -->
+      <button type="button" class="btn accent" id="runAiBtn" style="padding:13px 24px;font-size:14px;box-shadow:var(--shadow-up)">
+        ⚡ Run Gemini AI Inspection
+      </button>
+
+      <!-- Results Card (Visible after analysis) -->
+      <div class="results-card" id="resultsCard" style="display:none">
+        <div class="results-header">
+          <div>
+            <h3 id="resultVenueName">Centrio Mall Main Entrance</h3>
+            <span style="font-size:11.5px;color:var(--faint)">Analyzed via Gemini 3.8 Flash Vision Engine</span>
+          </div>
+          <span class="confidence-chip" id="confBadge">98.8% Match</span>
+        </div>
+
+        <!-- Architectural Summary -->
+        <div class="summary-box" id="resultSummary">
+          Step-free concrete access ramp detected with continuous dual handrails. Automatic sensor sliding doors with level flush threshold exceed standard 36" clearance for power wheelchairs.
+        </div>
+
+        <!-- Detected Physical Features -->
+        <div class="features-list" id="featuresList">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Barriers Box -->
+        <div class="barriers-box" id="barriersBox" style="display:none">
+          <div class="barriers-title">
+            <svg viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span>Potential Accessibility Barriers Flagged</span>
+          </div>
+          <ul class="barriers-list" id="barriersItems">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+        <!-- Suggested Tags Pills -->
+        <div class="tags-suggest">
+          <span class="samples-label">Suggested Community Tags</span>
+          <div class="tags-chips" id="tagsChips">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Action Row -->
+        <div class="action-row">
+          <button type="button" class="btn soft" id="saveAuditBtn">💾 Save to Profile History</button>
+          <button type="button" class="btn accent" id="applyMapBtn">📌 Apply to Map Location</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  var fileInput = document.getElementById('fileInput');
+  var dropArea = document.getElementById('dropArea');
+  var previewImg = document.getElementById('previewImg');
+  var dropTitle = document.getElementById('dropTitle');
+  var runAiBtn = document.getElementById('runAiBtn');
+  var resultsCard = document.getElementById('resultsCard');
+  var toastEl = document.getElementById('toast');
+  var toastTimer;
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2200);
+  }
+
+  // Pre-configured samples
+  var sampleData = {
+    centrio: {
+      venue: "Centrio Mall (Ayala Malls Ramp)",
+      conf: "99.4% Match",
+      imgUrl: "https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?auto=format&fit=crop&w=600&q=80",
+      summary: "Step-free ramp detected with gentle slope (<1:12 ADA compliant ratio) and dual continuous steel handrails. Automatic sliding doors with wide clearance.",
+      features: [
+        { name: "Step-free ramp", match: "99.4%", desc: "Slope gradient ~1:14 with textured anti-slip surface and 1.8m landing." },
+        { name: "Automatic sliding door", match: "98.8%", desc: "Sensor-activated glass doors with 44\" clear opening width." },
+        { name: "Tactile paving indicator", match: "96.5%", desc: "Yellow blister paving detected at ramp top and base approach." }
+      ],
+      barriers: [],
+      tags: ["Step-free ramp", "Automatic sliding door", "Tactile paving", "Wide doorway (>90cm)", "Wheelchair-accessible"]
+    },
+    laguna: {
+      venue: "Cafe Laguna (Entrance Threshold)",
+      conf: "98.2% Match",
+      imgUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+      summary: "Level flush entrance threshold with zero vertical steps. Wide wooden door with lever handle. Interior turning radius clear for mobility equipment.",
+      features: [
+        { name: "Flush zero-step entrance", match: "98.2%", desc: "Vertical threshold height under 0.2 inches, completely step-free." },
+        { name: "Wide doorway", match: "97.5%", desc: "Clear passage width of 36 inches." },
+        { name: "Accessible seating area", match: "95.0%", desc: "Removable chairs and wheelchair-height dining tables." }
+      ],
+      barriers: [],
+      tags: ["Flush threshold", "Wide doorway (>90cm)", "Wheelchair-accessible seating", "Accessible restroom"]
+    },
+    mercury: {
+      venue: "Mercury Drug (Divisoria CDO)",
+      conf: "96.0% Match",
+      imgUrl: "https://images.unsplash.com/photo-1576602976047-174e57a47881?auto=format&fit=crop&w=600&q=80",
+      summary: "Curbside transition features concrete curb-cut bevel. Push-bar double doors with level entry threshold.",
+      features: [
+        { name: "Curb-cut ramp", match: "96.0%", desc: "Beveled sidewalk ramp directly connecting street level to entrance." },
+        { name: "Low-profile threshold", match: "94.5%", desc: "Threshold under 0.5 inches with beveled edges." }
+      ],
+      barriers: ["Manual push door may require assistance in high wind."],
+      tags: ["Curb-cut ramp", "Low threshold", "Well-lit entrance"]
+    },
+    cogon: {
+      venue: "Cogon Market (Osmeña St Side)",
+      conf: "93.5% Match",
+      imgUrl: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=600&q=80",
+      summary: "Entrance has raised concrete curb step (approx 16cm height). No permanent ramp detected. Pedestrian pathway crowded by vendor stalls.",
+      features: [
+        { name: "Sheltered canopy", match: "93.5%", desc: "Covered overhead walkway protects from rain." }
+      ],
+      barriers: [
+        "Single 16cm vertical concrete step prevents direct roll-in access.",
+        "Missing tactile paving or curb ramp transition.",
+        "Clearance narrowed below 80cm by curbside merchandise."
+      ],
+      tags: ["Covered walkway", "Requires assistance", "Barrier reported"]
+    }
+  };
+
+  var currentAnalysis = sampleData.centrio;
+
+  function loadSample(key){
+    var s = sampleData[key];
+    if(!s) return;
+    currentAnalysis = s;
+    previewImg.src = s.imgUrl;
+    previewImg.style.display = 'block';
+    dropTitle.textContent = "Selected: " + s.venue;
+    showToast("Loaded sample: " + s.venue);
+  }
+
+  // Sample Buttons
+  document.querySelectorAll('.sample-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.getAttribute('data-sample');
+      loadSample(key);
+    });
+  });
+
+  // File Upload
+  dropArea.addEventListener('click', function(){ fileInput.click(); });
+  fileInput.addEventListener('change', function(e){
+    if(e.target.files && e.target.files[0]){
+      var file = e.target.files[0];
+      var reader = new FileReader();
+      reader.onload = function(evt){
+        previewImg.src = evt.target.result;
+        previewImg.style.display = 'block';
+        dropTitle.textContent = "Photo loaded: " + file.name;
+        showToast("Photo ready for Gemini inspection");
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Run AI Inspection
+  runAiBtn.addEventListener('click', function(){
+    runAiBtn.disabled = true;
+    runAiBtn.textContent = "⚡ Inspecting with Gemini AI...";
+    showToast("Running multimodal accessibility computer vision...");
+
+    setTimeout(function(){
+      runAiBtn.disabled = false;
+      runAiBtn.textContent = "⚡ Run Gemini AI Inspection";
+      renderResults(currentAnalysis);
+      resultsCard.style.display = 'flex';
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToast("Storefront analysis complete!");
+    }, 900);
+  });
+
+  function renderResults(data){
+    document.getElementById('resultVenueName').textContent = data.venue;
+    document.getElementById('confBadge').textContent = data.conf;
+    document.getElementById('resultSummary').textContent = data.summary;
+
+    // Render features
+    var fList = document.getElementById('featuresList');
+    fList.innerHTML = data.features.map(function(f){
+      return '<div class="feature-item">' +
+        '<div class="feature-chk"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>' +
+        '<div class="feature-info">' +
+          '<div class="feature-name"><span>' + f.name + '</span><span class="feature-match">' + f.match + '</span></div>' +
+          '<p class="feature-desc">' + f.desc + '</p>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // Render barriers
+    var bBox = document.getElementById('barriersBox');
+    var bItems = document.getElementById('barriersItems');
+    if(data.barriers && data.barriers.length > 0){
+      bBox.style.display = 'flex';
+      bItems.innerHTML = data.barriers.map(function(b){ return '<li>' + b + '</li>'; }).join('');
+    } else {
+      bBox.style.display = 'none';
+    }
+
+    // Render tags
+    var tChips = document.getElementById('tagsChips');
+    tChips.innerHTML = data.tags.map(function(t){
+      return '<button type="button" class="tag-toggle checked" data-tag="' + t + '">✔ ' + t + '</button>';
+    }).join('');
+
+    tChips.querySelectorAll('.tag-toggle').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        btn.classList.toggle('checked');
+        if(btn.classList.contains('checked')){
+          btn.textContent = '✔ ' + btn.getAttribute('data-tag');
+        } else {
+          btn.textContent = '+ ' + btn.getAttribute('data-tag');
+        }
+      });
+    });
+  }
+
+  // Camera trigger
+  document.getElementById('camTrigger').addEventListener('click', function(){
+    fileInput.setAttribute('capture', 'environment');
+    fileInput.click();
+  });
+
+  // Apply to Map Location
+  document.getElementById('applyMapBtn').addEventListener('click', function(){
+    showToast("Applied verified accessibility tags to map pin!");
+    if(window.parent){
+      window.parent.postMessage({
+        type: 'APPLY_AI_TAGS',
+        venue: currentAnalysis.venue,
+        tags: currentAnalysis.tags
+      }, '*');
+    }
+  });
+
+  // Save to Profile
+  document.getElementById('saveAuditBtn').addEventListener('click', function(){
+    showToast("Audit saved to Henry Sullivan's Contribution History!");
+  });
+
+  // Pre-load default
+  loadSample('centrio');
+})();
+</script>
+</body>
+</html>

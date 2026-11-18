@@ -24,6 +24,7 @@ import {
   ACCESSIBILITY_QUICK_FILTERS,
   MapSearchFilterBar,
 } from './MapSearchFilterBar';
+import { MobileRiftFloraLayout } from './mobile/MobileRiftFloraLayout';
 import {
   Crosshair,
   Locate,
@@ -57,6 +58,8 @@ interface MapViewProps {
     description?: string;
   }) => void;
   onTogglePinLocation?: (pinId: string) => void;
+  onRunAIScan?: (loc: LocationPin | null) => void;
+  onNavigateTab?: (tabId: string) => void;
 }
 
 export type MapTileStyle = 'osm' | 'positron' | 'dark' | 'hot';
@@ -118,6 +121,8 @@ export const MapView: React.FC<MapViewProps> = ({
   onNewPinCoordsChange,
   onQuickAddPin,
   onTogglePinLocation,
+  onRunAIScan,
+  onNavigateTab,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -432,8 +437,8 @@ export const MapView: React.FC<MapViewProps> = ({
         marker.bindTooltip(
           buildGuiCardHtml(loc),
           {
-            direction: 'top',
-            offset: [0, -44],
+            direction: 'right',
+            offset: [16, -10],
             opacity: 1,
             className: 'gui-card',
             interactive: true,
@@ -511,15 +516,15 @@ export const MapView: React.FC<MapViewProps> = ({
     const userIcon = L.divIcon({
       className: 'custom-pin-marker',
       html: `
-        <div style="position: relative; width: 26px; height: 26px;" title="${
+        <div style="position: relative; width: 28px; height: 28px;" title="${
           userCoords ? 'Your GPS Location' : 'CDO Reference Center'
         }">
-          <div style="position: absolute; width: 100%; height: 100%; border-radius: 9999px; background: #0284c7; opacity: 0.32; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-          <div style="position: relative; width: 18px; height: 18px; margin: 4px; border-radius: 9999px; background: #0284c7; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.35);"></div>
+          <div style="position: absolute; width: 100%; height: 100%; border-radius: 9999px; background: #B8F500; opacity: 0.45; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="position: relative; width: 18px; height: 18px; margin: 5px; border-radius: 9999px; background: #B8F500; border: 3px solid #0F172A; box-shadow: 0 0 12px rgba(184,245,0,0.85);"></div>
         </div>
       `,
-      iconSize: [26, 26],
-      iconAnchor: [13, 13],
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
     });
 
     L.marker([origin.lat, origin.lng], {
@@ -540,17 +545,17 @@ export const MapView: React.FC<MapViewProps> = ({
     L.polyline(activeRoute.coordinates, {
       color: '#0f172a',
       weight: 8,
-      opacity: 0.65,
+      opacity: 0.75,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(layer);
 
-    // Inner vibrant route line
+    // Inner vibrant route line (Neon Lime green navigation trail matching Rift Flora)
     const routeLine = L.polyline(activeRoute.coordinates, {
-      color: '#0ea5e9',
+      color: '#B8F500',
       weight: 4.5,
       opacity: 0.98,
-      dashArray: activeRoute.isFallbackArc ? '8, 8' : undefined,
+      dashArray: activeRoute.isFallbackArc ? '8, 8' : '4, 8',
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(layer);
@@ -738,28 +743,30 @@ export const MapView: React.FC<MapViewProps> = ({
         aria-label="Interactive OpenStreetMap and Leaflet map"
       />
 
-      {/* Floating Interactive Search, Category & Accessibility Filter Bar */}
-      <MapSearchFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        activeA11yFilters={activeA11yFilters}
-        onToggleA11yFilter={handleToggleA11yFilter}
-        onResetFilters={handleResetFilters}
-        filteredLocations={filteredLocations}
-        totalLocationsCount={locations.length}
-        onSelectLocationFromSearch={(loc) => {
-          onSelectLocation(loc);
-        }}
-        activeCityId={activeCity.id}
-        onSelectCityPreset={handleSelectCityPreset}
-        userCoords={userCoords}
-        nearbyRadiusKm={nearbyRadiusKm}
-      />
+      {/* Floating Interactive Search, Category & Accessibility Filter Bar - Desktop Only */}
+      <div className="hidden md:block">
+        <MapSearchFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          activeA11yFilters={activeA11yFilters}
+          onToggleA11yFilter={handleToggleA11yFilter}
+          onResetFilters={handleResetFilters}
+          filteredLocations={filteredLocations}
+          totalLocationsCount={locations.length}
+          onSelectLocationFromSearch={(loc) => {
+            onSelectLocation(loc);
+          }}
+          activeCityId={activeCity.id}
+          onSelectCityPreset={handleSelectCityPreset}
+          userCoords={userCoords}
+          nearbyRadiusKm={nearbyRadiusKm}
+        />
+      </div>
 
-      {/* Floating Map Controls Relocated to Bottom Right */}
-      <div className="absolute bottom-6 right-6 z-[500] flex items-center flex-wrap-reverse justify-end gap-2 pointer-events-auto">
+      {/* Floating Map Controls Relocated to Bottom Right - Desktop Only */}
+      <div className="hidden md:flex absolute bottom-6 right-6 z-[500] items-center flex-wrap-reverse justify-end gap-2 pointer-events-auto">
         {/* Layer Switcher (OpenStreetMap Standard / Positron / Humanitarian / Dark) */}
         <div className="relative">
           <button
@@ -926,6 +933,35 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       </div>
 
+      {/* Mobile Rift Flora Layout & HUD - Exclusive to Mobile (< md) */}
+      <MobileRiftFloraLayout
+        locations={locations}
+        filteredLocations={filteredLocations}
+        selectedLocation={selectedLocation}
+        onSelectLocation={(loc) => {
+          if (loc) {
+            onSelectLocation(loc);
+          }
+        }}
+        onOpenDetails={onOpenDetails}
+        onRunAIScan={onRunAIScan || (() => {})}
+        onLocateMe={handleLocateMe}
+        isLocating={isLocating}
+        onResetCenter={handleResetCenter}
+        mapStyle={mapStyle}
+        onSelectMapStyle={(style) => {
+          setMapStyle(style);
+          announce(`Map layer changed to ${TILE_CONFIGS[style].name}`);
+        }}
+        userCoords={userCoords}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        onNavigateTab={onNavigateTab || (() => {})}
+        onTogglePin={onTogglePinLocation}
+      />
+
       {/* Adding pin guide banner */}
       {isAddingLocation && (
         <div className="absolute top-36 sm:top-24 left-6 z-[500] bg-amber-500 text-amber-950 px-4 py-2.5 rounded-2xl shadow-xl border border-amber-600 flex items-center gap-3 animate-fade-in">
@@ -951,13 +987,13 @@ export const MapView: React.FC<MapViewProps> = ({
 
           {/* Context Menu Popup */}
           <div
-            className="absolute z-[590] bg-white border-2 border-[#0F172A] rounded-2xl shadow-[4px_4px_0px_#0F172A,0_20px_35px_-4px_rgba(15,23,42,0.3)] p-2 w-[220px] animate-scale-up font-sans select-none"
+            className="absolute z-[590] bg-white border-[1.8px] border-[#0F172A] rounded-[16px] shadow-[4px_4px_0px_#0F172A,0_20px_35px_-4px_rgba(15,23,42,0.25)] p-2.5 w-[225px] animate-scale-up font-space select-none"
             style={{
               left: Math.max(
                 12,
                 Math.min(
                   contextMenu.x,
-                  (mapContainerRef.current?.clientWidth || 800) - 235
+                  (mapContainerRef.current?.clientWidth || 800) - 240
                 )
               ),
               top: Math.max(
@@ -972,12 +1008,12 @@ export const MapView: React.FC<MapViewProps> = ({
             aria-label="Map location context menu"
           >
             {/* Header info */}
-            <div className="px-2.5 py-1.5 border-b border-slate-200 mb-1 flex items-center justify-between gap-1.5">
+            <div className="px-1.5 py-1 border-b-[1.5px] border-dashed border-[#9DBBC7] mb-2 flex items-center justify-between gap-1.5">
               <div className="min-w-0">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#586E7D]">
                   {contextMenu.location ? 'Venue Point' : 'Map Coordinate'}
                 </div>
-                <div className="text-xs font-mono font-bold text-slate-800 truncate">
+                <div className="text-xs font-mono font-bold text-[#0F172A] truncate">
                   {contextMenu.location
                     ? contextMenu.location.name
                     : `${contextMenu.lat.toFixed(4)}, ${contextMenu.lng.toFixed(4)}`}
@@ -986,7 +1022,7 @@ export const MapView: React.FC<MapViewProps> = ({
               <button
                 type="button"
                 onClick={() => setContextMenu(null)}
-                className="w-5 h-5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer"
+                className="w-6 h-6 rounded-full border-[1.5px] border-[#0F172A] bg-white hover:bg-[#EAF3F7] text-[#0F172A] flex items-center justify-center text-xs font-bold shadow-[0_1.5px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
                 aria-label="Close menu"
               >
                 ✕
@@ -1003,28 +1039,28 @@ export const MapView: React.FC<MapViewProps> = ({
                 );
                 announce('Opened Pin placeholder form side panel.');
               }}
-              className={`w-full px-3 py-2 rounded-xl text-left font-bold text-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+              className={`w-full px-2.5 py-2 rounded-[12px] border-[1.8px] text-left text-xs flex items-center gap-2.5 transition-all cursor-pointer ${
                 contextMenu.activeSidePanel === 'pin'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-800 hover:bg-emerald-50 hover:text-emerald-950'
+                  ? 'bg-[#21524B] text-white border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
+                  : 'bg-white text-[#0F172A] border-transparent hover:border-[#0F172A] hover:bg-[#EAF3F7] hover:shadow-[0_2px_0_#0F172A] font-semibold'
               }`}
             >
               <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                className={`w-7 h-7 rounded-[8px] border-[1.2px] border-[#0F172A] flex items-center justify-center shrink-0 shadow-[0_1px_0_#0F172A] ${
                   contextMenu.activeSidePanel === 'pin'
-                    ? 'bg-emerald-700 text-white'
-                    : 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-[#13332E] text-white'
+                    : 'bg-[#E7F2F0] text-[#21524B]'
                 }`}
               >
                 <MapPin className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="leading-tight">Pin</div>
+                <div className="leading-tight font-bold">Pin</div>
                 <div
                   className={`text-[10px] font-medium truncate ${
                     contextMenu.activeSidePanel === 'pin'
-                      ? 'text-emerald-100'
-                      : 'text-slate-400'
+                      ? 'text-[#E7F2F0]'
+                      : 'text-[#586E7D]'
                   }`}
                 >
                   Placeholder form to pin
@@ -1042,28 +1078,28 @@ export const MapView: React.FC<MapViewProps> = ({
                 );
                 announce('Opened Details placeholder form side panel.');
               }}
-              className={`w-full px-3 py-2 rounded-xl text-left font-bold text-xs flex items-center gap-2.5 transition-all cursor-pointer mt-1 ${
+              className={`w-full px-2.5 py-2 rounded-[12px] border-[1.8px] text-left text-xs flex items-center gap-2.5 transition-all cursor-pointer mt-1.5 ${
                 contextMenu.activeSidePanel === 'details'
-                  ? 'bg-sky-700 text-white shadow-xs'
-                  : 'text-slate-800 hover:bg-sky-50 hover:text-sky-950'
+                  ? 'bg-[#21524B] text-white border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
+                  : 'bg-white text-[#0F172A] border-transparent hover:border-[#0F172A] hover:bg-[#EAF3F7] hover:shadow-[0_2px_0_#0F172A] font-semibold'
               }`}
             >
               <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                className={`w-7 h-7 rounded-[8px] border-[1.2px] border-[#0F172A] flex items-center justify-center shrink-0 shadow-[0_1px_0_#0F172A] ${
                   contextMenu.activeSidePanel === 'details'
-                    ? 'bg-sky-800 text-white'
-                    : 'bg-sky-100 text-sky-700'
+                    ? 'bg-[#13332E] text-white'
+                    : 'bg-[#E7F2F0] text-[#21524B]'
                 }`}
               >
                 <Info className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="leading-tight">Details</div>
+                <div className="leading-tight font-bold">Details</div>
                 <div
                   className={`text-[10px] font-medium truncate ${
                     contextMenu.activeSidePanel === 'details'
-                      ? 'text-sky-100'
-                      : 'text-slate-400'
+                      ? 'text-[#E7F2F0]'
+                      : 'text-[#586E7D]'
                   }`}
                 >
                   Placeholder form details
@@ -1075,12 +1111,12 @@ export const MapView: React.FC<MapViewProps> = ({
           {/* Adjacent Side Panel for Placeholder Forms */}
           {contextMenu.activeSidePanel && (
             <aside
-              className="absolute z-[600] bg-white border-2 border-[#0F172A] rounded-2xl shadow-[5px_5px_0px_#0F172A,0_24px_45px_-6px_rgba(15,23,42,0.35)] p-4 sm:p-5 w-[320px] max-w-[90vw] animate-scale-up font-sans overflow-hidden flex flex-col max-h-[85vh]"
+              className="absolute z-[600] bg-white border-[1.8px] border-[#0F172A] rounded-[20px] shadow-[5px_5px_0px_#0F172A,0_24px_45px_-6px_rgba(15,23,42,0.3)] p-4 sm:p-5 w-[340px] max-w-[92vw] animate-scale-up font-space overflow-hidden flex flex-col max-h-[85vh]"
               style={{
                 left: (() => {
                   const cWidth = mapContainerRef.current?.clientWidth || 800;
-                  const menuW = 220;
-                  const panelW = 320;
+                  const menuW = 225;
+                  const panelW = 340;
                   const spaceOnRight = cWidth - (contextMenu.x + menuW + 16);
                   return spaceOnRight >= panelW
                     ? contextMenu.x + menuW + 12
@@ -1103,19 +1139,19 @@ export const MapView: React.FC<MapViewProps> = ({
               }
             >
               {/* Side Panel Header */}
-              <div className="flex items-start justify-between gap-3 pb-3 border-b-2 border-slate-900 shrink-0">
+              <div className="flex items-start justify-between gap-3 pb-3 border-b-[1.5px] border-dashed border-[#9DBBC7] shrink-0">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-base font-black text-slate-900 tracking-tight">
+                    <span className="text-base font-bold text-[#0F172A] tracking-tight">
                       {contextMenu.activeSidePanel === 'pin'
                         ? '📍 Pin Location'
                         : 'ℹ️ Place Details'}
                     </span>
-                    <span className="text-[9.5px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
+                    <span className="text-[9.5px] font-bold uppercase tracking-wider bg-[#E7F2F0] text-[#21524B] px-2.5 py-0.5 rounded-full border border-[rgba(33,82,75,0.4)]">
                       Placeholder Form
                     </span>
                   </div>
-                  <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-bold">
+                  <div className="text-[11px] font-mono text-[#586E7D] mt-0.5 font-bold">
                     GPS: {contextMenu.lat.toFixed(4)}, {contextMenu.lng.toFixed(4)}
                   </div>
                 </div>
@@ -1127,7 +1163,7 @@ export const MapView: React.FC<MapViewProps> = ({
                       prev ? { ...prev, activeSidePanel: null } : null
                     )
                   }
-                  className="w-7 h-7 rounded-xl border border-slate-300 hover:border-slate-900 hover:bg-slate-100 text-slate-600 hover:text-slate-900 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer shrink-0"
+                  className="w-7 h-7 rounded-full border-[1.5px] border-[#0F172A] bg-white hover:bg-[#EAF3F7] text-[#0F172A] flex items-center justify-center text-sm font-bold shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer shrink-0"
                   aria-label="Close side panel"
                 >
                   <X className="w-4 h-4" />
@@ -1162,7 +1198,7 @@ export const MapView: React.FC<MapViewProps> = ({
                   >
                     {/* Place Name Field */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                      <label className="block text-xs font-bold text-[#0F172A] mb-1">
                         Place Name
                       </label>
                       <input
@@ -1170,19 +1206,19 @@ export const MapView: React.FC<MapViewProps> = ({
                         value={pinFormName}
                         onChange={(e) => setPinFormName(e.target.value)}
                         placeholder="e.g., Xavier Gate 2, Corrales Ave..."
-                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                        className="w-full px-3 py-2 text-xs rounded-[12px] border-[1.8px] border-[#0F172A] bg-white text-[#0F172A] font-medium placeholder:text-[#586E7D] shadow-[0_2px_0_#0F172A] focus:outline-none focus:ring-2 focus:ring-[#21524B]"
                       />
                     </div>
 
                     {/* Category Selector */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                      <label className="block text-xs font-bold text-[#0F172A] mb-1">
                         Category
                       </label>
                       <select
                         value={pinFormCategory}
                         onChange={(e) => setPinFormCategory(e.target.value as CategoryType)}
-                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-white font-bold text-slate-800 focus:outline-none"
+                        className="w-full px-3 py-2 text-xs rounded-[12px] border-[1.8px] border-[#0F172A] bg-white font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] focus:outline-none focus:ring-2 focus:ring-[#21524B]"
                       >
                         <option value="Shopping">Shopping</option>
                         <option value="Dining & Cafe">Dining & Cafe</option>
@@ -1196,28 +1232,30 @@ export const MapView: React.FC<MapViewProps> = ({
                     </div>
 
                     {/* Pin Count Indicator */}
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between">
+                    <div className="bg-[#E7F2F0] border-[1.8px] border-[#0F172A] rounded-[14px] p-2.5 shadow-[0_2px_0_#0F172A] flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm">📌</span>
+                        <span className="w-6 h-6 rounded-md bg-white border border-[#0F172A] flex items-center justify-center text-xs shrink-0 shadow-[0_1px_0_#0F172A]">
+                          📌
+                        </span>
                         <div>
-                          <div className="text-xs font-bold text-emerald-950">
+                          <div className="text-xs font-bold text-[#0F172A]">
                             {contextMenu.location
                               ? `${contextMenu.location.pinCount ?? 1} users pinning this place`
                               : '1 user pinning (You)'}
                           </div>
-                          <div className="text-[10px] text-emerald-700">
+                          <div className="text-[10px] text-[#21524B] font-medium">
                             Current active community pin count
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs font-black bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-bold bg-[#21524B] text-white px-2.5 py-0.5 rounded-full border-[1.2px] border-[#0F172A] shadow-[0_1px_0_#0F172A]">
                         {contextMenu.location ? contextMenu.location.pinCount ?? 1 : 1}
                       </span>
                     </div>
 
                     {/* Accessibility Features Checklist */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                      <label className="block text-xs font-bold text-[#0F172A] mb-1.5">
                         Accessibility Features (Quick Tag)
                       </label>
                       <div className="grid grid-cols-1 gap-1.5">
@@ -1231,10 +1269,10 @@ export const MapView: React.FC<MapViewProps> = ({
                           return (
                             <label
                               key={tag}
-                              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-colors ${
+                              className={`flex items-center gap-2.5 px-3 py-2 rounded-[10px] border-[1.8px] text-xs font-medium cursor-pointer transition-all shadow-[0_1.5px_0_#0F172A] ${
                                 checked
-                                  ? 'bg-emerald-50 border-emerald-400 text-emerald-900 font-bold'
-                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                                  ? 'bg-[#E7F2F0] border-[#0F172A] text-[#21524B] font-bold'
+                                  : 'bg-white border-[#D5E5EC] text-[#475569] hover:border-[#0F172A] hover:bg-[#EAF3F7]'
                               }`}
                             >
                               <input
@@ -1247,7 +1285,7 @@ export const MapView: React.FC<MapViewProps> = ({
                                     setPinFormTags((prev) => prev.filter((t) => t !== tag));
                                   }
                                 }}
-                                className="rounded text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5"
+                                className="w-4 h-4 rounded border-[1.5px] border-[#0F172A] accent-[#21524B] cursor-pointer"
                               />
                               <span>{tag}</span>
                             </label>
@@ -1258,7 +1296,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
                     {/* Notes Textarea */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                      <label className="block text-xs font-bold text-[#0F172A] mb-1">
                         Notes / Accessibility Observations
                       </label>
                       <textarea
@@ -1266,22 +1304,22 @@ export const MapView: React.FC<MapViewProps> = ({
                         value={pinFormNotes}
                         onChange={(e) => setPinFormNotes(e.target.value)}
                         placeholder="Add notes about slope, entrance obstacles, or pavement condition..."
-                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium resize-none"
+                        className="w-full px-3 py-2 text-xs rounded-[12px] border-[1.8px] border-[#0F172A] bg-white text-[#0F172A] font-medium placeholder:text-[#586E7D] shadow-[0_2px_0_#0F172A] focus:outline-none focus:ring-2 focus:ring-[#21524B] resize-none"
                       />
                     </div>
 
                     {/* Actions */}
-                    <div className="pt-2 flex items-center justify-end gap-2">
+                    <div className="pt-2 flex items-center justify-end gap-2.5">
                       <button
                         type="button"
                         onClick={() => setContextMenu(null)}
-                        className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+                        className="px-4 py-1.5 rounded-full border-[1.8px] border-[#0F172A] bg-white text-[#0F172A] hover:bg-[#EAF3F7] text-xs font-bold shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold border-2 border-slate-900 shadow-[2px_2px_0px_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer flex items-center gap-1.5"
+                        className="px-5 py-1.5 rounded-full border-[1.8px] border-[#0F172A] bg-[#21524B] hover:bg-[#2B6860] text-white text-xs font-bold shadow-[0_3px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         <MapPin className="w-3.5 h-3.5" />
                         <span>Save Pin</span>
@@ -1302,7 +1340,7 @@ export const MapView: React.FC<MapViewProps> = ({
                   >
                     {/* Place Reference Field */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                      <label className="block text-xs font-bold text-[#0F172A] mb-1">
                         Place / Venue Reference
                       </label>
                       <input
@@ -1310,13 +1348,13 @@ export const MapView: React.FC<MapViewProps> = ({
                         value={detailsFormTitle}
                         onChange={(e) => setDetailsFormTitle(e.target.value)}
                         placeholder="e.g. Centrio Mall North Entrance..."
-                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium"
+                        className="w-full px-3 py-2 text-xs rounded-[12px] border-[1.8px] border-[#0F172A] bg-white text-[#0F172A] font-medium placeholder:text-[#586E7D] shadow-[0_2px_0_#0F172A] focus:outline-none focus:ring-2 focus:ring-[#21524B]"
                       />
                     </div>
 
                     {/* District / Address */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                      <label className="block text-xs font-bold text-[#0F172A] mb-1">
                         District / Area
                       </label>
                       <input
@@ -1324,82 +1362,84 @@ export const MapView: React.FC<MapViewProps> = ({
                         value={detailsFormArea}
                         onChange={(e) => setDetailsFormArea(e.target.value)}
                         placeholder="e.g. Downtown CDO, Northern Mindanao..."
-                        className="w-full px-3 py-2 text-xs rounded-xl border-2 border-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium"
+                        className="w-full px-3 py-2 text-xs rounded-[12px] border-[1.8px] border-[#0F172A] bg-white text-[#0F172A] font-medium placeholder:text-[#586E7D] shadow-[0_2px_0_#0F172A] focus:outline-none focus:ring-2 focus:ring-[#21524B]"
                       />
                     </div>
 
                     {/* Pin Count Indicator */}
-                    <div className="bg-sky-50 border border-sky-200 rounded-xl p-2.5 flex items-center justify-between">
+                    <div className="bg-[#E7F2F0] border-[1.8px] border-[#0F172A] rounded-[14px] p-2.5 shadow-[0_2px_0_#0F172A] flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm">📌</span>
+                        <span className="w-6 h-6 rounded-md bg-white border border-[#0F172A] flex items-center justify-center text-xs shrink-0 shadow-[0_1px_0_#0F172A]">
+                          📌
+                        </span>
                         <div>
-                          <div className="text-xs font-bold text-sky-950">
+                          <div className="text-xs font-bold text-[#0F172A]">
                             {contextMenu.location
                               ? `${contextMenu.location.pinCount ?? 1} users pinning this place`
                               : '0 users currently pinning this point'}
                           </div>
-                          <div className="text-[10px] text-sky-700">
+                          <div className="text-[10px] text-[#21524B] font-medium">
                             Live mapper activity tracking
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs font-black bg-sky-700 text-white px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-bold bg-[#21524B] text-white px-2.5 py-0.5 rounded-full border-[1.2px] border-[#0F172A] shadow-[0_1px_0_#0F172A]">
                         {contextMenu.location ? contextMenu.location.pinCount ?? 1 : 0}
                       </span>
                     </div>
 
                     {/* Inspection Fields */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-bold text-slate-800">
+                    <div className="space-y-2 pt-1 border-t-[1.5px] border-dashed border-[#9DBBC7]">
+                      <label className="block text-xs font-bold text-[#0F172A]">
                         Physical Accessibility Inspection Form
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <span className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                          <span className="block text-[10px] font-bold text-[#586E7D] mb-1">
                             Door Width
                           </span>
                           <input
                             type="text"
                             value={detailsFormDoorWidth}
                             onChange={(e) => setDetailsFormDoorWidth(e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 font-medium bg-slate-50"
+                            className="w-full px-2.5 py-1.5 text-xs rounded-[10px] border-[1.8px] border-[#0F172A] bg-white font-medium text-[#0F172A] shadow-[0_1.5px_0_#0F172A]"
                             placeholder="e.g. 90 cm"
                           />
                         </div>
                         <div>
-                          <span className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                          <span className="block text-[10px] font-bold text-[#586E7D] mb-1">
                             Auditor ID
                           </span>
                           <input
                             type="text"
                             value={detailsFormAuditor}
                             onChange={(e) => setDetailsFormAuditor(e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 font-medium bg-slate-50"
+                            className="w-full px-2.5 py-1.5 text-xs rounded-[10px] border-[1.8px] border-[#0F172A] bg-white font-medium text-[#0F172A] shadow-[0_1.5px_0_#0F172A]"
                             placeholder="Volunteer Mapper"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1.5 pt-1">
-                        <label className="flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer">
+                        <label className="flex items-center gap-2.5 px-3 py-2 rounded-[10px] border-[1.8px] border-[#0F172A] bg-[#E7F2F0] text-xs font-bold text-[#21524B] shadow-[0_1.5px_0_#0F172A] cursor-pointer">
                           <input
                             type="checkbox"
                             checked={detailsFormStepFree}
                             onChange={(e) => setDetailsFormStepFree(e.target.checked)}
-                            className="rounded text-sky-600 focus:ring-sky-500 w-3.5 h-3.5"
+                            className="w-4 h-4 rounded border-[1.5px] border-[#0F172A] accent-[#21524B] cursor-pointer"
                           />
                           <span>Step-free ground clearance verified</span>
                         </label>
                       </div>
 
                       <div>
-                        <span className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                        <span className="block text-[10px] font-bold text-[#586E7D] mb-1">
                           Sensory Rating Category
                         </span>
                         <select
                           value={detailsFormSensory}
                           onChange={(e) => setDetailsFormSensory(e.target.value)}
-                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium"
+                          className="w-full px-2.5 py-1.5 text-xs rounded-[10px] border-[1.8px] border-[#0F172A] bg-white font-bold text-[#0F172A] shadow-[0_1.5px_0_#0F172A]"
                         >
                           <option value="Quiet / low-sensory zone">Quiet / low-sensory zone</option>
                           <option value="Moderate noise / accessible lighting">Moderate noise / accessible lighting</option>
@@ -1409,17 +1449,17 @@ export const MapView: React.FC<MapViewProps> = ({
                     </div>
 
                     {/* Actions */}
-                    <div className="pt-2 flex items-center justify-end gap-2">
+                    <div className="pt-2 flex items-center justify-end gap-2.5">
                       <button
                         type="button"
                         onClick={() => setContextMenu(null)}
-                        className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+                        className="px-4 py-1.5 rounded-full border-[1.8px] border-[#0F172A] bg-white text-[#0F172A] hover:bg-[#EAF3F7] text-xs font-bold shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
                       >
                         Close
                       </button>
                       <button
                         type="submit"
-                        className="px-4 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold border-2 border-slate-900 shadow-[2px_2px_0px_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer flex items-center gap-1.5"
+                        className="px-5 py-1.5 rounded-full border-[1.8px] border-[#0F172A] bg-[#21524B] hover:bg-[#2B6860] text-white text-xs font-bold shadow-[0_3px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         <Info className="w-3.5 h-3.5" />
                         <span>Submit Details</span>

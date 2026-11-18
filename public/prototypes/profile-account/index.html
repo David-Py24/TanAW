@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Profile &amp; account</title>
+<title>Profile &amp; Account Settings · TanAW</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#FFFFFF; --soft:#EAF3F7; --ink:#0F172A; --mute:#475569; --faint:#586E7D;
   --accent:#21524B; --accent-hover:#2B6860; --accent-light:#E7F2F0; --card:#FFFFFF; --grid:#9DBBC7;
+  --amber:#F59E0B; --amber-light:#FEF3C7; --red:#EF4444; --red-light:#FEE2E2; --blue:#38BDF8;
   --shadow:0 3px 0 var(--ink); --shadow-up:0 6px 0 var(--ink);
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -139,14 +140,14 @@ body{background:var(--bg);color:var(--ink);font:400 14px/1.5 "Space Grotesk",sys
   100% { transform: scale(1.6) rotate(60deg); opacity: 0; }
 }
 
-.page{position:relative;z-index:1;min-height:100%;display:flex;padding:clamp(24px,5vw,56px) clamp(16px,5vw,64px) 160px}
+.page{position:relative;z-index:1;min-height:100%;display:flex;padding:clamp(20px,4vw,40px) clamp(16px,4vw,36px) 120px}
 .card{width:100%;max-width:1040px;margin:0 auto;display:flex;flex-direction:column;animation:rise .7s cubic-bezier(.16,1,.3,1) both}
 @keyframes rise{from{opacity:0;transform:translateY(24px)}}
 
-.body{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:28px}
+.body{flex:1;display:flex;flex-direction:column;gap:24px}
 .top{display:flex;justify-content:space-between;align-items:flex-start}
 .avatar svg{width:100%;height:100%}
-.avatar{width:104px;height:104px;border-radius:50%;border:1.8px solid var(--ink);box-shadow:0 3px 0 var(--ink);background:var(--accent-light);display:grid;place-items:center;overflow:hidden;flex-shrink:0}
+.avatar{width:96px;height:96px;border-radius:50%;border:1.8px solid var(--ink);box-shadow:0 3px 0 var(--ink);background:var(--accent-light);display:grid;place-items:center;overflow:hidden;flex-shrink:0}
 .top .btn{margin-top:0}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 13px "Space Grotesk",sans-serif;padding:10px 20px;border-radius:99px;border:1.8px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:var(--shadow);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
@@ -159,47 +160,92 @@ body{background:var(--bg);color:var(--ink);font:400 14px/1.5 "Space Grotesk",sys
 .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--shadow)}
 :focus-visible{outline:2.5px solid var(--accent);outline-offset:3px}
 
-.name{display:flex;align-items:center;gap:8px;margin:18px 0 2px;font-size:clamp(30px,4vw,44px);font-weight:600;letter-spacing:-.025em;line-height:1.15}
+.name{display:flex;align-items:center;gap:8px;margin:14px 0 2px;font-size:clamp(28px,3.8vw,40px);font-weight:600;letter-spacing:-.025em;line-height:1.15}
 .verified{flex-shrink:0}
-.email{color:var(--faint);font-size:15px}
+.email{color:var(--faint);font-size:14px}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);margin:26px 0 0;padding-bottom:24px;border-bottom:1.5px dashed var(--grid)}
-.stat{padding:0 28px;border-left:1.5px solid var(--grid)}
+/* Stats Strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin:18px 0 0;padding-bottom:20px;border-bottom:1.5px dashed var(--grid)}
+.stat{padding:0 20px;border-left:1.5px solid var(--grid)}
 .stat:first-child{padding-left:0;border-left:0}
 .stat:last-child{padding-right:0}
-.stat small{display:block;color:var(--faint);font-size:12px;font-weight:500;margin-bottom:2px}
-.stat b{font-size:clamp(17px,2vw,22px);font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.stat small{display:block;color:var(--faint);font-size:11.5px;font-weight:500;margin-bottom:2px}
+.stat b{font-size:clamp(17px,2vw,22px);font-weight:700;letter-spacing:-.01em;white-space:nowrap}
 
-.row{display:grid;grid-template-columns:260px minmax(0,560px);gap:28px;align-items:start;padding-bottom:24px;border-bottom:1.5px dashed var(--grid)}
+/* Section Tabs Switcher */
+.tabs-nav{display:flex;align-items:center;gap:8px;border-bottom:1.8px solid var(--ink);padding-bottom:1px;margin-top:4px}
+.tab-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:12px 12px 0 0;border:1.8px solid transparent;border-bottom:0;background:transparent;color:var(--mute);font-weight:600;font-size:13.5px;cursor:pointer;transition:all .18s ease;position:relative;top:1.8px}
+.tab-btn:hover{color:var(--ink);background:var(--soft)}
+.tab-btn.on{color:var(--ink);background:#fff;border-color:var(--ink);box-shadow:0 -2px 0 var(--accent);font-weight:700}
+.tab-btn svg{width:16px;height:16px;stroke-width:2;stroke:currentColor;fill:none}
+.tab-badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;border:1px solid rgba(33,82,75,.3)}
+
+/* Profile Form Section */
+.row{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start;padding:22px 0;border-bottom:1.5px dashed var(--grid)}
 h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
 .hint{color:var(--faint);font-size:12.5px;line-height:1.45;margin:0}
 .fields{display:grid;gap:10px}
 .input{display:flex;align-items:stretch;border:1.8px solid var(--ink);border-radius:14px;background:var(--card);overflow:hidden;transition:box-shadow .18s}
 .input:focus-within{box-shadow:0 3px 0 var(--accent);border-color:var(--accent)}
-.input span{padding:11px 12px 11px 14px;color:var(--faint);background:var(--soft);border-right:1.8px solid var(--ink);white-space:nowrap}
-.input input,.input select{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 14px "Space Grotesk",sans-serif;padding:11px 14px;outline:none}
+.input span{padding:10px 12px;color:var(--faint);background:var(--soft);border-right:1.8px solid var(--ink);white-space:nowrap;font-size:13px;font-weight:500}
+.input input,.input select{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 13.5px "Space Grotesk",system-ui,sans-serif;padding:10px 14px;outline:none}
 .input select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230F172A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
 .input.bad{border-color:#C2410C}
 .err{color:#C2410C;font-size:12px;margin:-4px 0 0 4px;min-height:0}
 
-.setting{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 0 0}
-.setting + .setting{padding-top:20px}
+.setting{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 0 0}
+.setting + .setting{padding-top:18px}
 .setting p.hint{max-width:340px}
 .switch{position:relative;width:52px;height:30px;flex-shrink:0;border-radius:99px;border:1.8px solid var(--ink);background:var(--soft);cursor:pointer;box-shadow:0 2px 0 var(--ink);transition:background .2s}
 .switch::after{content:"";position:absolute;top:2.5px;left:3px;width:21px;height:21px;border-radius:50%;background:var(--card);border:1.8px solid var(--ink);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
 .switch[aria-checked="true"]{background:var(--accent)}
 .switch[aria-checked="true"]::after{transform:translateX(21px)}
 
-.foot{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:22px;border-top:1.5px dashed var(--grid)}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;z-index:5;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:600;font-size:13px;transition:.3s cubic-bezier(.16,1,.3,1);pointer-events:none}
+.foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:18px;border-top:1.5px dashed var(--grid)}
+
+/* Contribution History Section */
+.history-wrap{display:flex;flex-direction:column;gap:18px;padding-top:14px}
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1.5px solid var(--ink);background:#fff;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--ink);transition:all .15s ease}
+.pill:hover{background:var(--soft);transform:translateY(-1px)}
+.pill.on{background:var(--accent);color:#fff;border-color:var(--ink);box-shadow:0 2px 0 var(--ink)}
+.search-input{display:flex;align-items:center;gap:8px;border:1.8px solid var(--ink);border-radius:99px;background:#fff;padding:6px 14px;box-shadow:0 2px 0 var(--ink);width:100%;margin-top:4px}
+.search-input input{border:0;outline:0;background:transparent;font:inherit;font-size:13px;width:100%}
+.search-input svg{width:15px;height:15px;color:var(--mute);flex-shrink:0}
+
+.feed-list{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+.contrib-card{border:1.8px solid var(--ink);border-radius:16px;background:#fff;box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s}
+.contrib-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-up)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.type-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:8px;border:1px solid rgba(15,23,42,.2)}
+.type-badge.audit{background:var(--accent-light);color:var(--accent);border-color:rgba(33,82,75,.4)}
+.type-badge.pin{background:#E0F2FE;color:#0369A1;border-color:rgba(3,105,161,.3)}
+.type-badge.barrier{background:var(--amber-light);color:#92400E;border-color:rgba(245,158,11,.4)}
+.card-date{color:var(--faint);font-size:11.5px}
+.card-title{font-size:16px;font-weight:700;margin:0;color:var(--ink);letter-spacing:-.01em}
+.card-loc{color:var(--mute);font-size:12.5px;margin:-4px 0 0}
+.ai-meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;background:var(--soft);border-radius:10px;padding:8px 10px;border:1px solid var(--grid)}
+.ai-meter-item{display:flex;flex-direction:column;gap:2px}
+.ai-meter-top{display:flex;justify-content:space-between;font-size:11px}
+.ai-meter-top span{color:var(--mute)}
+.ai-meter-top b{color:var(--ink);font-weight:700}
+.meter-bar{height:4px;border-radius:99px;background:#CBD5E1;overflow:hidden}
+.meter-fill{height:100%;border-radius:99px;background:var(--accent)}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid var(--ink);background:var(--soft);color:var(--ink)}
+.chip.high{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;padding-top:10px;border-top:1px dashed var(--grid);font-size:11.5px;color:var(--mute)}
+.card-foot strong{color:var(--accent);font-weight:700}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;z-index:50;background:var(--ink);color:#fff;padding:9px 18px;border-radius:99px;font-weight:600;font-size:13px;transition:.25s cubic-bezier(.16,1,.3,1);pointer-events:none;box-shadow:0 4px 12px rgba(15,23,42,.3)}
 .toast.on{transform:translate(-50%,0);opacity:1}
 
 @media (max-width:560px){
-  .body{gap:22px}
-  .stats{grid-template-columns:1fr 1fr;gap:16px 0}
+  .stats{grid-template-columns:1fr 1fr;gap:14px 0}
   .stat:nth-child(3){padding-left:0;border-left:0}
   .stat{padding:0 12px}
-  .row{grid-template-columns:1fr;gap:14px}
+  .row{grid-template-columns:1fr;gap:12px}
   .setting{align-items:flex-start}
 }
 @media (prefers-reduced-motion:reduce){.bg-grid-drift,.bg-topo-drift,.bg-orb,.bg-radar-ring,.card{animation:none!important}*{transition:none!important}}
@@ -219,8 +265,9 @@ h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
 </div>
 
 <main class="page">
-  <form class="card" id="form" novalidate>
+  <div class="card" id="mainCard">
     <div class="body">
+      <!-- Profile Header -->
       <div class="top">
         <div class="avatar" role="img" aria-label="Henry Sullivan's avatar">
           <svg viewBox="0 0 76 76" width="76" height="76">
@@ -229,15 +276,18 @@ h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
             <path d="M10 76c2-17 12-24 28-24s26 7 28 24z" fill="#F5FAFD" stroke="#0F172A" stroke-width="1.8"/>
           </svg>
         </div>
-        <button type="button" class="btn sm" id="view">View profile</button>
+        <button type="button" class="btn sm" id="viewBtn">View profile</button>
       </div>
 
-      <div class="name">
-        <span id="displayName">Henry Sullivan</span>
-        <svg class="verified" width="22" height="22" viewBox="0 0 24 24" role="img" aria-label="Verified"><path d="M12 1.5l2.6 1.8 3.1-.2 1.2 2.9 2.7 1.6-.7 3.1 1.1 2.9-2.2 2.2-.4 3.1-3.1.6L12 22.5l-2.3-1.9-3.1-.6-.4-3.1L4 14.7l1.1-2.9-.7-3.1 2.7-1.6 1.2-2.9 3.1.2z" fill="#38BDF8" stroke="#0F172A" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 12.2l2.8 2.8 5.2-5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <div class="name">
+          <span id="displayName">Henry Sullivan</span>
+          <svg class="verified" width="22" height="22" viewBox="0 0 24 24" role="img" aria-label="Verified"><path d="M12 1.5l2.6 1.8 3.1-.2 1.2 2.9 2.7 1.6-.7 3.1 1.1 2.9-2.2 2.2-.4 3.1-3.1.6L12 22.5l-2.3-1.9-3.1-.6-.4-3.1L4 14.7l1.1-2.9-.7-3.1 2.7-1.6 1.2-2.9 3.1.2z" fill="#38BDF8" stroke="#0F172A" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 12.2l2.8 2.8 5.2-5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="email">henrysullivan@gmail.com &bull; Verified Contributor</div>
       </div>
-      <div class="email">henrysullivan@gmail.com &bull; Verified Contributor</div>
 
+      <!-- 4-Column Metric Stats -->
       <div class="stats">
         <div class="stat"><small>Location pins</small><b>148</b></div>
         <div class="stat"><small>Saved routes</small><b>24</b></div>
@@ -245,55 +295,94 @@ h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
         <div class="stat"><small>Verified tags</small><b>312</b></div>
       </div>
 
-      <section class="row" aria-labelledby="pp">
-        <div>
-          <h2 id="pp">Public profile</h2>
-          <p class="hint">Your contributor identity and navigation preferences across AccessMap.</p>
-        </div>
-        <div class="fields">
-          <label class="input"><span>Contributor</span><input id="fullName" value="Henry Sullivan" aria-label="Contributor name" autocomplete="name"></label>
-          <label class="input" id="slugBox"><span>accessmap.org/@</span><input id="slug" value="henrysullivan" aria-label="Profile handle" autocapitalize="none" spellcheck="false"></label>
-          <label class="input"><span>Navigation</span><select id="mobilityMode" aria-label="Navigation preference">
-            <option value="step-free" selected>Step-Free (Wheelchair / Stroller)</option>
-            <option value="low-incline">Low Incline &amp; Ramp Priority</option>
-            <option value="tactile">Tactile Paving &amp; Audio Guidance</option>
-            <option value="sensory">Quiet &amp; Low-Stimulus Routing</option>
-          </select></label>
-          <label class="input"><span>Mapping Focus</span><input id="mappingFocus" value="Downtown CDO &bull; Storefront ramps &amp; curb cuts" aria-label="Mapping focus"></label>
-          <div class="err" id="err" role="alert"></div>
-        </div>
-      </section>
+      <!-- Segmented Tab Switcher: Public Profile & Contribution History -->
+      <nav class="tabs-nav" role="tablist" aria-label="Profile navigation sections">
+        <button type="button" class="tab-btn on" id="tabProfile" role="tab" aria-selected="true" aria-controls="profileSection">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+          <span>Public Profile</span>
+        </button>
+        <button type="button" class="tab-btn" id="tabHistory" role="tab" aria-selected="false" aria-controls="historySection">
+          <svg viewBox="0 0 24 24"><path d="M6 20V11M12 20V5M18 20v-7"/></svg>
+          <span>Contribution History</span>
+          <span class="tab-badge" id="contribBadge">42</span>
+        </button>
+      </nav>
 
-      <div class="setting">
-        <div>
-          <h2 id="sa">Public contributor profile</h2>
-          <p class="hint" id="saText">Your pins, storefront audits, and contributor badge are visible on the public accessibility map and leaderboard.</p>
+      <!-- TAB 1: Public Profile Form & Settings -->
+      <form id="profileSection" novalidate>
+        <section class="row" aria-labelledby="pp">
+          <div>
+            <h2 id="pp">Public profile</h2>
+            <p class="hint">Your contributor identity and navigation preferences across AccessMap.</p>
+          </div>
+          <div class="fields">
+            <label class="input"><span>Contributor</span><input id="fullName" value="Henry Sullivan" aria-label="Contributor name" autocomplete="name"></label>
+            <label class="input" id="slugBox"><span>accessmap.org/@</span><input id="slug" value="henrysullivan" aria-label="Profile handle" autocapitalize="none" spellcheck="false"></label>
+            <label class="input"><span>Navigation</span><select id="mobilityMode" aria-label="Navigation preference">
+              <option value="step-free" selected>Step-Free (Wheelchair / Stroller)</option>
+              <option value="low-incline">Low Incline &amp; Ramp Priority</option>
+              <option value="tactile">Tactile Paving &amp; Audio Guidance</option>
+              <option value="sensory">Quiet &amp; Low-Stimulus Routing</option>
+            </select></label>
+            <label class="input"><span>Mapping Focus</span><input id="mappingFocus" value="Downtown CDO &bull; Storefront ramps &amp; curb cuts" aria-label="Mapping focus"></label>
+            <div class="err" id="err" role="alert"></div>
+          </div>
+        </section>
+
+        <div class="setting">
+          <div>
+            <h2 id="sa">Public contributor profile</h2>
+            <p class="hint" id="saText">Your pins, storefront audits, and contributor badge are visible on the public accessibility map and leaderboard.</p>
+          </div>
+          <button type="button" class="switch" id="support" role="switch" aria-checked="true" aria-labelledby="sa"></button>
         </div>
-        <button type="button" class="switch" id="support" role="switch" aria-checked="true" aria-labelledby="sa"></button>
+
+        <div class="setting">
+          <div>
+            <h2>Offline route &amp; map cache</h2>
+            <p class="hint">Keep your 24 saved step-free routes and downloaded neighborhood tiles available offline.</p>
+          </div>
+          <button type="button" class="btn soft" id="syncBtn">Manage cache</button>
+        </div>
+
+        <div class="setting">
+          <div>
+            <h2>Active sessions</h2>
+            <p class="hint">Currently signed in on TanAW Mobile (iOS &bull; GPS Active) and TanAW PC Suite.</p>
+          </div>
+          <button type="button" class="btn soft" id="logout">Log out</button>
+        </div>
+
+        <div class="foot">
+          <button type="button" class="btn" id="cancel">Cancel</button>
+          <button type="submit" class="btn accent" id="save" disabled>Save changes</button>
+        </div>
+      </form>
+
+      <!-- TAB 2: Contribution History Section (Kept at Profile Page) -->
+      <div id="historySection" class="history-wrap" style="display:none" aria-labelledby="tabHistory">
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <button type="button" class="pill on" data-filter="all">All (42)</button>
+          <button type="button" class="pill" data-filter="audit">Photo Audits (18)</button>
+          <button type="button" class="pill" data-filter="pin">Pins (14)</button>
+          <button type="button" class="pill" data-filter="barrier">Barriers Reported (10)</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+          <input id="contribSearch" type="search" placeholder="Search your accessibility contributions..." aria-label="Search contributions">
+        </div>
+
+        <!-- Contributions Feed List -->
+        <div class="feed-list" id="feedList">
+          <!-- Populated by JS -->
+        </div>
       </div>
 
-      <div class="setting">
-        <div>
-          <h2>Offline route &amp; map cache</h2>
-          <p class="hint">Keep your 24 saved step-free routes and downloaded neighborhood tiles available offline.</p>
-        </div>
-        <button type="button" class="btn soft" id="syncBtn">Manage cache</button>
-      </div>
-
-      <div class="setting">
-        <div>
-          <h2>Active sessions</h2>
-          <p class="hint">Currently signed in on TanAW Mobile (iOS &bull; GPS Active) and TanAW PC Suite.</p>
-        </div>
-        <button type="button" class="btn soft" id="logout">Log out</button>
-      </div>
-
-      <div class="foot">
-        <button type="button" class="btn" id="cancel">Cancel</button>
-        <button type="submit" class="btn accent" id="save" disabled>Save changes</button>
-      </div>
     </div>
-  </form>
+  </div>
 </main>
 <div class="toast" id="toast" role="status"></div>
 
@@ -316,6 +405,10 @@ h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
       err=$("err"),
       box=$("slugBox"),
       toastEl=$("toast"),
+      tabProfile=$("tabProfile"),
+      tabHistory=$("tabHistory"),
+      profileSection=$("profileSection"),
+      historySection=$("historySection"),
       t;
 
   function toast(m){
@@ -325,6 +418,42 @@ h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
     t=setTimeout(function(){toastEl.classList.remove("on")},2200);
   }
 
+  // Tab switching logic
+  function setTab(activeTab){
+    if(activeTab==='history'){
+      tabProfile.classList.remove('on');
+      tabProfile.setAttribute('aria-selected','false');
+      tabHistory.classList.add('on');
+      tabHistory.setAttribute('aria-selected','true');
+      profileSection.style.display='none';
+      historySection.style.display='flex';
+      renderContributions();
+    } else {
+      tabHistory.classList.remove('on');
+      tabHistory.setAttribute('aria-selected','false');
+      tabProfile.classList.add('on');
+      tabProfile.setAttribute('aria-selected','true');
+      historySection.style.display='none';
+      profileSection.style.display='block';
+    }
+  }
+
+  tabProfile.addEventListener('click',function(){setTab('profile')});
+  tabHistory.addEventListener('click',function(){setTab('history')});
+
+  // Deep linking via URL hash (#contributions)
+  if(window.location.hash==='#contributions'||window.location.search.indexOf('tab=contributions')!==-1){
+    setTab('history');
+  }
+
+  // Cross-document message listener for embedded iframe
+  window.addEventListener('message',function(e){
+    if(e.data&&e.data.type==='SET_TAB'){
+      setTab(e.data.tab==='contributions'?'history':'profile');
+    }
+  });
+
+  // Profile Form state logic
   function state(){
     return {
       name:name.value.trim(),
@@ -365,7 +494,7 @@ h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
     refresh();
   });
 
-  $("form").addEventListener("submit",function(e){
+  profileSection.addEventListener("submit",function(e){
     e.preventDefault();
     var s=state();
     if(valid(s)) return;
@@ -385,7 +514,7 @@ h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
     toast("Changes discarded");
   });
 
-  $("view").addEventListener("click",function(){
+  $("viewBtn").addEventListener("click",function(){
     toast("Opening accessmap.org/@"+saved.slug);
   });
 
@@ -409,6 +538,162 @@ h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
       },2500);
     },900);
   });
+
+  // CONTRIBUTION HISTORY DATA & RENDERING
+  var contributions=[
+    {
+      id: 1,
+      type: 'audit',
+      title: 'Centrio Mall (Ayala Malls)',
+      location: 'C.M. Recto Ave, Downtown CDO',
+      date: '2 hours ago',
+      score: '5.0★',
+      status: 'Community Verified',
+      chips: ['Step-free ramp', 'Auto sliding door', 'Braille directory', 'Tactile guide path'],
+      checks: [
+        { name: 'Ramp slope ratio', match: '99.4%' },
+        { name: 'Entrance door clearance', match: '98.8%' }
+      ],
+      note: 'Verified dual-sided handrails and gentle slope transition. Sensor push plate installed at 34" ADA compliant height.'
+    },
+    {
+      id: 2,
+      type: 'audit',
+      title: 'Cafe Laguna Cagayan de Oro',
+      location: 'Rosario Strip, Limketkai Center',
+      date: 'Yesterday',
+      score: '4.8★',
+      status: 'Community Verified',
+      chips: ['Flush threshold', 'Wide door (36")', 'Step-free seating'],
+      checks: [
+        { name: 'Threshold height (<0.25")', match: '99.1%' },
+        { name: 'Pathway width (>36")', match: '97.5%' }
+      ],
+      note: 'Level threshold at main entrance. Clear 42" turning radius inside for power wheelchair mobility.'
+    },
+    {
+      id: 3,
+      type: 'pin',
+      title: 'SM CDO Downtown Premier (Main North Ramp)',
+      location: 'Claro M. Recto Ave, CDO',
+      date: '3 days ago',
+      score: '5.0★',
+      status: 'Published Pin',
+      chips: ['Covered drop-off', 'Dedicated ramp', 'Elevator access'],
+      note: 'Direct step-free covered entrance from North taxi bay with high-visibility tactile ground indicators.'
+    },
+    {
+      id: 4,
+      type: 'barrier',
+      title: 'Cogon Market - Osmeña St Entrance',
+      location: 'Osmeña St, Cogon, CDO',
+      date: '5 days ago',
+      score: '2.2★',
+      status: 'Barrier Flagged',
+      chips: ['High curb step (18cm)', 'Missing curb cut', 'Vendor obstruction'],
+      note: 'Curbside step without ramp transition prevents independent wheelchair ingress. Flagged for city DPWH curb-cut program.'
+    },
+    {
+      id: 5,
+      type: 'audit',
+      title: 'Xavier University - Ateneo de CDO (Library Ramp)',
+      location: 'Corrales Ave, CDO',
+      date: '1 week ago',
+      score: '4.9★',
+      status: 'Community Verified',
+      chips: ['Tactile paving', 'Low-incline ramp', 'Elevator to all floors'],
+      checks: [
+        { name: 'Ramp incline angle', match: '98.2%' },
+        { name: 'Braille lift buttons', match: '99.0%' }
+      ],
+      note: 'Smooth concrete ramp with textured yellow blister tactile tiles at bottom approach.'
+    },
+    {
+      id: 6,
+      type: 'pin',
+      title: 'Northern Mindanao Medical Center (Emergency Ramp)',
+      location: 'Capitol Compound, CDO',
+      date: '2 weeks ago',
+      score: '5.0★',
+      status: 'Published Pin',
+      chips: ['24/7 Step-free', 'Hospital ramp', 'Wide automatic doors'],
+      note: 'Direct emergency ramp access with 60" wide dual automatic sliding doors and level stretcher transition.'
+    }
+  ];
+
+  var currentFilter='all';
+  var searchQuery='';
+
+  function renderContributions(){
+    var list=$("feedList");
+    if(!list) return;
+
+    var filtered=contributions.filter(function(item){
+      var matchType = currentFilter==='all' || item.type===currentFilter;
+      var matchQuery = !searchQuery || 
+        item.title.toLowerCase().indexOf(searchQuery)!==-1 || 
+        item.location.toLowerCase().indexOf(searchQuery)!==-1 ||
+        item.chips.some(function(c){return c.toLowerCase().indexOf(searchQuery)!==-1});
+      return matchType && matchQuery;
+    });
+
+    if(filtered.length===0){
+      list.innerHTML='<div style="border:1.8px dashed var(--ink);border-radius:14px;padding:28px;text-align:center;color:var(--mute);background:#fff"><b>No matching contributions</b><p style="margin:4px 0 0;font-size:12px">Try adjusting your filter or search keywords.</p></div>';
+      return;
+    }
+
+    list.innerHTML=filtered.map(function(item){
+      var badgeClass = item.type==='audit'?'audit':(item.type==='pin'?'pin':'barrier');
+      var badgeLabel = item.type==='audit'?'Photo Audit':(item.type==='pin'?'Published Pin':'Barrier Flagged');
+      
+      var metersHtml = '';
+      if(item.checks && item.checks.length){
+        metersHtml = '<div class="ai-meters">' + item.checks.map(function(chk){
+          return '<div class="ai-meter-item"><div class="ai-meter-top"><span>'+chk.name+'</span><b>'+chk.match+'</b></div><div class="meter-bar"><div class="meter-fill" style="width:'+chk.match+'"></div></div></div>';
+        }).join('') + '</div>';
+      }
+
+      var chipsHtml = item.chips.map(function(chip){
+        return '<span class="chip high">'+chip+'</span>';
+      }).join('');
+
+      return '<article class="contrib-card">' +
+        '<div class="card-head">' +
+          '<span class="type-badge '+badgeClass+'">'+badgeLabel+'</span>' +
+          '<span class="card-date">'+item.date+'</span>' +
+        '</div>' +
+        '<h3 class="card-title">'+item.title+'</h3>' +
+        '<p class="card-loc">📍 '+item.location+'</p>' +
+        metersHtml +
+        '<div class="chip-row">'+chipsHtml+'</div>' +
+        (item.note ? '<p style="margin:2px 0 0;font-size:12.5px;color:var(--ink);line-height:1.4">'+item.note+'</p>' : '') +
+        '<div class="card-foot">' +
+          '<span>Score: <strong>'+item.score+'</strong> · '+item.status+'</span>' +
+          '<span>Verified by Henry S.</span>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  // Filter pills event listeners
+  var pills=document.querySelectorAll('.filter-bar .pill');
+  pills.forEach(function(pill){
+    pill.addEventListener('click',function(){
+      pills.forEach(function(p){p.classList.remove('on')});
+      pill.classList.add('on');
+      currentFilter=pill.getAttribute('data-filter');
+      renderContributions();
+    });
+  });
+
+  // Search input event listener
+  var sInput=$("contribSearch");
+  if(sInput){
+    sInput.addEventListener('input',function(e){
+      searchQuery=e.target.value.trim().toLowerCase();
+      renderContributions();
+    });
+  }
 
   refresh();
 })();

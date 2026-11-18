@@ -387,13 +387,14 @@ export function buildGuiCardHtml(loc: LocationPin): string {
         display: inline-flex;
         align-items: center;
         gap: 3px;
-        background: #f1f5f9;
-        color: #334155;
+        background: #E7F2F0;
+        color: #21524B;
         font-size: 10px;
         font-weight: 700;
-        padding: 2px 6px;
+        padding: 2.5px 7px;
         border-radius: 6px;
-        border: 1px solid #e2e8f0;
+        border: 1.2px solid #0F172A;
+        box-shadow: 0 1px 0 #0F172A;
       ">✓ ${escapeHtml(t.name)}</span>`
     )
     .join('');
@@ -404,8 +405,8 @@ export function buildGuiCardHtml(loc: LocationPin): string {
 
   return `
     <div class="gui-card-inner" style="
-      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-      width: 275px;
+      font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      width: 280px;
       background: #ffffff;
       color: #0f172a;
       border-radius: 16px;
@@ -414,56 +415,66 @@ export function buildGuiCardHtml(loc: LocationPin): string {
     ">
       <!-- Top banner / header -->
       <div style="
-        background: #0f172a;
-        padding: 10px 12px;
+        background: #EAF3F7;
+        padding: 10px 14px;
+        border-bottom: 1.5px dashed #9DBBC7;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 8px;
       ">
-        <div style="min-width: 0;">
-          <div style="
-            font-size: 10px;
-            font-weight: 800;
+        <div style="min-width: 0; flex: 1;">
+          <span style="
+            display: inline-block;
+            font-size: 9.5px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #94a3b8;
-          ">${escapeHtml(loc.category)}</div>
+            letter-spacing: 0.06em;
+            background: #E7F2F0;
+            color: #21524B;
+            border: 1px solid rgba(33,82,75,0.4);
+            border-radius: 99px;
+            padding: 1px 7px;
+            margin-bottom: 3px;
+          ">${escapeHtml(loc.category)}</span>
           <div style="
-            font-size: 13px;
-            font-weight: 800;
-            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            color: #0F172A;
+            letter-spacing: -0.015em;
+            line-height: 1.25;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-top: 1px;
           ">${escapeHtml(loc.name)}</div>
         </div>
         <div style="
           background: ${colorMeta.hex};
           color: #ffffff;
           font-size: 11px;
-          font-weight: 900;
-          padding: 2px 7px;
-          border-radius: 9999px;
-          border: 1.5px solid rgba(255,255,255,0.4);
+          font-weight: 800;
+          padding: 2px 8px;
+          border-radius: 99px;
+          border: 1.2px solid #0F172A;
+          box-shadow: 0 1px 0 #0F172A;
           white-space: nowrap;
-          shrink: 0;
+          flex-shrink: 0;
         ">${ratingText}</div>
       </div>
 
       <!-- Body -->
-      <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+      <div style="padding: 11px 14px; display: flex; flex-direction: column; gap: 8px;">
         <!-- Interactive Direct Pin Action Row -->
         <div style="
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 6px;
-          background: ${loc.isPinnedByMe ? '#ecfdf5' : '#f8fafc'};
-          border: 1px solid ${loc.isPinnedByMe ? '#a7f3d0' : '#e2e8f0'};
-          padding: 6px 8px;
-          border-radius: 10px;
+          background: #E7F2F0;
+          border: 1.5px solid #0F172A;
+          box-shadow: 0 1.5px 0 #0F172A;
+          padding: 6px 10px;
+          border-radius: 12px;
         ">
           <button
             type="button"
@@ -471,49 +482,67 @@ export function buildGuiCardHtml(loc: LocationPin): string {
             style="
               display: inline-flex;
               align-items: center;
-              gap: 4px;
+              gap: 5px;
+              font-family: inherit;
               font-size: 11px;
-              font-weight: 800;
-              padding: 3px 8px;
-              border-radius: 9999px;
+              font-weight: 700;
+              padding: 3px 10px;
+              border-radius: 99px;
               cursor: pointer;
-              border: 1px solid ${loc.isPinnedByMe ? '#059669' : '#cbd5e1'};
-              background: ${loc.isPinnedByMe ? '#10b981' : '#ffffff'};
-              color: ${loc.isPinnedByMe ? '#ffffff' : '#0f172a'};
-              box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-              transition: all 0.15s ease;
+              border: 1.5px solid #0F172A;
+              background: ${loc.isPinnedByMe ? '#21524B' : '#FFFFFF'};
+              color: ${loc.isPinnedByMe ? '#FFFFFF' : '#0F172A'};
+              box-shadow: 0 1.5px 0 #0F172A;
+              transition: transform 0.15s ease;
             "
             title="${loc.isPinnedByMe ? 'Pinned to your places (Click to unpin)' : 'Click to pin this place'}"
           >
             <span>📌</span>
             <span>${loc.isPinnedByMe ? 'Pinned' : 'Pin Place'}</span>
-            <span style="opacity: 0.85; font-size: 10px;">(${pinCount})</span>
+            <span style="opacity: 0.9; font-size: 10px; font-weight: 800; background: ${loc.isPinnedByMe ? '#13332E' : '#EAF3F7'}; color: ${loc.isPinnedByMe ? '#fff' : '#0F172A'}; padding: 0 5px; border-radius: 99px; border: 1px solid #0F172A;">${pinCount}</span>
           </button>
-          ${isVerified ? '<span style="font-size: 8.5px; font-weight: 900; background: #22c55e; color: #ffffff; padding: 2px 6px; border-radius: 6px;">VERIFIED ACCESS</span>' : '<span style="font-size: 9.5px; color: #64748b; font-weight: 700;">Community Verified</span>'}
+          ${isVerified ? `
+            <span style="
+              font-size: 9.5px;
+              font-weight: 800;
+              background: #E7F2F0;
+              color: #21524B;
+              border: 1.2px solid #21524B;
+              padding: 2.5px 7px;
+              border-radius: 99px;
+              letter-spacing: 0.02em;
+            ">VERIFIED ACCESS</span>
+          ` : `
+            <span style="
+              font-size: 9.5px;
+              color: #586E7D;
+              font-weight: 700;
+            ">Community Verified</span>
+          `}
         </div>
 
         <!-- Summary -->
         <p style="
           margin: 0;
-          font-size: 11px;
-          line-height: 1.4;
+          font-size: 11.5px;
+          line-height: 1.45;
           color: #475569;
           font-weight: 500;
         ">${escapeHtml(truncatedSummary)}</p>
 
         <!-- Feature chips -->
-        ${topTags ? `<div style="display: flex; flex-wrap: wrap; gap: 4px;">${topTags}</div>` : ''}
+        ${topTags ? `<div style="display: flex; flex-wrap: wrap; gap: 5px;">${topTags}</div>` : ''}
 
         <!-- Footer quick actions hint -->
         <div style="
           margin-top: 2px;
-          padding-top: 6px;
-          border-top: 1px dashed #e2e8f0;
+          padding-top: 8px;
+          border-top: 1.5px dashed #9DBBC7;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          font-size: 9.5px;
-          color: #64748b;
+          font-size: 10px;
+          color: #586E7D;
           font-weight: 600;
         ">
           <span>🖱️ Click to select</span>
