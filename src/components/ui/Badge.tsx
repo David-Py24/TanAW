@@ -37,26 +37,26 @@ export const Badge: React.FC<BadgeProps> = ({
 
   const variantStyles: Record<BadgeVariant, { container: string; defaultIcon?: React.ReactNode }> = {
     verified: {
-      container: 'bg-[#bef264] text-slate-950 font-black tracking-wide uppercase shadow-2xs',
-      defaultIcon: <CheckCircle2 className="w-3 h-3 text-slate-950" />,
+      container: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-semibold',
+      defaultIcon: <CheckCircle2 className="w-3 h-3 text-emerald-600" />,
     },
     'ai-suggested': {
-      container: 'bg-purple-100 text-purple-900 border border-purple-200 font-bold uppercase',
-      defaultIcon: <Sparkles className="w-3 h-3 text-purple-600" />,
+      container: 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 font-semibold',
+      defaultIcon: <Sparkles className="w-3 h-3 text-indigo-600" />,
     },
     barrier: {
-      container: 'bg-rose-100 text-rose-800 border border-rose-200 font-bold uppercase',
-      defaultIcon: <AlertTriangle className="w-3 h-3 text-rose-700" />,
+      container: 'bg-rose-50 text-rose-700 border border-rose-200/80 font-semibold',
+      defaultIcon: <AlertTriangle className="w-3 h-3 text-rose-600" />,
     },
     category: {
-      container: 'bg-slate-100 text-slate-600 font-bold tracking-wider uppercase',
+      container: 'bg-slate-100/80 text-slate-600 font-medium border border-slate-200/60',
     },
     neutral: {
-      container: 'bg-slate-100 text-slate-700 font-medium border border-slate-200',
+      container: 'bg-slate-50 text-slate-600 font-medium border border-slate-200/80',
     },
     success: {
-      container: 'bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold',
-      defaultIcon: <ShieldCheck className="w-3 h-3 text-emerald-600" />,
+      container: 'bg-teal-50 text-teal-800 border border-teal-200/80 font-semibold',
+      defaultIcon: <ShieldCheck className="w-3 h-3 text-teal-600" />,
     },
   };
 

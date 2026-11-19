@@ -5,6 +5,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { A11yProvider, useA11y } from './context/A11yContext';
+import { LoginPage } from './components/LoginPage';
 import { SidebarRail } from './components/SidebarRail';
 import { PlacesPanel } from './components/PlacesPanel';
 import { MapView } from './components/MapView';
@@ -21,11 +22,29 @@ import {
 import {
   loadLocations,
   saveLocations,
-  resetToSeedData,
+  clearAllLocations,
   getStoredUserVotes,
   saveStoredUserVote,
+  calculateDistanceKm,
 } from './utils/storage';
-import { MapPin, Sparkles, Plus, Layers, ArrowLeft, ExternalLink } from 'lucide-react';
+import {
+  CityPreset,
+  MINDANAO_CITY_PRESETS,
+  ACCESSIBILITY_QUICK_FILTERS,
+  RoutePreviewResult,
+  fetchAccessibleRoute,
+} from './utils/routingAndSpatial';
+import { calculateGoogleWalkingRoute } from './utils/googleMapsLoader';
+import { AuthSession, clearSession, loadSession } from './utils/auth';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
+
+// Prototype pages run as standalone HTML, so pass the Google Maps key to them
+// through the URL instead of relying on Vite's import.meta.env injection.
+const withGoogleMapsKey = (url: string) => {
+  const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+  if (!key) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}googleMapsKey=${encodeURIComponent(key)}`;
+};
 
 const PROTOTYPE_ROUTES: Record<string, { title: string; subtitle: string; url: string }> = {
   profile: {
@@ -70,7 +89,12 @@ const PROTOTYPE_ROUTES: Record<string, { title: string; subtitle: string; url: s
   },
 };
 
-function AccessMapApp() {
+interface AccessMapWorkspaceProps {
+  session: AuthSession;
+  onSignOut: () => void;
+}
+
+function AccessMapWorkspace({ session, onSignOut }: AccessMapWorkspaceProps) {
   const { announce } = useA11y();
 
   // Core locations state
@@ -89,25 +113,37 @@ function AccessMapApp() {
     }));
   });
 
+  // Active City Preset (defaults to Cagayan de Oro)
+  const [activeCity, setActiveCity] = useState<CityPreset>(MINDANAO_CITY_PRESETS[1]);
+
   // Selected Location
   const [selectedLocation, setSelectedLocation] = useState<LocationPin | null>(() => {
     return locations.length > 0 ? locations[0] : null;
   });
 
-  // Detail Drawer Visibility (full drawer with voting & review form)
+  // Detail Drawer Visibility
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
   // Active navigation tab
   const [activeNavTab, setActiveNavTab] = useState<string>('map');
 
-  // Mobile / Filter panel toggle
-  const [isPlacesPanelOpen, setIsPlacesPanelOpen] = useState(true);
+  // Mobile / Filter panel toggle. Phones start on the map, larger screens on the list.
+  const [isPlacesPanelOpen, setIsPlacesPanelOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return window.matchMedia('(min-width: 768px)').matches;
+  });
 
-  // Search & Tag Filter states
+  // Search & Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'All'>('All');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [activeA11yFilters, setActiveA11yFilters] = useState<string[]>([]);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [nearbyRadiusKm, setNearbyRadiusKm] = useState<number | null>(null);
+  const [aiMatchedIds, setAiMatchedIds] = useState<string[]>([]);
+
+  // Route Preview state
+  const [activeRoute, setActiveRoute] = useState<RoutePreviewResult | null>(null);
+  const [isRoutingLoading, setIsRoutingLoading] = useState(false);
 
   // Add Location Flow State
   const [isAddingLocation, setIsAddingLocation] = useState(false);
@@ -142,6 +178,34 @@ function AccessMapApp() {
       if (fresh) setSelectedLocation(fresh);
     }
   }, [locations]);
+
+  // Toggle Route Preview
+  const handleToggleRoute = async (loc: LocationPin) => {
+    if (activeRoute && selectedLocation?.id === loc.id) {
+      setActiveRoute(null);
+      announce('Route preview cleared.');
+      return;
+    }
+
+    const origin = userCoords || { lat: activeCity.lat, lng: activeCity.lng };
+    setIsRoutingLoading(true);
+    announce(`Calculating accessible Google route to ${loc.name}...`);
+    try {
+      const result = await calculateGoogleWalkingRoute(origin, { lat: loc.lat, lng: loc.lng });
+      setActiveRoute(result);
+      setSelectedLocation(loc);
+      announce(
+        `Google walking route ready: ${result.distanceKm} km, ~${result.durationMinutes} min mobility transit.`
+      );
+    } catch {
+      const fallback = await fetchAccessibleRoute(origin.lat, origin.lng, loc.lat, loc.lng);
+      setActiveRoute(fallback);
+      setSelectedLocation(loc);
+      announce(`Accessible route ready: ${fallback.distanceKm} km, ~${fallback.durationMinutes} min est.`);
+    } finally {
+      setIsRoutingLoading(false);
+    }
+  };
 
   // Community Voting (Confirm / Dispute)
   const handleVoteTag = (pinId: string, tagName: string, vote: 'confirm' | 'dispute') => {
@@ -274,7 +338,7 @@ function AccessMapApp() {
       summary: analysis.summary,
       barriers: analysis.possible_barriers,
     });
-    setNewPinCoords({ lat: 8.4822, lng: 124.6473 });
+    setNewPinCoords({ lat: activeCity.lat, lng: activeCity.lng });
     setIsAddModalOpen(true);
   };
 
@@ -287,19 +351,57 @@ function AccessMapApp() {
     setAiNewPinData(null);
   };
 
-  // Reset to seed data
+  // Clear every saved place and start fresh
   const handleResetData = () => {
-    if (window.confirm('Reset all AccessMap pins to initial Cagayan de Oro seed places?')) {
-      const reset = resetToSeedData();
-      setLocations(reset);
-      setSelectedLocation(reset[0] || null);
-      announce('Database reset to Cagayan de Oro seed data.');
+    if (
+      window.confirm(
+        'Clear all saved places? This removes every location stored in this browser and cannot be undone.'
+      )
+    ) {
+      clearAllLocations();
+      setLocations([]);
+      setSelectedLocation(null);
+      setIsDetailDrawerOpen(false);
+      setActiveRoute(null);
+      setAiMatchedIds([]);
+      setIsAddingLocation(false);
+      setNewPinCoords(null);
+      announce('All saved places cleared. Add a new place to start fresh.');
     }
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('All');
+    setActiveA11yFilters([]);
+    setNearbyRadiusKm(null);
+    setAiMatchedIds([]);
+    announce('All filters cleared.');
   };
 
   // Filter locations
   const filteredLocations = useMemo(() => {
     let result = [...locations];
+
+    // AI matched IDs filter (if an AI query is active)
+    if (aiMatchedIds.length > 0) {
+      result = result.filter((loc) => aiMatchedIds.includes(loc.id));
+    }
+
+    // City Filter (if not 'mindanao' all-island view)
+    if (activeCity.id !== 'mindanao') {
+      const cityLat = activeCity.lat;
+      const cityLng = activeCity.lng;
+      result = result.filter((loc) => {
+        const dist = calculateDistanceKm(cityLat, cityLng, loc.lat, loc.lng);
+        if (dist <= 40) return true;
+        const cityName = activeCity.name.toLowerCase();
+        const shortName = activeCity.shortName.toLowerCase();
+        const addr = loc.address.toLowerCase();
+        return addr.includes(cityName) || addr.includes(shortName);
+      });
+    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
@@ -316,29 +418,57 @@ function AccessMapApp() {
       result = result.filter((loc) => loc.category === selectedCategory);
     }
 
-    if (selectedTags.length > 0) {
+    if (activeA11yFilters.length > 0) {
+      for (const filterId of activeA11yFilters) {
+        const def = ACCESSIBILITY_QUICK_FILTERS.find((f) => f.id === filterId);
+        if (!def) continue;
+        if (def.minRating) {
+          result = result.filter((l) => l.averageRating >= def.minRating!);
+        }
+        if (def.tagKeyword) {
+          result = result.filter((l) =>
+            l.tags.some(
+              (t) =>
+                t.name.toLowerCase().includes(def.tagKeyword!) &&
+                t.confirmations >= t.disputes
+            )
+          );
+        }
+      }
+    }
+
+    if (nearbyRadiusKm !== null) {
+      const origin = userCoords || { lat: activeCity.lat, lng: activeCity.lng };
       result = result.filter((loc) => {
-        const locTagNames = loc.tags.map((t) => t.name);
-        return selectedTags.every((t) => locTagNames.includes(t));
+        const dist = calculateDistanceKm(origin.lat, origin.lng, loc.lat, loc.lng);
+        return dist <= nearbyRadiusKm;
       });
     }
 
     return result;
-  }, [locations, searchQuery, selectedCategory, selectedTags]);
+  }, [locations, activeCity, searchQuery, selectedCategory, activeA11yFilters, nearbyRadiusKm, userCoords, aiMatchedIds]);
 
   return (
-    <div className="flex h-screen w-screen bg-[#f1f5f9] text-slate-900 overflow-hidden font-sans">
-      {/* Far Left Navigation Rail (Matching Reference UI rail) */}
+    <div className="relative flex h-[100dvh] w-full bg-slate-100 text-slate-900 overflow-hidden font-sans">
+      {/* Far Left Navigation Rail */}
       <SidebarRail
+        session={session}
+        onSignOut={onSignOut}
         activeTab={activeNavTab}
-        onTabChange={setActiveNavTab}
+        onTabChange={(tab) => {
+          setActiveNavTab(tab);
+          // On phones the list covers the map, so tapping Map View should reveal it.
+          if (tab === 'map' && window.matchMedia('(max-width: 767px)').matches) {
+            setIsPlacesPanelOpen(false);
+          }
+        }}
         onOpenAIAnalyzer={() => {
           setAiTargetLocation(null);
           setIsAIModalOpen(true);
         }}
         onOpenAddModal={() => {
           setIsAddingLocation(true);
-          setNewPinCoords({ lat: 8.4822, lng: 124.6473 });
+          setNewPinCoords({ lat: activeCity.lat, lng: activeCity.lng });
           setIsAddModalOpen(true);
         }}
         onResetData={handleResetData}
@@ -346,14 +476,13 @@ function AccessMapApp() {
         isFilterPanelOpen={isPlacesPanelOpen}
       />
 
-      {/* Floating / Docked Places Panel (Matching Reference UI "Packages" panel) */}
+      {/* Places & Search Panel */}
       {!PROTOTYPE_ROUTES[activeNavTab] && (
         <PlacesPanel
           locations={filteredLocations}
+          totalLocationsCount={locations.length}
           selectedLocation={selectedLocation}
-          onSelectLocation={(loc) => {
-            setSelectedLocation(loc);
-          }}
+          onSelectLocation={(loc) => setSelectedLocation(loc)}
           onOpenDetails={(loc) => {
             setSelectedLocation(loc);
             setIsDetailDrawerOpen(true);
@@ -366,55 +495,71 @@ function AccessMapApp() {
           onSearchChange={setSearchQuery}
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
-          selectedTags={selectedTags}
-          onToggleTag={(tag) => {
-            setSelectedTags((prev) =>
-              prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-            );
-          }}
-          onClearTags={() => setSelectedTags([])}
+          activeA11yFilters={activeA11yFilters}
+          onToggleA11yFilter={(fId) =>
+            setActiveA11yFilters((prev) =>
+              prev.includes(fId) ? prev.filter((id) => id !== fId) : [...prev, fId]
+            )
+          }
+          onClearFilters={handleClearFilters}
           userCoords={userCoords}
           onResetData={handleResetData}
           isOpen={isPlacesPanelOpen}
+          onCloseMobile={() => setIsPlacesPanelOpen(false)}
+          activeCity={activeCity}
+          onSelectCityPreset={(city) => {
+            setActiveCity(city);
+            if (activeRoute) setActiveRoute(null);
+          }}
+          onOpenAddModal={() => {
+            setIsAddingLocation(true);
+            setNewPinCoords({ lat: activeCity.lat, lng: activeCity.lng });
+            setIsAddModalOpen(true);
+          }}
+          onToggleRoute={handleToggleRoute}
+          activeRouteLocationId={activeRoute ? selectedLocation?.id : undefined}
+          onOpenAIAnalyzer={() => {
+            setAiTargetLocation(null);
+            setIsAIModalOpen(true);
+          }}
+          aiMatchedIds={aiMatchedIds}
+          onSetAiMatchedIds={setAiMatchedIds}
         />
       )}
 
       {/* Main Map / Prototype Canvas Area */}
-      <main className="flex-1 h-full relative overflow-hidden bg-slate-200">
+      <main className="isolate flex-1 min-h-0 relative overflow-hidden bg-slate-200">
         {PROTOTYPE_ROUTES[activeNavTab] ? (
           <div className="w-full h-full flex flex-col bg-white">
             {/* Top Navigation Banner */}
-            <div className="flex items-center justify-between px-5 py-3 bg-[#EAF3F7] border-b-2 border-[#0F172A] z-10 shrink-0">
+            <div className="flex items-center justify-between px-5 py-3 bg-slate-50 border-b border-slate-200 z-10 shrink-0">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setActiveNavTab('map')}
-                  className="px-3 py-1.5 rounded-xl bg-white border-[1.5px] border-[#0F172A] text-xs font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-1.5 cursor-pointer"
-                  title="Return to interactive map"
+                  className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="Return to map"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back to Map</span>
                 </button>
                 <div>
-                  <h2 className="text-sm font-bold text-[#0F172A] leading-tight">
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">
                     {PROTOTYPE_ROUTES[activeNavTab].title}
                   </h2>
-                  <p className="text-[11px] text-[#475569] hidden sm:block">
+                  <p className="text-[11px] text-slate-500 hidden sm:block">
                     {PROTOTYPE_ROUTES[activeNavTab].subtitle}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="hidden md:inline-flex text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#E7F2F0] text-[#21524B] border border-[#21524B]/30">
-                  External Repo Linked
-                </span>
                 <a
-                  href={PROTOTYPE_ROUTES[activeNavTab].url}
+                  href={withGoogleMapsKey(PROTOTYPE_ROUTES[activeNavTab].url)}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-white border-[1.5px] border-[#0F172A] text-[11px] font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-1.5 cursor-pointer"
-                  title="Open this page in a separate full browser tab"
+                  className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="Open fullscreen"
                 >
                   <span>Open Fullscreen</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -422,9 +567,9 @@ function AccessMapApp() {
               </div>
             </div>
 
-            {/* Embedded Live Interface from Sibling Repo */}
+            {/* Embedded Live Interface */}
             <iframe
-              src={PROTOTYPE_ROUTES[activeNavTab].url}
+              src={withGoogleMapsKey(PROTOTYPE_ROUTES[activeNavTab].url)}
               title={PROTOTYPE_ROUTES[activeNavTab].title}
               className="w-full flex-1 border-none bg-white"
             />
@@ -434,9 +579,7 @@ function AccessMapApp() {
             <MapView
               locations={filteredLocations}
               selectedLocation={selectedLocation}
-              onSelectLocation={(loc) => {
-                setSelectedLocation(loc);
-              }}
+              onSelectLocation={(loc) => setSelectedLocation(loc)}
               onOpenDetails={(loc) => {
                 setSelectedLocation(loc);
                 setIsDetailDrawerOpen(true);
@@ -449,66 +592,83 @@ function AccessMapApp() {
                   setIsAddModalOpen(true);
                 }
               }}
+              activeCity={activeCity}
+              activeRoute={activeRoute}
+              onToggleRoutePreview={handleToggleRoute}
+              onClearRoute={() => setActiveRoute(null)}
+              userCoords={userCoords}
+              onUserCoordsChange={setUserCoords}
+              nearbyRadiusKm={nearbyRadiusKm}
+              onNearbyRadiusChange={setNearbyRadiusKm}
+              onOpenAIAnalyzer={() => {
+                setAiTargetLocation(null);
+                setIsAIModalOpen(true);
+              }}
             />
-
-            {/* Mobile toggle button for places panel */}
-            <button
-              type="button"
-              onClick={() => setIsPlacesPanelOpen(!isPlacesPanelOpen)}
-              className="md:hidden absolute bottom-24 right-5 z-[550] px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-full shadow-xl flex items-center gap-1.5 cursor-pointer"
-            >
-              <Layers className="w-4 h-4" />
-              <span>{isPlacesPanelOpen ? 'Hide List' : 'Show List'}</span>
-            </button>
           </>
         )}
+      </main>
 
-        {/* Full Details Slide-out Drawer */}
-        {isDetailDrawerOpen && (
-          <LocationDetailDrawer
-            location={selectedLocation}
-            onClose={() => setIsDetailDrawerOpen(false)}
-            onVoteTag={handleVoteTag}
-            onAddReview={handleAddReview}
-            onRunAIScanOnPin={(loc) => {
-              setAiTargetLocation(loc);
-              setIsAIModalOpen(true);
-            }}
-          />
-        )}
-
-        {/* Add Location Modal */}
-        <AddLocationModal
-          isOpen={isAddModalOpen}
-          onClose={() => {
-            setIsAddModalOpen(false);
-            setIsAddingLocation(false);
-          }}
-          initialCoords={newPinCoords}
-          initialTags={aiNewPinData?.tags}
-          initialPhotoUrl={aiNewPinData?.photoUrl}
-          initialAiSummary={aiNewPinData?.summary}
-          initialAiBarriers={aiNewPinData?.barriers}
-          onSaveLocation={handleSaveLocation}
-          onOpenStorefrontScanner={() => {
-            setIsAddModalOpen(false);
-            setAiTargetLocation(null);
+      {/* Full Details Slide-out Drawer */}
+      {isDetailDrawerOpen && (
+        <LocationDetailDrawer
+          location={selectedLocation}
+          onClose={() => setIsDetailDrawerOpen(false)}
+          onVoteTag={handleVoteTag}
+          onAddReview={handleAddReview}
+          onRunAIScanOnPin={(loc) => {
+            setAiTargetLocation(loc);
             setIsAIModalOpen(true);
           }}
         />
+      )}
 
-        {/* AI Storefront Analyzer Modal */}
-        <AIStorefrontModal
-          isOpen={isAIModalOpen}
-          onClose={() => setIsAIModalOpen(false)}
-          targetLocation={aiTargetLocation}
-          locations={locations}
-          onApplyTagsToLocation={handleApplyTagsToLocation}
-          onStartNewPinFromAnalysis={handleStartNewPinFromAnalysis}
-        />
-      </main>
+      {/* Add Location Modal */}
+      <AddLocationModal
+        isOpen={isAddModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setIsAddingLocation(false);
+        }}
+        initialCoords={newPinCoords}
+        initialTags={aiNewPinData?.tags}
+        initialPhotoUrl={aiNewPinData?.photoUrl}
+        initialAiSummary={aiNewPinData?.summary}
+        initialAiBarriers={aiNewPinData?.barriers}
+        onSaveLocation={handleSaveLocation}
+        onOpenStorefrontScanner={() => {
+          setIsAddModalOpen(false);
+          setAiTargetLocation(null);
+          setIsAIModalOpen(true);
+        }}
+      />
+
+      {/* AI Storefront Analyzer Modal */}
+      <AIStorefrontModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        targetLocation={aiTargetLocation}
+        locations={locations}
+        onApplyTagsToLocation={handleApplyTagsToLocation}
+        onStartNewPinFromAnalysis={handleStartNewPinFromAnalysis}
+      />
     </div>
   );
+}
+
+function AccessMapApp() {
+  const [session, setSession] = useState<AuthSession | null>(() => loadSession());
+
+  const handleSignOut = () => {
+    clearSession();
+    setSession(null);
+  };
+
+  if (!session) {
+    return <LoginPage onSignIn={setSession} />;
+  }
+
+  return <AccessMapWorkspace session={session} onSignOut={handleSignOut} />;
 }
 
 export default function App() {

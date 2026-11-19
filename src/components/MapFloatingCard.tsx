@@ -6,22 +6,16 @@
 import React from 'react';
 import { LocationPin } from '../types/accessibility';
 import { calculateDistanceKm } from '../utils/storage';
-import {
-  DEFAULT_CDO_CENTER,
-  RoutePreviewResult,
-  extractDistrictOrCity,
-} from '../utils/routingAndSpatial';
-import { getTagIcon } from '../utils/tagHelpers';
+import { DEFAULT_CDO_CENTER, RoutePreviewResult } from '../utils/routingAndSpatial';
 import { Badge } from './ui/Badge';
 import {
-  ArrowRight,
   X,
   Navigation,
-  ChevronLeft,
-  ChevronRight,
-  AlertTriangle,
-  Sparkles,
+  ArrowRight,
+  MapPin,
   Clock,
+  Check,
+  Sparkles,
 } from 'lucide-react';
 
 interface MapFloatingCardProps {
@@ -32,9 +26,6 @@ interface MapFloatingCardProps {
   activeRoute?: RoutePreviewResult | null;
   isRoutingLoading?: boolean;
   onToggleRoutePreview?: (loc: LocationPin) => void;
-  onNavigateRelative?: (direction: 'prev' | 'next') => void;
-  currentIndex?: number;
-  totalFilteredCount?: number;
 }
 
 export const MapFloatingCard: React.FC<MapFloatingCardProps> = ({
@@ -45,248 +36,127 @@ export const MapFloatingCard: React.FC<MapFloatingCardProps> = ({
   activeRoute = null,
   isRoutingLoading = false,
   onToggleRoutePreview,
-  onNavigateRelative,
-  currentIndex = 0,
-  totalFilteredCount = 1,
 }) => {
   if (!location) return null;
+
+  const origin = userCoords || DEFAULT_CDO_CENTER;
+  const distanceKm = calculateDistanceKm(origin.lat, origin.lng, location.lat, location.lng);
 
   const isCommunityVerified =
     location.tags.some((t) => t.confirmations >= 2 && t.confirmations > t.disputes) &&
     location.averageRating >= 4.0;
 
-  const origin = userCoords || DEFAULT_CDO_CENTER;
-  const distanceKm = calculateDistanceKm(origin.lat, origin.lng, location.lat, location.lng);
-  const districtOrCity = extractDistrictOrCity(location.address);
-  const hasBarriers =
-    (location.aiBarriers && location.aiBarriers.length > 0) ||
-    (location.averageRating > 0 && location.averageRating < 2.5);
+  const verifiedTags = location.tags.filter(
+    (t) => t.confirmations >= 2 && t.confirmations > t.disputes
+  );
 
-  const primaryPhoto = location.photos && location.photos.length > 0 ? location.photos[0] : null;
-  const topTags = location.tags.slice(0, 4);
+  const displayTags = (verifiedTags.length > 0 ? verifiedTags : location.tags).slice(0, 2);
 
   return (
     <div
       role="region"
-      aria-label="Selected location quick status"
-      className="absolute bottom-4 sm:bottom-6 left-4 right-4 sm:left-6 sm:right-6 md:left-8 md:right-8 max-w-4xl mx-auto z-[500] bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-200/90 p-4 sm:p-5 transition-all animate-slide-up"
+      aria-label="Selected place preview"
+      className="absolute bottom-36 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[500] bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 p-3.5 transition-all animate-slide-up"
     >
-      {/* Active Route Preview Banner */}
+      {/* Active Route banner if active */}
       {activeRoute && (
-        <div className="mb-3 px-3.5 py-2 rounded-2xl bg-sky-50 border border-sky-200/90 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2 text-sky-950 font-bold">
-            <span className="w-6 h-6 rounded-full bg-sky-600 text-white flex items-center justify-center shrink-0">
-              <Navigation className="w-3.5 h-3.5" />
-            </span>
-            <span>{activeRoute.summaryText}</span>
+        <div className="mb-2.5 px-2.5 py-1.5 rounded-lg bg-teal-50 border border-teal-200/80 flex items-center justify-between text-xs text-teal-900 font-semibold">
+          <div className="flex items-center gap-1.5">
+            <Navigation className="w-3.5 h-3.5 text-teal-700" />
+            <span>{activeRoute.distanceKm} km mobility route</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 font-extrabold flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              ~{activeRoute.durationMinutes} min
-            </span>
-            {hasBarriers && (
-              <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-extrabold flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                Barrier Advisory at Destination
-              </span>
-            )}
-          </div>
+          <span className="flex items-center gap-1 text-teal-750 font-bold">
+            <Clock className="w-3 h-3" />
+            ~{activeRoute.durationMinutes} min
+          </span>
         </div>
       )}
 
-      {/* Top Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          {primaryPhoto && (
-            <img
-              src={primaryPhoto}
-              alt={location.name}
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-slate-200 shrink-0 hidden xs:block"
-            />
-          )}
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight truncate">
-                {location.name}
-              </h3>
-
-              {/* Status Badge */}
-              {isCommunityVerified ? (
-                <Badge variant="verified" size="xs">
-                  VERIFIED
-                </Badge>
-              ) : location.aiSummary ? (
-                <Badge variant="ai-suggested" size="xs">
-                  AI SCAN
-                </Badge>
-              ) : location.averageRating < 2.5 && location.averageRating > 0 ? (
-                <Badge variant="barrier" size="xs">
-                  BARRIERS
-                </Badge>
-              ) : (
-                <Badge variant="neutral" size="xs">
-                  {location.averageRating > 0 ? `${location.averageRating.toFixed(1)} ★` : 'PENDING'}
-                </Badge>
-              )}
-            </div>
-
-            <p className="text-xs text-slate-500 truncate mt-0.5">{location.address}</p>
-          </div>
+      {/* Header: Title, Category & Dismiss button */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-slate-900 truncate">
+            {location.name}
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 truncate">
+            <span className="font-medium text-slate-700">{location.category}</span>
+            <span>•</span>
+            <span className="text-slate-400">{distanceKm} km away</span>
+          </p>
         </div>
 
-        {/* Action Buttons & Prev/Next Carousel Controls */}
-        <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-          {onNavigateRelative && totalFilteredCount > 1 && (
-            <div className="flex items-center bg-slate-100 rounded-full p-0.5 border border-slate-200">
-              <button
-                type="button"
-                onClick={() => onNavigateRelative('prev')}
-                className="p-1.5 rounded-full hover:bg-white text-slate-700 transition-colors cursor-pointer"
-                title="Previous location"
-                aria-label="Previous location"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <span className="px-2 text-[11px] font-extrabold text-slate-600 tabular-nums">
-                {currentIndex + 1}/{totalFilteredCount}
-              </span>
-              <button
-                type="button"
-                onClick={() => onNavigateRelative('next')}
-                className="p-1.5 rounded-full hover:bg-white text-slate-700 transition-colors cursor-pointer"
-                title="Next location"
-                aria-label="Next location"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {onToggleRoutePreview && (
-            <button
-              type="button"
-              onClick={() => onToggleRoutePreview(location)}
-              disabled={isRoutingLoading}
-              className={`px-3.5 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer border ${
-                activeRoute
-                  ? 'bg-sky-600 text-white border-sky-700 shadow-xs'
-                  : 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-200'
-              }`}
-              title="Preview accessible route on map"
-            >
-              <Navigation className={`w-3.5 h-3.5 ${isRoutingLoading ? 'animate-spin' : ''}`} />
-              <span>{activeRoute ? 'Clear Route' : 'Preview Route'}</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => onOpenDetails(location)}
-            className="px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-          >
-            <span>Full Details</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-            title="Dismiss summary card"
-            aria-label="Dismiss summary card"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+          title="Dismiss card"
+          aria-label="Dismiss card"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* Interactive Tags & AI Insight Strip */}
-      {(topTags.length > 0 || location.aiSummary || (location.aiBarriers && location.aiBarriers.length > 0)) && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          {topTags.map((tag) => (
-            <span
-              key={tag.name}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200/80 text-[11px] font-bold text-slate-700"
-            >
-              {getTagIcon(tag.name)}
-              <span>{tag.name}</span>
-              {tag.confirmations > 0 && (
-                <span className="text-[10px] text-emerald-700 font-extrabold ml-0.5">
-                  ✓{tag.confirmations}
-                </span>
-              )}
-            </span>
-          ))}
+      {/* Middle row: Rating and tags */}
+      <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+        {isCommunityVerified ? (
+          <Badge variant="verified" size="xs">
+            ★ {location.averageRating.toFixed(1)} Verified
+          </Badge>
+        ) : location.averageRating > 0 ? (
+          <Badge variant="neutral" size="xs">
+            ★ {location.averageRating.toFixed(1)}
+          </Badge>
+        ) : (
+          <Badge variant="neutral" size="xs">
+            Unrated
+          </Badge>
+        )}
 
-          {location.aiSummary && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 border border-purple-200 text-[11px] font-semibold text-purple-900 max-w-full truncate">
-              <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-              <span className="truncate">{location.aiSummary}</span>
-            </span>
-          )}
+        {displayTags.map((tag) => (
+          <span
+            key={tag.name}
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600"
+          >
+            {tag.confirmations >= 2 && <Check className="w-2.5 h-2.5 text-emerald-600" />}
+            <span className="truncate max-w-[120px]">{tag.name}</span>
+          </span>
+        ))}
+      </div>
 
-          {location.aiBarriers && location.aiBarriers.length > 0 && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 border border-rose-200 text-[11px] font-bold text-rose-800">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-              <span>{location.aiBarriers[0]}</span>
-            </span>
-          )}
+      {/* AI Agent Insight */}
+      {location.aiSummary && (
+        <div className="mt-2 px-2 py-1 rounded-lg bg-indigo-50/80 border border-indigo-100 flex items-center gap-1.5 text-[11px] text-indigo-950">
+          <Sparkles className="w-3 h-3 text-indigo-600 shrink-0" />
+          <span className="truncate"><b>AI:</b> {location.aiSummary}</span>
         </div>
       )}
 
-      {/* Horizontal Divider */}
-      <hr className="my-3 border-slate-200/80" />
+      {/* Action buttons */}
+      <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+        {onToggleRoutePreview && (
+          <button
+            type="button"
+            onClick={() => onToggleRoutePreview(location)}
+            disabled={isRoutingLoading}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+              activeRoute
+                ? 'bg-sky-600 text-white'
+                : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700'
+            }`}
+          >
+            <Navigation className={`w-3.5 h-3.5 ${isRoutingLoading ? 'animate-spin' : ''}`} />
+            <span>{activeRoute ? 'Clear Route' : 'Route'}</span>
+          </button>
+        )}
 
-      {/* 5-Column Metric Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-left">
-        <div>
-          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            City / District
-          </span>
-          <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-            {districtOrCity}
-          </span>
-        </div>
-
-        <div>
-          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Category
-          </span>
-          <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-            {location.category}
-          </span>
-        </div>
-
-        <div className="hidden sm:block">
-          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Coordinates
-          </span>
-          <span className="block text-xs font-bold text-slate-800 font-mono truncate mt-0.5">
-            {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
-          </span>
-        </div>
-
-        <div>
-          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            {userCoords ? 'GPS Distance' : 'From CDO Center'}
-          </span>
-          <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-            {activeRoute ? `${activeRoute.distanceKm} km route` : `${distanceKm} km away`}
-          </span>
-        </div>
-
-        <div>
-          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Accessibility Score
-          </span>
-          <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-            {location.averageRating > 0
-              ? `${location.averageRating.toFixed(1)} / 5.0 ★ (${location.totalReviews})`
-              : 'Unrated • Needs Review'}
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={() => onOpenDetails(location)}
+          className="ml-auto px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+        >
+          <span>View Details</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );

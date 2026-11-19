@@ -3,10 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useA11y } from '../context/A11yContext';
+import { AuthSession, getDisplayName, getInitials } from '../utils/auth';
 
 export interface SidebarRailProps {
+  session: AuthSession;
+  onSignOut: () => void;
   activeTab: string;
   onTabChange: (tab: string) => void;
   onOpenAIAnalyzer: () => void;
@@ -17,6 +20,8 @@ export interface SidebarRailProps {
 }
 
 export const SidebarRail: React.FC<SidebarRailProps> = ({
+  session,
+  onSignOut,
   activeTab,
   onTabChange,
   onOpenAIAnalyzer,
@@ -24,9 +29,49 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
   onToggleFilterPanel,
   isFilterPanelOpen,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [isCollapsedPreference, setIsCollapsedPreference] = useState<boolean>(true);
+  const [isCompactRail, setIsCompactRail] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 767px)').matches;
+  });
   const [inviteCopied, setInviteCopied] = useState<boolean>(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const { announce } = useA11y();
+
+  // Phones keep the rail in icon-only mode so the panel and map keep their width.
+  const isCollapsed = isCompactRail || isCollapsedPreference;
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 767px)');
+    const handleChange = (event: MediaQueryListEvent) => setIsCompactRail(event.matches);
+
+    setIsCompactRail(query.matches);
+    query.addEventListener('change', handleChange);
+    return () => query.removeEventListener('change', handleChange);
+  }, []);
+
+  // The "More" sheet only exists on phones; close it if the viewport grows.
+  useEffect(() => {
+    if (!isCompactRail) setIsMobileMenuOpen(false);
+  }, [isCompactRail]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen]);
+
+  const displayName = getDisplayName(session);
+  const initials = getInitials(session);
+  const roleLabel = session.guest ? 'Guest session' : 'Community Mapper';
+
+  const handleSignOut = () => {
+    announce('Signed out of TanAW.');
+    onSignOut();
+  };
 
   const handleInviteClick = () => {
     if (navigator.clipboard?.writeText) {
@@ -51,9 +96,20 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
     announce(`Navigated to ${tabId}`);
   };
 
+  const handleMenuNav = (tabId: string) => {
+    setIsMobileMenuOpen(false);
+    handleNavClick(tabId);
+  };
+
+  const isMoreActive =
+    isMobileMenuOpen ||
+    ['profile', 'community', 'contributions', 'messages', 'settings', 'landing'].includes(
+      activeTab
+    );
+
   return (
     <>
-      {/* SVG Icon Definition Sprite from sidebar.html */}
+      {/* SVG Icon Definition Sprite */}
       <svg width="0" height="0" className="absolute w-0 h-0 pointer-events-none" aria-hidden="true">
         <defs>
           <symbol id="i-globe" viewBox="0 0 24 24">
@@ -115,42 +171,39 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
 
       <aside
         aria-label="Primary Navigation"
-        className={`bg-white border-r-[1.5px] border-[#0F172A] flex flex-col shrink-0 select-none overflow-y-auto overflow-x-hidden min-h-0 z-40 font-space transition-all duration-200 ${
-          isCollapsed ? 'w-[68px] p-[16px_10px]' : 'w-[248px] p-[16px_12px]'
+        className={`bg-white border-r border-slate-200 flex flex-col shrink-0 select-none overflow-y-auto overflow-x-hidden min-h-0 z-40 transition-all duration-200 ${
+          isCollapsed ? 'w-[64px] p-3' : 'w-[220px] p-4'
         }`}
-        style={{
-          colorScheme: 'light',
-        }}
       >
         {/* Brand Header */}
         <div
-          className={`flex items-center justify-between pb-3.5 ${
-            isCollapsed ? 'flex-col gap-2 p-[2px_0_10px]' : 'p-[2px_6px_14px]'
+          className={`flex items-center justify-between pb-3 ${
+            isCollapsed ? 'flex-col gap-2' : ''
           }`}
         >
           <button
             type="button"
             onClick={() => handleNavClick('map')}
-            className="flex items-center gap-2.5 font-bold text-[20px] tracking-[-0.02em] text-[#0F172A] text-left cursor-pointer group"
-            title="AccessMap Home"
-            aria-label="AccessMap Home"
+            className="flex items-center gap-2 font-bold text-base tracking-tight text-slate-900 text-left cursor-pointer group"
+            title="TanAW / AccessMap"
+            aria-label="TanAW / AccessMap"
           >
-            <div className="w-[30px] h-[30px] rounded-[9px] bg-[#21524B] text-white grid place-items-center border-[1.5px] border-[#0F172A] shadow-[0_2px_0_#0F172A] shrink-0 group-hover:scale-105 transition-transform">
-              <svg className="w-[17px] h-[17px] fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
+            <div className="w-8 h-8 rounded-lg bg-teal-700 text-white grid place-items-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-4 h-4 fill-none stroke-current stroke-[2] stroke-linecap-round stroke-linejoin-round">
                 <use href="#i-pin" />
               </svg>
             </div>
-            {!isCollapsed && <span className="whitespace-nowrap">AccessMap</span>}
+            {!isCollapsed && <span className="whitespace-nowrap font-bold text-slate-900">TanAW</span>}
           </button>
 
           <button
             type="button"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-[34px] h-[34px] rounded-full border-[1.5px] border-transparent hover:border-[#0F172A] bg-transparent hover:bg-white text-[#475569] hover:text-[#0F172A] grid place-items-center p-0 transition-all cursor-pointer"
+            onClick={() => setIsCollapsedPreference(!isCollapsedPreference)}
+            className="hidden md:block p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            <svg className="w-[18px] h-[18px] fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
+            <svg className="w-4 h-4 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
               <use href="#i-sidebar" />
             </svg>
           </button>
@@ -160,311 +213,206 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
         <button
           type="button"
           onClick={() => handleNavClick('profile')}
-          className={`w-full text-left bg-white border-[1.5px] border-[#0F172A] rounded-[12px] shadow-[0_2px_0_#0F172A] mb-3.5 flex items-center cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all ${
-            isCollapsed ? 'justify-center p-[9px]' : 'gap-2.5 p-[9px_10px]'
+          className={`w-full text-left bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl mb-3 flex items-center cursor-pointer transition-colors ${
+            isCollapsed ? 'justify-center p-2' : 'gap-2.5 p-2'
           }`}
-          title="Alex David - My workspace"
-          aria-label="Workspace: Alex David"
+          title={`${displayName}${session.guest ? ' - Guest session' : ` - ${session.email}`}`}
+          aria-label={`Workspace: ${displayName}`}
         >
-          <span className="w-[30px] h-[30px] rounded-full bg-[#21524B] text-white grid place-items-center font-bold text-[11px] shrink-0">
-            AD
+          <span
+            className={`w-6 h-6 rounded-full text-white grid place-items-center font-bold text-[10px] shrink-0 ${
+              session.guest ? 'bg-slate-600' : 'bg-teal-700'
+            }`}
+          >
+            {initials}
           </span>
           {!isCollapsed && (
             <>
               <div className="overflow-hidden min-w-0">
-                <b className="block text-[13px] leading-[1.2] text-[#0F172A] font-bold truncate">
-                  My workspace
+                <b className="block text-xs leading-tight text-slate-800 font-semibold truncate">
+                  {displayName}
                 </b>
-                <small className="block text-[#475569] text-[11px] truncate">Alex David</small>
+                <small className="block text-slate-400 text-[10px] truncate">{roleLabel}</small>
               </div>
-              <svg className="ml-auto text-[#475569] w-[15px] h-[15px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
+              <svg className="ml-auto text-slate-400 w-3.5 h-3.5 shrink-0 fill-none stroke-current stroke-[1.8]">
                 <use href="#i-chev" />
               </svg>
             </>
           )}
         </button>
 
-        {/* Top Navigation Items */}
-        <div className="flex flex-col gap-1">
+        {/* Primary Views */}
+        <div className="flex flex-col gap-0.5">
           <button
             type="button"
-            onClick={(e) => handleNavClick('community', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'community'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Community (BETA)"
+            onClick={(e) => handleNavClick('map', e)}
+            className={`flex items-center gap-2.5 rounded-lg text-xs whitespace-nowrap cursor-pointer transition-colors ${
+              activeTab === 'map'
+                ? 'bg-teal-50 text-teal-900 font-semibold'
+                : 'text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
+            } ${isCollapsed ? 'justify-center p-2' : 'px-2.5 py-2'}`}
+            title="Interactive Map"
           >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-globe" />
+            <svg className={`w-4 h-4 shrink-0 fill-none stroke-current stroke-[1.8] ${activeTab === 'map' ? 'text-teal-700' : ''}`}>
+              <use href="#i-pin" />
+            </svg>
+            {!isCollapsed && <span>Map View</span>}
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => handleNavClick('vision', e)}
+            className={`flex items-center gap-2.5 rounded-lg text-xs whitespace-nowrap cursor-pointer transition-all bg-indigo-50/70 hover:bg-indigo-100/80 text-indigo-900 font-semibold border border-indigo-200/70 shadow-2xs ${
+              isCollapsed ? 'justify-center p-2' : 'px-2.5 py-2'
+            }`}
+            title="TanAW AI Agent (Gemini Storefront Analyzer)"
+          >
+            <svg className="w-4 h-4 shrink-0 text-indigo-600 fill-none stroke-current stroke-[1.8]">
+              <use href="#i-sparkle" />
             </svg>
             {!isCollapsed && (
               <>
-                <span>Community</span>
-                <span className="ml-auto text-[9px] font-bold text-[#21524B] bg-[#E7F2F0] rounded-[6px] px-1.5 py-0.5 border border-[#21524B]/35">
-                  BETA
+                <span>AI Agent</span>
+                <span className="ml-auto text-[9px] font-bold text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200">
+                  SCAN
                 </span>
               </>
             )}
           </button>
 
+          {onOpenAddModal && (
+            <button
+              type="button"
+              onClick={onOpenAddModal}
+              className={`flex items-center gap-2.5 rounded-lg text-xs whitespace-nowrap cursor-pointer transition-colors text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 ${
+                isCollapsed ? 'justify-center p-2' : 'px-2.5 py-2'
+              }`}
+              title="Add a New Place"
+            >
+              <svg className="w-4 h-4 shrink-0 text-teal-600 fill-none stroke-current stroke-[1.8]">
+                <use href="#i-plus" />
+              </svg>
+              {!isCollapsed && <span>Add Place</span>}
+            </button>
+          )}
+        </div>
+
+        {/* Section Divider */}
+        <div className={isCollapsed ? 'my-2.5 h-px bg-slate-100 w-full' : 'my-3 h-px bg-slate-100 w-full'} />
+
+        {/* Community & Personal */}
+        {!isCollapsed && (
+          <span className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Community
+          </span>
+        )}
+
+        <div className="flex flex-col gap-0.5">
           <button
             type="button"
-            onClick={(e) => handleNavClick('dashboard', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'dashboard'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Dashboard"
+            onClick={(e) => handleNavClick('community', e)}
+            className={`flex items-center gap-2.5 rounded-lg text-xs whitespace-nowrap cursor-pointer transition-colors ${
+              activeTab === 'community'
+                ? 'bg-teal-50 text-teal-900 font-semibold'
+                : 'text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
+            } ${isCollapsed ? 'justify-center p-2' : 'px-2.5 py-2'}`}
+            title="Leaderboard"
           >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-grid" />
+            <svg className="w-4 h-4 shrink-0 fill-none stroke-current stroke-[1.8]">
+              <use href="#i-globe" />
             </svg>
-            {!isCollapsed && <span>Dashboard</span>}
+            {!isCollapsed && <span>Leaderboard</span>}
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => handleNavClick('saved', e)}
+            className={`flex items-center gap-2.5 rounded-lg text-xs whitespace-nowrap cursor-pointer transition-colors ${
+              activeTab === 'saved'
+                ? 'bg-teal-50 text-teal-900 font-semibold'
+                : 'text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
+            } ${isCollapsed ? 'justify-center p-2' : 'px-2.5 py-2'}`}
+            title="Saved places"
+          >
+            <svg className="w-4 h-4 shrink-0 fill-none stroke-current stroke-[1.8]">
+              <use href="#i-bookmark" />
+            </svg>
+            {!isCollapsed && <span>Saved Places</span>}
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => handleNavClick('contributions', e)}
+            className={`flex items-center gap-2.5 rounded-lg text-xs whitespace-nowrap cursor-pointer transition-colors ${
+              activeTab === 'contributions'
+                ? 'bg-teal-50 text-teal-900 font-semibold'
+                : 'text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
+            } ${isCollapsed ? 'justify-center p-2' : 'px-2.5 py-2'}`}
+            title="Contribution history"
+          >
+            <svg className="w-4 h-4 shrink-0 fill-none stroke-current stroke-[1.8]">
+              <use href="#i-bars" />
+            </svg>
+            {!isCollapsed && <span>Contributions</span>}
           </button>
 
           <button
             type="button"
             onClick={(e) => handleNavClick('messages', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
+            className={`flex items-center gap-2.5 rounded-lg text-xs whitespace-nowrap cursor-pointer transition-colors ${
               activeTab === 'messages'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
+                ? 'bg-teal-50 text-teal-900 font-semibold'
+                : 'text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
+            } ${isCollapsed ? 'justify-center p-2' : 'px-2.5 py-2'}`}
             title="Messages"
           >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
+            <svg className="w-4 h-4 shrink-0 fill-none stroke-current stroke-[1.8]">
               <use href="#i-chat" />
             </svg>
             {!isCollapsed && <span>Messages</span>}
           </button>
         </div>
 
-        {/* IDENTITY Group */}
-        <div
-          className={
-            isCollapsed
-              ? 'my-2 h-[1px] bg-[#D5E5EC] w-full block text-[0px]'
-              : "flex items-center gap-2.5 text-[#475569] text-[10px] font-bold tracking-[0.09em] my-3.5 mx-1.5 uppercase after:content-[''] after:flex-1 after:h-[1px] after:bg-[#D5E5EC]"
-          }
-        >
-          {!isCollapsed && 'IDENTITY'}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('profile', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'profile'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Profile"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-user" />
-            </svg>
-            {!isCollapsed && <span>Profile</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('saved', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'saved'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Saved places"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-bookmark" />
-            </svg>
-            {!isCollapsed && <span>Saved places</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('contributions', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'contributions'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Contribution history"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-bars" />
-            </svg>
-            {!isCollapsed && <span>Contribution history</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('signin', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'signin'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Sign in & Account access"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-door" />
-            </svg>
-            {!isCollapsed && <span>Sign in</span>}
-          </button>
-        </div>
-
-        {/* EXPLORE Group */}
-        <div
-          className={
-            isCollapsed
-              ? 'my-2 h-[1px] bg-[#D5E5EC] w-full block text-[0px]'
-              : "flex items-center gap-2.5 text-[#475569] text-[10px] font-bold tracking-[0.09em] my-3.5 mx-1.5 uppercase after:content-[''] after:flex-1 after:h-[1px] after:bg-[#D5E5EC]"
-          }
-        >
-          {!isCollapsed && 'EXPLORE'}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('map', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'map'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Map view"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-pin" />
-            </svg>
-            {!isCollapsed && <span>Map view</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('landing', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'landing'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="AccessMap Public Landing Page"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-globe" />
-            </svg>
-            {!isCollapsed && <span>Landing portal</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('vision', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all border-transparent font-medium hover:bg-[#EAF3F7] ${
-              isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'
-            }`}
-            title="AI vision (Gemini Storefront Analyzer)"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 text-emerald-700 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-sparkle" />
-            </svg>
-            {!isCollapsed && <span>AI vision</span>}
-          </button>
-
-          {/* Quick Add Pin action */}
-          {onOpenAddModal && (
-            <button
-              type="button"
-              onClick={onOpenAddModal}
-              className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all border-transparent font-medium hover:bg-[#EAF3F7] ${
-                isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'
-              }`}
-              title="Add New Location Pin"
-            >
-              <svg className="w-[18px] h-[18px] shrink-0 text-teal-700 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-                <use href="#i-plus" />
-              </svg>
-              {!isCollapsed && <span>Add place</span>}
-            </button>
-          )}
-        </div>
-
-        {/* SETTINGS Group */}
-        <div
-          className={
-            isCollapsed
-              ? 'my-2 h-[1px] bg-[#D5E5EC] w-full block text-[0px]'
-              : "flex items-center gap-2.5 text-[#475569] text-[10px] font-bold tracking-[0.09em] my-3.5 mx-1.5 uppercase after:content-[''] after:flex-1 after:h-[1px] after:bg-[#D5E5EC]"
-          }
-        >
-          {!isCollapsed && 'SETTINGS'}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('tags', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              activeTab === 'tags'
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Tags & badges"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-tag" />
-            </svg>
-            {!isCollapsed && <span>Tags &amp; badges</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => handleNavClick('filters', e)}
-            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
-              isFilterPanelOpen
-                ? 'bg-[#E7F2F0] border-[#0F172A] shadow-[0_2px_0_#0F172A] font-bold'
-                : 'border-transparent font-medium hover:bg-[#EAF3F7]'
-            } ${isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'}`}
-            title="Filter settings"
-          >
-            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
-              <use href="#i-sliders" />
-            </svg>
-            {!isCollapsed && <span>Filter settings</span>}
-          </button>
-        </div>
-
-        {/* Invite a Mapper Promo Card */}
+        {/* Promo Invite Button at bottom */}
         <button
           type="button"
           onClick={handleInviteClick}
-          className={`mt-auto w-full border-[1.5px] border-[#21524B] rounded-[12px] bg-gradient-to-br from-white to-[#E7F2F0] text-left cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-transform flex items-center shadow-xs ${
-            isCollapsed ? 'justify-center p-[9px]' : 'gap-2.5 p-2.5'
+          className={`mt-auto w-full rounded-xl bg-teal-50/70 hover:bg-teal-100/70 border border-teal-200/80 text-left cursor-pointer transition-colors flex items-center ${
+            isCollapsed ? 'justify-center p-2' : 'gap-2.5 p-2.5'
           }`}
-          title="Invite a mapper - Bring neighbors in to verify places"
-          aria-label="Invite a mapper"
+          title="Invite a mapper"
         >
-          <span className="w-9 h-9 rounded-full bg-white border-[1.5px] border-[#0F172A] grid place-items-center text-[#21524B] shrink-0">
-            <svg className="w-[18px] h-[18px] fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
+          <span className="w-7 h-7 rounded-lg bg-teal-600 text-white grid place-items-center shrink-0">
+            <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-[2]">
               <use href="#i-user" />
             </svg>
           </span>
           {!isCollapsed && (
             <div className="overflow-hidden min-w-0">
-              <b className="block text-[13px] leading-[1.2] text-[#0F172A] font-bold truncate">
-                {inviteCopied ? 'Link Copied!' : 'Invite a mapper'}
+              <b className="block text-xs text-teal-950 font-semibold truncate">
+                {inviteCopied ? 'Link Copied!' : 'Invite a Mapper'}
               </b>
-              <small className="block text-[#475569] text-[11px] leading-[1.3] truncate">
-                {inviteCopied ? 'Share with neighbors' : 'Bring neighbors in to verify places.'}
+              <small className="block text-teal-700 text-[10px] truncate">
+                {inviteCopied ? 'Ready to share' : 'Help verify places'}
               </small>
             </div>
           )}
+        </button>
+
+        {/* Sign out */}
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className={`mt-1 w-full rounded-xl border border-transparent text-slate-500 hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 cursor-pointer transition-colors flex items-center ${
+            isCollapsed ? 'justify-center p-2' : 'gap-2.5 p-2.5'
+          }`}
+          title={`Sign out of ${displayName}'s session`}
+          aria-label="Sign out"
+        >
+          <svg className="w-4 h-4 shrink-0 fill-none stroke-current stroke-[1.8]">
+            <use href="#i-door" />
+          </svg>
+          {!isCollapsed && <span className="text-xs font-semibold">Sign out</span>}
         </button>
       </aside>
     </>

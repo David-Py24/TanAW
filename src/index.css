@@ -1,35 +1,5 @@
 @import "tailwindcss";
 
-/* Leaflet marker & map styling helpers */
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-  font-family: inherit;
-  z-index: 10;
-}
-
-/* Custom Marker Pin Classes */
-.custom-pin-marker {
-  background: transparent;
-  border: none;
-}
-
-.pin-bubble {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  border: 2.5px solid #ffffff;
-}
-
-.pin-bubble:hover, .pin-bubble:focus-visible {
-  transform: scale(1.18);
-  outline: 3px solid #0284c7;
-  outline-offset: 2px;
-}
-
 /* Accessibility High Contrast Mode overrides */
 body.high-contrast {
   background-color: #000000 !important;
@@ -133,6 +103,29 @@ body.high-contrast textarea {
 
 .font-space {
   font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Compact phone login: keep the primary sign-in action visible on short screens. */
+@media (max-width: 1023px) and (max-height: 720px) {
+  .login-mobile-hero {
+    padding-bottom: 2.25rem;
+  }
+
+  .login-mobile-copy {
+    margin-top: 1.25rem;
+  }
+
+  .login-mobile-chips {
+    display: none;
+  }
+
+  .login-mobile-sheet {
+    padding-top: 1rem;
+  }
+
+  .login-mobile-handle {
+    display: none;
+  }
 }
 
 

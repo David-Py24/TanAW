@@ -49,7 +49,7 @@ export const PlaceInfoFields: React.FC<PlaceInfoFieldsProps> = ({
           required
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
-          placeholder="e.g. Centrio Ayala Mall, Cafe Demitasse, Barangay Hall"
+          placeholder="e.g. Barangay Hall, Riverside Cafe, Clinic"
           className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm bg-white"
         />
       </div>
@@ -80,7 +80,7 @@ export const PlaceInfoFields: React.FC<PlaceInfoFieldsProps> = ({
             type="text"
             value={address}
             onChange={(e) => onAddressChange(e.target.value)}
-            placeholder="e.g. Corrales Ave, Divisoria, CDO"
+            placeholder="Street address, barangay, city"
             className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm bg-white"
           />
         </div>

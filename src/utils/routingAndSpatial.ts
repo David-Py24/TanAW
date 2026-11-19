@@ -16,6 +16,59 @@ export interface CityPreset {
   zoom: number;
 }
 
+export interface AccessibilityQuickFilter {
+  id: string;
+  label: string;
+  shortLabel: string;
+  tagKeyword?: string;
+  minRating?: number;
+}
+
+export const ACCESSIBILITY_QUICK_FILTERS: AccessibilityQuickFilter[] = [
+  {
+    id: 'high-rated',
+    label: 'High Accessibility (4.0★+)',
+    shortLabel: '4.0★+ Verified',
+    minRating: 4.0,
+  },
+  {
+    id: 'wheelchair',
+    label: 'Wheelchair Entrance',
+    shortLabel: 'Wheelchair',
+    tagKeyword: 'wheelchair',
+  },
+  {
+    id: 'ramp',
+    label: 'Ramp Available',
+    shortLabel: 'Ramp',
+    tagKeyword: 'ramp',
+  },
+  {
+    id: 'elevator',
+    label: 'Elevator Access',
+    shortLabel: 'Elevator',
+    tagKeyword: 'elevator',
+  },
+  {
+    id: 'restroom',
+    label: 'Accessible Restroom',
+    shortLabel: 'Restroom',
+    tagKeyword: 'restroom',
+  },
+  {
+    id: 'quiet',
+    label: 'Quiet / Low-Sensory',
+    shortLabel: 'Quiet Zone',
+    tagKeyword: 'quiet',
+  },
+  {
+    id: 'parking',
+    label: 'Accessible Parking',
+    shortLabel: 'Parking',
+    tagKeyword: 'parking',
+  },
+];
+
 export const MINDANAO_CITY_PRESETS: CityPreset[] = [
   {
     id: 'mindanao',
@@ -613,7 +666,7 @@ export async function fetchAccessibleRoute(
           distanceKm: distKm,
           durationMinutes: durationMins,
           isFallbackArc: false,
-          summaryText: `Street route via OpenStreetMap (${distKm} km • ~${durationMins} min mobility transit)`,
+          summaryText: `Accessible walking route (${distKm} km • ~${durationMins} min mobility transit)`,
         };
       }
     }

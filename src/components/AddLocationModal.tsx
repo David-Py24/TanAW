@@ -437,7 +437,7 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Centrio Mall, Cafe Demitasse"
+                placeholder="e.g. Barangay Hall, Riverside Cafe"
                 className="w-full px-3.5 py-2.5 bg-slate-50/80 hover:bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-2 focus:outline-slate-900 transition-colors"
               />
             </div>
@@ -472,7 +472,7 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="e.g. Claro M. Recto Ave & Corrales Ave, Cagayan de Oro"
+              placeholder="Street address, barangay, city"
               className="w-full px-3.5 py-2.5 bg-slate-50/80 hover:bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-2 focus:outline-slate-900 transition-colors"
             />
           </div>

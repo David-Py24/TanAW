@@ -172,9 +172,9 @@ export const AIStorefrontModal: React.FC<AIStorefrontModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="AI Storefront Accessibility Analyzer"
-      subtitle="Powered by Gemini Vision • Automatic Entrance & Barrier Detection"
-      headerClassName="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50"
+      title="TanAW AI Storefront Accessibility Agent"
+      subtitle="Multimodal Gemini Vision • Automatic Entrance & Barrier Inspection"
+      headerClassName="bg-gradient-to-r from-teal-50 via-indigo-50 to-purple-50"
       maxWidthClassName="max-w-3xl"
       icon={
         <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">

@@ -3,14 +3,14 @@
 **Application**: AccessMap  
 **Purpose**: Crowdsourced Accessibility Mapping Platform with Multimodal Gemini AI Storefront Analysis  
 **Region of Focus**: Cagayan de Oro, Northern Mindanao, Philippines  
-**Repository & Tech Stack**: React 19, TypeScript, Vite, Tailwind CSS, Leaflet, OpenStreetMap, Express, Google GenAI SDK (`gemini-3.8-flash`)  
+**Repository & Tech Stack**: React 19, TypeScript, Vite, Tailwind CSS, Google Maps JavaScript API (Directions, Places, Street View), OSRM fallback, Google GenAI SDK (`gemini-3.8-flash`)  
 
 ---
 
 ## 1. Executive Summary
 
 AccessMap is an open-source, crowdsourced urban accessibility platform designed to catalog, rate, and verify physical and sensory accessibility features for buildings, venues, and public spaces in Cagayan de Oro, Philippines. The platform incorporates:
-- **Zero-Cost Open-Source Mapping**: Powered by Leaflet and OpenStreetMap (no paid Google Maps API keys required).
+- **Google Maps Platform Mapping**: Powered by the official Google Maps JavaScript API (Roadmap, Satellite, Hybrid, Terrain, Directions, Places, and Street View), with an OSRM walking-route fallback.
 - **Gemini Multimodal AI Storefront Analyzer**: Automatic computer vision inspection of doors, ramps, thresholds, and stairs with strict JSON output.
 - **Community Verification Engine**: Dual "Confirm" / "Dispute" consensus voting with automated trust badging.
 - **Accessible WCAG AA Design**: Text scaling (`1x`, `1.15x`, `1.3x`), high-contrast dark mode, ARIA live regions, and keyboard-first navigability.
@@ -18,6 +18,86 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
 ---
 
 ## 2. Chronological Progress Log (Hourly Format)
+
+### `2026-11-19 21:30:00` — Floating Bottom Navigation on All Screens
+- **Event**: The phone-only bottom bar left desktop on the old left rail, and the request was to unify navigation: put it at the bottom and make it float on PC desktop too.
+- **Decisions & Implementation**:
+  - Removed the left `SidebarRail` presentation entirely. `SidebarRail` now renders one floating dock — an `absolute`, centered, `rounded-2xl` white/95 card with backdrop blur, border, shadow, and ring — on every breakpoint.
+  - Dock composition: phones show **Map**, **List**, **Add**, **AI Scan**, **More** because the places list is still a full-screen overlay; tablet/desktop show **Map**, **Saved**, **Add**, **AI Scan**, **More** with the brand mark from `lg`. The places panel is permanently visible on tablet/desktop.
+  - The dock floats over the map at `bottom: calc(3rem + env(safe-area-inset-bottom))` and is centered over the map area with `md:left-[360px] lg:left-[390px]`, so it stays visually attached to the map rather than the list.
+  - **More** opens a bottom sheet on phones and a centered modal on larger screens. It lists Profile & Account, Saved Places, Leaderboard, Contributions, Messages, Invite a Mapper, and Sign out, and closes on backdrop, close button, or Escape.
+  - Removed the **Show List** pill from `App.tsx` (the dock's **List** button replaces it). The places list, selected-place card, and desktop AI scanner were given bottom clearance for the dock; the zoom/recenter cluster moved to `top-20 right-4`; the desktop places panel now begins at x=0 and stays full height.
+- **Verification**: Headless Chrome measurements: phone 390×844 (`dock [12,722,366,74]`, card bottom 144, full-height list, 477px More sheet), phone 360×640 (`dock [12,518,336,74]`), desktop 1440×900 (`dock [622,773,585,79]`, panel `[0,0,390,900]`, card `[1032,608,384,148]`, AI scanner `[406,722,167,34]`, zoom `[1387,85,32,32]`), desktop 1024×768 (`dock [414,641,585,79]`), and a 393×873 desktop-site shell (`dock [12,751,369,74]`). No horizontal overflow at any size. Screenshots inspected for dock/card/attribution/zoom/AI-scanner collisions. `npm run lint` reported 0 errors and `npm run build` succeeded.
+
+### `2026-11-19 21:00:00` — Phone Bottom Navigation *(superseded by the 21:30 floating dock)*
+- **Event**: The phone workspace still used a 64px left icon rail, which consumed horizontal map space and sat far from the thumb.
+- **Decisions & Implementation**:
+  - Below `md`, `SidebarRail` now renders a 64px bottom tab bar (plus the bottom safe area) with **Map**, **Saved**, **Add**, **AI Scan**, and **More**. The desktop rail branch is unchanged.
+  - **More** opens a bottom sheet with the signed-in identity, Profile & Account, Leaderboard, Contributions, Messages, Invite a Mapper, and Sign out. It closes on backdrop, close button, or Escape and respects the safe area.
+  - The places panel and **Show List** pill now stop above the bar, and the selected-place card keeps its clearance over the pill. The app shell is a column on phones and a row on desktop; desktop dimensions are unchanged.
+- **Verification**: Headless Chrome at 390×844 and 360×640 (64px bar, five 72–78px targets, no horizontal overflow, panel ending at the bar, Map tab closing the list, and a 425px-tall More sheet at 360×640), 980×2176 with a 393×873 screen through the desktop-site shell, and 1440×900 desktop with the original rail/panel/map. `npm run lint` reported 0 errors and `npm run build` succeeded.
+
+### `2026-11-19 20:45:00` — Phone Desktop-Site Rendering Fix
+- **Event**: On the user's phone, the app loaded with a ~980px layout viewport despite a ~393px physical screen because the browser was using "desktop site" mode. The page was scaled to ~40%, so both the login screen and the workspace looked tiny. The viewport meta tag was present and correct.
+- **Decisions & Implementation**:
+  - Added `PhoneDesktopShell` (wrapped around `<App />` in `main.tsx`). On a coarse-pointer device whose layout viewport is at least 1.35× the estimated physical width (300–520px from `screen.width`/`outerWidth`, with a `visualViewport.scale < 0.8` fallback), it mounts the app in a phone-width iframe scaled to fill the wide layout viewport. The browser's own downscale then restores true phone-sized UI.
+  - Normal phone rendering, desktop, tablets, and already-embedded frames bypass the shell; metrics recompute on resize and orientation change. The app iframe allows geolocation and clipboard write.
+  - Raised the **Show List** pill and the selected-place card so they clear Google's map attribution and each other.
+  - Pluralized the results count ("1 place found").
+- **Verification**: Headless Chrome checks at 390×844 (no shell), 980×2176 with a 393×873 screen (shell active, inner viewport 393×873), and 1440×900 (no shell); login, workspace, and list were captured at physical scale with no horizontal overflow. `npm run lint` reported 0 errors and `npm run build` succeeded.
+
+### `2026-11-19 20:15:00` — Phone Workspace Usability Pass
+- **Event**: After signing in on a phone, the places panel rendered as a 390px flex sibling next to the 64px rail. That pushed the map to zero width and placed the "Hide List" control off-screen, so the map was unreachable.
+- **Decisions & Implementation**:
+  - `PlacesPanel` now overlays the map to the right of the icon rail below `md`; the map keeps its width underneath. Desktop and tablet keep the static 360/390px panel.
+  - Phones open the workspace on the map. A "Show List" pill opens the panel, the panel header includes a "Back to map" button, and tapping Map View in the rail also closes the list.
+  - The rail is forced into icon-only mode below 768px; its expand toggle is desktop-only.
+  - Map chrome adapts to small widths: the city badge shows the short city name and hides the place count and Google Maps chip, while the floating AI scanner is desktop-only (rail and panel entry points remain).
+  - The selected-place card lifts above the Show List pill, and the drawer/modals were moved outside the isolated map region so they layer above the panel correctly.
+  - The places search uses 16px text on phones to prevent iOS focus zoom; the list gains bottom padding, and the panel header uses a compact "Add" label on narrow screens.
+- **Verification**: Headless Chrome device emulation at 390×844 and 360×640 showed no horizontal or vertical overflow, map widths of 326px/296px, working panel open/close via the header and rail, and a full-screen detail drawer. Desktop at 1440×900 is unchanged. `npm run lint` reported 0 errors and `npm run build` succeeded.
+
+### `2026-11-19 20:05:00` — Dedicated Phone Sign-In Layout
+- **Event**: The responsive login still felt like a squeezed desktop page on phones, so the sign-in screen was rebuilt as a dedicated phone UI.
+- **Decisions & Implementation**:
+  - `LoginPage.tsx` now mounts one of two layouts based on `matchMedia('(max-width: 1023px)')`: a phone-first layout and the existing split desktop layout. Only one form exists in the DOM, so input IDs and focus remain unique.
+  - The phone layout uses a dark branded hero (TanAW mark, headline, value chips, dotted map texture and pin motif) above a rounded light sheet containing the form.
+  - Mobile controls are 52px tall with 16px input text to prevent iOS focus zoom; the remember-me control uses a custom teal checkbox and the sheet respects the bottom safe area.
+  - Added a short-screen mode in `index.css` (`max-width: 1023px` and `max-height: 720px`) that hides the hero chips and sheet handle, tightens the hero, and keeps the Sign in button above the fold on 360×640 phones.
+  - Improved contrast for the "or explore first" divider and demo notice.
+- **Verification**: Rendered through headless Chrome device emulation at 390×844, 360×640, and 1440×900 desktop; `npm run lint` (`tsc --noEmit`) 0 errors and `npm run build` succeeded.
+
+### `2026-11-19 10:20:00` — Minimal App-Entry Login & Local Sessions
+- **Event**: User requested a minimal, intuitive login page that complements the existing TanAW/AccessMap design.
+- **Decisions & Implementation**:
+  - Added `src/components/LoginPage.tsx`: a split layout with a dotted-grid sign-in panel and a dark, map-inspired informational panel. Styling reuses the site palette (teal 700, slate 950, `#F5FAFD`), Space Grotesk, rounded panels, and the pin brand mark from the sidebar.
+  - Added local demo authentication in `src/utils/auth.ts`: any valid email plus a non-empty password signs in, and a one-click "Continue as guest" path is available. No credentials leave the browser.
+  - Sessions are stored under `accessmap_session_v1` in `localStorage` when "Remember me" is checked, otherwise in `sessionStorage` so they end with the tab. Guest sessions are always tab-scoped.
+  - Split `AccessMapApp` into a `LoginPage`/session wrapper and the existing `AccessMapWorkspace`, preserving unconditional hook order.
+  - Updated `SidebarRail` to show the signed-in display name and initials (guest-aware) and to provide a sign-out action.
+  - "Forgot password?" reveals a demo notice rather than pretending to send mail.
+- **Verification**: `npm run lint` (`tsc --noEmit`) 0 errors and `npm run build` completed successfully.
+
+### `2026-11-18 23:10:00` — Cleared Preloaded Places for a Fresh Start
+- **Event**: User requested that the pre-provided addresses and locations be removed so the system starts empty.
+- **Decisions**:
+  - Emptied `INITIAL_LOCATIONS` and removed the 11 seeded Cagayan de Oro venues plus 26 Mindanao venue listings and their address strings.
+  - Bumped the localStorage keys to `accessmap_locations_v2` / `accessmap_user_votes_v2` and delete the legacy v1 keys on load, so browsers that already cached the old dataset do not restore it.
+  - Added an explicit "Your map is empty" panel with an "Add your first place" action, and a matching empty state in the standalone interactive-map prototype.
+  - Replaced the internal seed-reset action with a destructive "clear all saved places" flow.
+- **Verification**: `npm run lint` (`tsc --noEmit`) 0 errors and `npm run build` completed successfully.
+
+### `2026-11-18 21:55:00` — Google Maps Migration (Main App + Prototypes)
+- **Event**: User requested Google Maps as the map contributor/provider across the entire project.
+- **Decisions**:
+  - Confirmed the main React app already uses the Google Maps JavaScript API in `src/components/MapView.tsx`.
+  - Fixed the malformed `VITE_GOOGLE_MAPS_API_KEY` entry in `.env` and documented how to obtain a valid key (Maps JavaScript API + Directions API enabled).
+  - Passed the API key from `App.tsx` to embedded prototype pages through the `googleMapsKey` query parameter, so standalone prototype HTML can load Google Maps without duplicating the secret.
+  - Replaced Leaflet 1.9.4 and OpenStreetMap/CARTO tiles in `public/prototypes/interactive-map/index.html` with the Google Maps JavaScript API, retaining custom HTML pins/clusters via `OverlayView`.
+  - Replaced OSRM-first routing in the prototype with Google Directions walking routes, keeping the geodesic arc fallback.
+  - Converted the prototype layer switcher to Google map types (Roadmap, Satellite, Hybrid, Terrain).
+  - Updated OSM/Leaflet labels and attribution in the landing, profile-account, and profile-settings mockups to Google Maps.
+- **Verification**: `npm run lint` (`tsc --noEmit`) 0 errors, `npm run build` completed successfully.
 
 ### `2026-11-05 22:55:00` — Project Initialization & Architecture Planning
 - **Event**: Core requirements analysis based on prompt specification.
@@ -203,7 +283,7 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
 ```
 ├── .env.example                          # Environment variable template
 ├── Documentation.md                      # Comprehensive progress log & hourly documentation
-├── index.html                            # HTML entry point with Space Grotesk, Leaflet styles & meta tags
+├── index.html                            # HTML entry point with Space Grotesk, Google Maps bootstrap & meta tags
 ├── metadata.json                         # Project metadata and server capabilities
 ├── package.json                          # Dependencies & Vite build scripts
 ├── package-lock.json                     # Locked dependency tree
@@ -212,7 +292,7 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
 ├── vite.config.ts                        # Vite configuration with relative base and ESM path resolution
 └── src/
     ├── App.tsx                           # Master application shell & state coordinator
-    ├── index.css                         # Global CSS, Space Grotesk tokens & Leaflet styles
+    ├── index.css                         # Global CSS, Space Grotesk tokens & map UI styles
     ├── main.tsx                          # React entry point
     ├── components/
     │   ├── AddLocationModal.tsx          # Reconstructed modular Add Location dialog
@@ -220,8 +300,9 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
     │   ├── FilterBar.tsx                 # Search & multi-tag filter component (legacy desktop)
     │   ├── LocationCard.tsx              # Card component with active/inactive visual states
     │   ├── LocationDetailDrawer.tsx      # Slideout panel for reviews & community voting
+    │   ├── LoginPage.tsx                 # App-entry sign-in gate with guest access
     │   ├── MapFloatingCard.tsx           # Floating bottom summary card matching reference
-    │   ├── MapView.tsx                   # Leaflet map with OpenStreetMap layer switcher
+    │   ├── MapView.tsx                   # Google Maps with Directions, Street View & map-type switcher
     │   ├── Navbar.tsx                    # Top navigation & view switcher (legacy desktop)
     │   ├── PlacesPanel.tsx               # Left docked places panel with segmented pill control
     │   ├── SidebarRail.tsx               # Neo-brutalist collapsible primary navigation rail
@@ -247,12 +328,13 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
     ├── context/
     │   └── A11yContext.tsx               # Text scale, high-contrast, & screen-reader live region
     ├── data/
-    │   └── initialLocations.ts           # 10 pre-seeded Cagayan de Oro venues & test storefronts
+    │   └── initialLocations.ts           # Empty initial dataset & AI test storefronts
     ├── prompts/
     │   └── storefrontPrompt.ts           # Standard accessibility tags & Gemini prompt constant
     ├── types/
     │   └── accessibility.ts              # TypeScript interfaces for pins, tags, reviews & AI
     └── utils/
+        ├── auth.ts                       # Local demo session helpers & display-name formatting
         ├── storage.ts                    # LocalStorage persistence, color coding & distance
         └── tagHelpers.tsx                # Tag Lucide icon mapping
 ```
@@ -303,11 +385,11 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
 ## 5. Summary of Completed Milestones
 
 - [x] Initial full-stack scaffolding with Express and Vite.
-- [x] Free OpenStreetMap + Leaflet integration centered on Cagayan de Oro.
+- [x] Google Maps JavaScript API integration centered on Cagayan de Oro.
 - [x] Multimodal Gemini Storefront Analyzer with strict JSON output and sample photos.
 - [x] Community verification ("Confirm" / "Dispute") and dynamic trust badges.
 - [x] Mobile-responsive UI adapted from `UI_Referrence_8c48ae05.jpg`.
-- [x] Map Layer Switcher for OpenStreetMap Standard, Humanitarian, Carto Positron, and Dark Matter.
+- [x] Google map-type switcher for Roadmap, Satellite, Hybrid, and Terrain.
 - [x] Add Location Form adapted from `Form_Referrence_e36981fe.jpg`.
 - [x] Resolved npm `esbuild` peer dependency conflict with Vite.
 - [x] Modular reconstruction of monolithic components into `/src/components/ui/`, `/add-location/`, `/storefront/`, and `/location-detail/`.
@@ -319,6 +401,30 @@ AccessMap is an open-source, crowdsourced urban accessibility platform designed 
 - [x] Streamlined sidebar footer by removing redundant accessibility icon buttons (`T`, `Eye`, `Refresh`) for a cleaner design.
 - [x] Full compilation and zero-error TypeScript linting (`tsc --noEmit`).
 - [x] Verified fast production bundle build (`vite build` in 633ms).
+- [x] Comprehensive Minimalist & Intuitive UI Redesign:
+  - Unified search, city switching, and filtering state across `PlacesPanel` and `MapView`.
+  - Removed duplicate floating `MapSearchFilterBar`, clearing the map canvas for a spacious, open experience.
+  - Streamlined `LocationCard` by replacing bloated 4-column metrics tables with compact, modern cards and clear action buttons.
+  - Redesigned `MapFloatingCard` into a minimal, non-intrusive preview sheet shown only on explicit marker selection.
+  - Compact glassmorphic map action toolbar (Layers, Nearby Radar, GPS Locate) in top-right corner.
+  - Refined `SidebarRail` typography and border styling, eliminating heavy retro shadows in favor of a clean, modern aesthetic.
+- [x] AI Agent UI Prominence & Interactive Copilot Integration:
+  - Added dedicated **TanAW AI Agent Hub** card in the primary Places Panel with real-time status and quick semantic queries ("Ramps in CDO", "Accessible Restrooms", "Hospitals & Clinics", "Quiet Cafes").
+  - Implemented interactive semantic query answering engine (`src/utils/aiAgent.ts`) that answers accessibility questions and automatically filters recommended venues on the map.
+  - Added floating **AI Storefront Scanner** button in the bottom-left corner of the map canvas with pulsating status indicator.
+  - Prominently highlighted AI audit findings and barrier warnings directly on venue cards (`🤖 AI Agent Audit` and `⚠️ Barrier Alert`).
+  - Elevated the `AI Agent Scan` nav trigger in `SidebarRail` with a distinct indigo gradient and active status chip.
+
+---
+
+## `2026-11-18 20:35:00` — Minimalist & Intuitive Design Transformation
+- **Event**: Refactored application layout and visual hierarchy to eliminate visual clutter, remove competing search bars, and improve usability.
+- **Decisions**:
+  - Unified state in `App.tsx` so search queries and filters immediately synchronize between the places list and map pins.
+  - Placed city preset switching directly in the `PlacesPanel` header (`📍 Cagayan de Oro ▾`), with automatic map flight to the chosen region.
+  - Replaced oversized 4-column cards with sleek, modern cards highlighting verified tags, distance, and direct `Route` / `Details` buttons.
+  - Minimized floating overlays on the Google Maps canvas: subtle city status pill on top-left, compact glass controls on top-right, and an unobtrusive bottom preview sheet.
+- **Verification**: `npm run lint` (`tsc --noEmit`) 0 errors, `npm run build` completed successfully.
 
 ---
 

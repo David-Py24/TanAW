@@ -6,31 +6,31 @@
 import { INITIAL_LOCATIONS } from '../data/initialLocations';
 import { LocationPin, LocationTag, Review } from '../types/accessibility';
 
-const STORAGE_KEY = 'accessmap_cdo_locations_v1';
-const VOTES_KEY = 'accessmap_user_votes_v1';
+const STORAGE_KEY = 'accessmap_locations_v2';
+const VOTES_KEY = 'accessmap_user_votes_v2';
+
+// The v1 keys held the old preloaded sample dataset. They are removed once so
+// upgraded browsers start with an empty map instead of restoring old addresses.
+const LEGACY_STORAGE_KEY = 'accessmap_cdo_locations_v1';
+const LEGACY_VOTES_KEY = 'accessmap_user_votes_v1';
+
+function clearLegacySeedData(): void {
+  try {
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_VOTES_KEY);
+  } catch {
+    // localStorage may be unavailable (private mode or disabled storage).
+  }
+}
 
 export function loadLocations(): LocationPin[] {
+  clearLegacySeedData();
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      saveLocations(INITIAL_LOCATIONS);
-      return INITIAL_LOCATIONS;
-    }
+    if (!raw) return INITIAL_LOCATIONS;
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      saveLocations(INITIAL_LOCATIONS);
-      return INITIAL_LOCATIONS;
-    }
-    // Add newly published seed venues to existing browsers without overwriting
-    // user edits, ratings, or saved community contributions.
-    const existingIds = new Set(parsed.map((location: LocationPin) => location.id));
-    const newlySeeded = INITIAL_LOCATIONS.filter((location) => !existingIds.has(location.id));
-    if (newlySeeded.length > 0) {
-      const merged = [...parsed, ...newlySeeded];
-      saveLocations(merged);
-      return merged;
-    }
-    return parsed;
+    return Array.isArray(parsed) ? parsed : INITIAL_LOCATIONS;
   } catch (err) {
     console.error('Failed to load locations from localStorage:', err);
     return INITIAL_LOCATIONS;
@@ -45,15 +45,16 @@ export function saveLocations(locations: LocationPin[]): void {
   }
 }
 
-export function resetToSeedData(): LocationPin[] {
+export function clearAllLocations(): LocationPin[] {
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(VOTES_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_VOTES_KEY);
   } catch (e) {
     // ignore
   }
-  saveLocations(INITIAL_LOCATIONS);
-  return INITIAL_LOCATIONS;
+  return [];
 }
 
 export function getStoredUserVotes(): Record<string, 'confirm' | 'dispute'> {

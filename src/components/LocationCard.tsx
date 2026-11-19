@@ -9,8 +9,11 @@ import { calculateDistanceKm } from '../utils/storage';
 import { Badge } from './ui/Badge';
 import {
   Sparkles,
-  ChevronDown,
-  ExternalLink,
+  Navigation,
+  ArrowRight,
+  MapPin,
+  Check,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface LocationCardProps {
@@ -20,6 +23,8 @@ interface LocationCardProps {
   onOpenDetails: (loc: LocationPin) => void;
   onRunAIScan: (loc: LocationPin) => void;
   userCoords?: { lat: number; lng: number } | null;
+  onToggleRoute?: (loc: LocationPin) => void;
+  isRouteActive?: boolean;
 }
 
 export const LocationCard: React.FC<LocationCardProps> = ({
@@ -29,6 +34,8 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   onOpenDetails,
   onRunAIScan,
   userCoords,
+  onToggleRoute,
+  isRouteActive = false,
 }) => {
   const distanceKm = userCoords
     ? calculateDistanceKm(userCoords.lat, userCoords.lng, location.lat, location.lng)
@@ -38,164 +45,164 @@ export const LocationCard: React.FC<LocationCardProps> = ({
     location.tags.some((t) => t.confirmations >= 2 && t.confirmations > t.disputes) &&
     location.averageRating >= 4.0;
 
-  const verifiedTagCount = location.tags.filter(
+  const verifiedTags = location.tags.filter(
     (t) => t.confirmations >= 2 && t.confirmations > t.disputes
-  ).length;
+  );
 
-  const topContributor =
-    location.reviews && location.reviews.length > 0
-      ? location.reviews[0].authorName
-      : 'Community Volunteer';
+  const displayTags = (verifiedTags.length > 0 ? verifiedTags : location.tags).slice(0, 3);
 
   const renderStatusBadge = () => {
     if (isCommunityVerified) {
-      return <Badge variant="verified">VERIFIED ACCESS</Badge>;
+      return (
+        <Badge variant="verified" size="xs">
+          ★ {location.averageRating.toFixed(1)} Verified
+        </Badge>
+      );
     }
     if (location.aiSummary) {
-      return <Badge variant="ai-suggested">AI STOREFRONT SCAN</Badge>;
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <Sparkles className="w-2.5 h-2.5 text-indigo-600" />
+          <span>AI Audited</span>
+        </span>
+      );
     }
     if (location.averageRating < 2.5 && location.averageRating > 0) {
-      return <Badge variant="barrier">BARRIER REPORTED</Badge>;
+      return (
+        <Badge variant="barrier" size="xs">
+          Barriers
+        </Badge>
+      );
+    }
+    if (location.averageRating > 0) {
+      return (
+        <Badge variant="neutral" size="xs">
+          ★ {location.averageRating.toFixed(1)}
+        </Badge>
+      );
     }
     return (
-      <Badge variant="neutral">
-        {location.averageRating > 0 ? `${location.averageRating.toFixed(1)} ★` : 'PENDING'}
+      <Badge variant="neutral" size="xs">
+        Unrated
       </Badge>
     );
   };
 
-  // If selected, render the prominent expanded card
+  // Selected State
   if (isSelected) {
     return (
       <article
         onClick={() => onSelect(location)}
-        className="w-full bg-white rounded-3xl border-2 border-slate-900 shadow-xl p-4 sm:p-5 transition-all cursor-pointer relative animate-scale-up"
+        className="w-full bg-white rounded-2xl border-2 border-teal-600 shadow-md p-4 transition-all cursor-pointer relative text-left"
         role="region"
         aria-label={`Selected location: ${location.name}`}
       >
-        {/* Top Place Name & ID */}
-        <div className="flex items-start justify-between gap-3">
+        {/* Title & Badge */}
+        <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight truncate">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 truncate">
               {location.name}
             </h3>
-            <p className="text-xs text-slate-400 font-mono mt-0.5 truncate">
-              CDO-{location.id.replace('cdo-', '').toUpperCase()}
+            <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 truncate">
+              <span className="font-semibold text-slate-700">{location.category}</span>
+              <span>•</span>
+              <span className="text-slate-400">{distanceKm} km away</span>
             </p>
           </div>
+          <div className="shrink-0">{renderStatusBadge()}</div>
         </div>
 
-        {/* Status Pill Badge */}
-        <div className="mt-3 flex items-center justify-start">
-          {renderStatusBadge()}
-        </div>
+        {/* Address */}
+        <p className="text-xs text-slate-500 mt-2 line-clamp-1 flex items-center gap-1">
+          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+          <span className="truncate">{location.address}</span>
+        </p>
 
-        {/* Progress / Rating indicator bar */}
-        <div className="mt-3.5 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-          <div
-            className="bg-gradient-to-r from-lime-400 to-emerald-500 h-full rounded-full"
-            style={{
-              width: `${Math.min(100, Math.max(15, (location.averageRating / 5) * 100))}%`,
-            }}
-          />
-        </div>
-
-        {/* 4-Column Metric Grid */}
-        <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-4 gap-2 text-left">
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Category
-            </span>
-            <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-              {location.category.split(' ')[0]}
-            </span>
-          </div>
-
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Score
-            </span>
-            <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-              {location.averageRating > 0 ? `${location.averageRating.toFixed(1)} ★` : '–'}
-            </span>
-          </div>
-
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Distance
-            </span>
-            <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-              {distanceKm} km
-            </span>
-          </div>
-
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Verified
-            </span>
-            <span className="block text-xs font-bold text-slate-800 truncate mt-0.5">
-              {verifiedTagCount} Tags
-            </span>
-          </div>
-        </div>
-
-        {/* Reviewer / Contributor Row */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-              {topContributor.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                Auditor
-              </span>
-              <span className="block text-xs font-bold text-slate-800 truncate">
-                {topContributor}
-              </span>
+        {/* AI Agent Summary Callout */}
+        {location.aiSummary && (
+          <div className="mt-2.5 p-2 rounded-xl bg-indigo-50/80 border border-indigo-100 flex items-start gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+            <div className="text-[11px] leading-relaxed">
+              <span className="font-bold text-indigo-900">AI Agent Audit: </span>
+              <span className="text-slate-700">{location.aiSummary}</span>
             </div>
           </div>
+        )}
 
-          {/* Quick Action Circle Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0">
+        {/* AI Barrier Callout */}
+        {location.aiBarriers && location.aiBarriers.length > 0 && (
+          <div className="mt-1.5 p-2 rounded-xl bg-rose-50/80 border border-rose-100 flex items-start gap-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="text-[11px] leading-relaxed">
+              <span className="font-bold text-rose-900">Barrier Alert: </span>
+              <span className="text-slate-700">{location.aiBarriers[0]}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Tags */}
+        {displayTags.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1">
+            {displayTags.map((tag) => (
+              <span
+                key={tag.name}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600"
+              >
+                {tag.confirmations >= 2 && <Check className="w-2.5 h-2.5 text-emerald-600" />}
+                <span className="truncate max-w-[130px]">{tag.name}</span>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Action Buttons Row */}
+        <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            {onToggleRoute && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleRoute(location);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isRouteActive
+                    ? 'bg-sky-600 text-white'
+                    : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700'
+                }`}
+                title="Preview route on map"
+              >
+                <Navigation className="w-3 h-3" />
+                <span>{isRouteActive ? 'Clear Route' : 'Route'}</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onRunAIScan(location);
               }}
-              className="w-8 h-8 rounded-full border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 flex items-center justify-center transition-colors cursor-pointer"
-              title="Run Gemini AI Storefront Scan"
-              aria-label="Run Gemini AI Storefront Scan on this location"
+              className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+              title="Run AI Storefront Scan on this location"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <Sparkles className="w-3 h-3 text-indigo-600" />
+              <span>AI Scan</span>
             </button>
-
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="w-8 h-8 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
-              title="Open directions"
-              aria-label="Open Google Maps directions"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
           </div>
-        </div>
 
-        {/* Accordion / Details button at bottom of active card */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetails(location);
-          }}
-          className="mt-3.5 pt-3 border-t border-slate-100 w-full flex items-center justify-between text-xs font-semibold text-slate-700 hover:text-slate-950 transition-colors cursor-pointer"
-        >
-          <span>Accessibility tags & community reviews</span>
-          <ChevronDown className="w-4 h-4 text-slate-400" />
-        </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenDetails(location);
+            }}
+            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer ml-auto"
+          >
+            <span>Details</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
       </article>
     );
   }
@@ -215,25 +222,43 @@ export const LocationCard: React.FC<LocationCardProps> = ({
       aria-label={`${location.name}, ${location.category}, rating ${
         location.averageRating > 0 ? location.averageRating.toFixed(1) : 'unrated'
       }`}
-      className="w-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xs p-4 flex items-center justify-between gap-3 transition-all cursor-pointer text-left focus:outline-2 focus:outline-sky-600"
+      className="w-full bg-white rounded-xl border border-slate-200/70 hover:border-slate-300 hover:shadow-xs p-3 sm:p-3.5 flex flex-col gap-2 transition-all cursor-pointer text-left focus:outline-2 focus:outline-teal-600"
     >
-      <div className="min-w-0 flex-1">
-        <h4 className="text-sm font-bold text-slate-900 truncate">
-          {location.name}
-        </h4>
-        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500">
-          <span className="font-medium text-slate-600">{location.category}</span>
-          <span>•</span>
-          <span className="font-mono text-slate-400">
-            {distanceKm} km away
-          </span>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h4 className="text-sm font-semibold text-slate-900 truncate">
+            {location.name}
+          </h4>
+          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 truncate">
+            <span className="font-medium text-slate-600">{location.category}</span>
+            <span>•</span>
+            <span className="text-slate-400">{distanceKm} km</span>
+          </p>
         </div>
+        <div className="shrink-0">{renderStatusBadge()}</div>
       </div>
 
-      {/* Status Pill on the Right */}
-      <div className="shrink-0">
-        {renderStatusBadge()}
-      </div>
+      {/* AI snippet preview if available */}
+      {location.aiSummary && (
+        <div className="flex items-center gap-1.5 text-[11px] text-indigo-900/80 bg-indigo-50/50 px-2 py-1 rounded-md line-clamp-1">
+          <Sparkles className="w-3 h-3 text-indigo-600 shrink-0" />
+          <span className="truncate">{location.aiSummary}</span>
+        </div>
+      )}
+
+      {displayTags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {displayTags.slice(0, 2).map((tag) => (
+            <span
+              key={tag.name}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 text-[10px] text-slate-500 border border-slate-100"
+            >
+              {tag.confirmations >= 2 && <Check className="w-2.5 h-2.5 text-emerald-600" />}
+              <span className="truncate max-w-[120px]">{tag.name}</span>
+            </span>
+          ))}
+        </div>
+      )}
     </article>
   );
 };

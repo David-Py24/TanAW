@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interactive Map Engine • AccessMap Mindanao & CDO</title>
+  <title>Google Maps Engine • AccessMap Mindanao & CDO</title>
+  <meta name="google-maps-api-key" content="__GOOGLE_MAPS_API_KEY__" />
   <link rel="icon" type="image/png" href="./Assets/favicon.png" />
 
   <!-- Tailwind CSS CDN -->
@@ -21,10 +22,6 @@
     }
   </script>
 
-  <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
   <!-- Google Font Space Grotesk -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,9 +36,10 @@
       width: 100vw;
       z-index: 1;
     }
-    .custom-pin-marker {
-      background: none !important;
-      border: none !important;
+    .gm-html-marker {
+      position: absolute;
+      pointer-events: auto;
+      will-change: left, top;
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -58,17 +56,10 @@
     .pin-pulse-ring {
       animation: pulseRing 1.7s cubic-bezier(0, 0, 0.2, 1) infinite;
     }
-    .leaflet-tooltip.modern-tooltip {
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 12px;
-      color: #f8fafc;
-      padding: 6px 10px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-    }
-    .leaflet-tooltip-top.modern-tooltip::before {
-      border-top-color: rgba(15, 23, 42, 0.95);
+    /* Keep Google's attribution readable above the dark HUD */
+    .gm-style-cc,
+    .gm-style a[href*="maps.google.com"] {
+      opacity: 0.9;
     }
   </style>
 </head>
@@ -98,7 +89,7 @@
     <div class="hidden sm:flex items-center gap-1.5 pl-1">
       <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-900/90 backdrop-blur-md text-emerald-300 border border-slate-700/80 shadow-lg pointer-events-auto flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-        <span>OpenStreetMap + Leaflet</span>
+        <span>Google Maps Platform</span>
         <span class="text-slate-400 font-normal" id="header-zoom-badge">| Zoom 7</span>
       </span>
     </div>
@@ -208,27 +199,27 @@
         type="button"
         onclick="toggleMenu('layer-menu')"
         class="h-10 px-3 bg-slate-900/90 backdrop-blur-md hover:bg-slate-800 text-slate-100 rounded-2xl shadow-2xl border border-slate-700/80 flex items-center gap-1.5 text-xs font-bold transition-all"
-        title="Switch Map Tile Layer"
+        title="Switch Google Map Type"
       >
         <span>🗺️</span>
-        <span id="active-layer-label" class="hidden lg:inline">Standard OSM</span>
+        <span id="active-layer-label" class="hidden lg:inline">Google Roadmap</span>
       </button>
 
       <div id="layer-menu" class="hidden absolute top-12 right-0 w-56 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-700/90 shadow-2xl p-2 flex flex-col gap-1 z-50">
         <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 pt-1">
-          Open-Source Map Style
+          Google Map Style
         </div>
-        <button onclick="switchTileLayer('osm')" id="btn-osm" class="text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-          🗺️ Standard OSM
+        <button onclick="switchMapStyle('roadmap')" id="btn-roadmap" class="text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+          🗺️ Google Roadmap
         </button>
-        <button onclick="switchTileLayer('hot')" id="btn-hot" class="text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors hover:bg-slate-800 text-slate-300 border border-transparent">
-          🏥 Humanitarian HOT
+        <button onclick="switchMapStyle('satellite')" id="btn-satellite" class="text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors hover:bg-slate-800 text-slate-300 border border-transparent">
+          🛰️ Google Satellite
         </button>
-        <button onclick="switchTileLayer('dark')" id="btn-dark" class="text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors hover:bg-slate-800 text-slate-300 border border-transparent">
-          🌙 Carto Dark Matter
+        <button onclick="switchMapStyle('hybrid')" id="btn-hybrid" class="text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors hover:bg-slate-800 text-slate-300 border border-transparent">
+          🌍 Google Hybrid
         </button>
-        <button onclick="switchTileLayer('positron')" id="btn-positron" class="text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors hover:bg-slate-800 text-slate-300 border border-transparent">
-          ☀️ Carto Positron Light
+        <button onclick="switchMapStyle('terrain')" id="btn-terrain" class="text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors hover:bg-slate-800 text-slate-300 border border-transparent">
+          ⛰️ Google Terrain
         </button>
       </div>
     </div>
@@ -269,6 +260,24 @@
       </div>
     </div>
 
+    <!-- Google Maps Zoom Controls -->
+    <div class="flex flex-col bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/80 overflow-hidden">
+      <button
+        type="button"
+        onclick="zoomMap(1)"
+        class="w-10 h-9 hover:bg-slate-800 text-slate-100 flex items-center justify-center text-lg font-bold transition-all border-b border-slate-700/80"
+        title="Zoom In"
+        aria-label="Zoom In"
+      >＋</button>
+      <button
+        type="button"
+        onclick="zoomMap(-1)"
+        class="w-10 h-9 hover:bg-slate-800 text-slate-100 flex items-center justify-center text-lg font-bold transition-all"
+        title="Zoom Out"
+        aria-label="Zoom Out"
+      >−</button>
+    </div>
+
     <!-- Locate Me Button -->
     <button
       type="button"
@@ -292,11 +301,27 @@
     </button>
   </aside>
 
+  <!-- Empty State (no preloaded venues) -->
+  <div
+    id="map-empty-state"
+    class="absolute inset-0 z-10 pointer-events-none grid place-items-center px-4"
+  >
+    <div class="pointer-events-auto max-w-sm rounded-2xl border border-slate-700 bg-slate-900/95 backdrop-blur-xl p-5 text-center shadow-2xl">
+      <div class="mx-auto mb-2 w-10 h-10 rounded-xl bg-slate-800 text-sky-300 grid place-items-center text-xl">
+        📍
+      </div>
+      <h2 class="text-sm font-extrabold text-white">No venues yet</h2>
+      <p class="mt-1 text-xs text-slate-400 leading-relaxed">
+        This prototype starts empty. Add venues to the dataset to see pins, clusters, and accessibility details.
+      </p>
+    </div>
+  </div>
+
   <!-- Floating Active Venue Summary Card -->
   <section
     id="location-card"
     aria-label="Selected venue accessibility summary"
-    class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-[94%] max-w-3xl bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-3xl p-4 sm:p-5 shadow-2xl transition-all"
+    class="hidden absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-[94%] max-w-3xl bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-3xl p-4 sm:p-5 shadow-2xl transition-all"
   >
     <!-- Active Route Banner (hidden unless route preview is active) -->
     <div
@@ -305,7 +330,7 @@
     >
       <div class="flex items-center gap-2 text-sky-200 font-bold">
         <span class="px-2 py-0.5 rounded-full bg-sky-500 text-slate-950 font-black">ROUTE</span>
-        <span id="route-summary-text">Street route via OpenStreetMap</span>
+        <span id="route-summary-text">Google walking route</span>
       </div>
       <div class="flex items-center gap-2">
         <span id="route-eta-pill" class="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 font-extrabold">
@@ -322,25 +347,18 @@
       <div class="flex items-center gap-3 min-w-0">
         <img
           id="card-photo"
-          src="https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=400&q=80"
           alt="Venue preview"
-          class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-slate-700 shrink-0 hidden sm:block"
+          class="hidden w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-slate-700 shrink-0"
         />
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-0.5">
-            <span id="card-badge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-              VERIFIED • HIGH ACCESS
+            <span id="card-badge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-300 border border-slate-500/40">
+              No selection
             </span>
-            <span id="card-category" class="text-xs text-slate-400 font-semibold">
-              Shopping
-            </span>
+            <span id="card-category" class="text-xs text-slate-400 font-semibold"></span>
           </div>
-          <h2 id="card-name" class="text-base sm:text-lg font-extrabold text-white tracking-tight truncate">
-            Centrio Mall (Ayala Malls)
-          </h2>
-          <p id="card-address" class="text-xs text-slate-400 truncate">
-            Claro M. Recto Ave & Corrales Ave, Cagayan de Oro
-          </p>
+          <h2 id="card-name" class="text-base sm:text-lg font-extrabold text-white tracking-tight truncate"></h2>
+          <p id="card-address" class="text-xs text-slate-400 truncate"></p>
         </div>
       </div>
 
@@ -356,7 +374,7 @@
             ←
           </button>
           <span id="card-index-indicator" class="px-2 text-[11px] font-extrabold text-slate-300 tabular-nums">
-            1 / 37
+            0 / 0
           </span>
           <button
             type="button"
@@ -380,10 +398,10 @@
 
         <div class="text-right pl-1">
           <div class="text-xl sm:text-2xl font-black text-emerald-400 leading-none" id="card-score">
-            4.8★
+            —
           </div>
           <div class="text-[10px] text-slate-400 font-semibold mt-0.5" id="card-reviews">
-            24 reviews
+            No reviews
           </div>
         </div>
       </div>
@@ -400,55 +418,56 @@
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-left">
       <div>
         <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">City / Zone</span>
-        <span id="metric-city" class="block text-xs font-bold text-slate-200 truncate mt-0.5">Cagayan de Oro</span>
+        <span id="metric-city" class="block text-xs font-bold text-slate-200 truncate mt-0.5">—</span>
       </div>
       <div>
         <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Category</span>
-        <span id="metric-category" class="block text-xs font-bold text-slate-200 truncate mt-0.5">Shopping</span>
+        <span id="metric-category" class="block text-xs font-bold text-slate-200 truncate mt-0.5">—</span>
       </div>
       <div class="hidden sm:block">
         <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Coordinates</span>
-        <span id="metric-coords" class="block text-xs font-bold text-slate-300 font-mono truncate mt-0.5">8.4851, 124.6496</span>
+        <span id="metric-coords" class="block text-xs font-bold text-slate-300 font-mono truncate mt-0.5">—</span>
       </div>
       <div>
         <span id="metric-dist-label" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">From CDO Center</span>
-        <span id="metric-distance" class="block text-xs font-bold text-emerald-400 truncate mt-0.5">0.4 km away</span>
+        <span id="metric-distance" class="block text-xs font-bold text-emerald-400 truncate mt-0.5">—</span>
       </div>
       <div>
         <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Status</span>
-        <span id="metric-status" class="block text-xs font-bold text-slate-200 truncate mt-0.5">Community Verified</span>
+        <span id="metric-status" class="block text-xs font-bold text-slate-200 truncate mt-0.5">—</span>
       </div>
     </div>
   </section>
 
-  <!-- Leaflet Map Container -->
-  <main id="map" aria-label="Interactive Accessibility Map of Mindanao and Cagayan de Oro"></main>
+  <!-- Google Maps Container -->
+  <main id="map" aria-label="Google Maps Interactive Accessibility Map of Mindanao and Cagayan de Oro"></main>
+
+  <!-- Google Maps API Key / Load Error Notice -->
+  <div id="map-error" class="hidden absolute inset-0 z-30 grid place-items-center bg-slate-950/95 backdrop-blur-sm px-6">
+    <div class="max-w-md w-full bg-slate-900 border border-amber-500/40 rounded-3xl p-6 shadow-2xl text-center">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/40 grid place-items-center text-2xl">🔑</div>
+      <h2 class="mt-3 text-lg font-extrabold text-white">Google Maps API key required</h2>
+      <p id="map-error-message" class="mt-1.5 text-xs text-slate-300 leading-relaxed">
+        Add <code class="bg-slate-800 px-1 py-0.5 rounded font-mono text-emerald-300">VITE_GOOGLE_MAPS_API_KEY</code> to your
+        <code class="bg-slate-800 px-1 py-0.5 rounded font-mono text-emerald-300">.env</code> file, then open this page from the AccessMap app.
+      </p>
+      <p class="mt-2 text-[11px] text-slate-400">
+        For standalone use, append
+        <code class="bg-slate-800 px-1 py-0.5 rounded font-mono">?googleMapsKey=YOUR_KEY</code>
+        to this page's URL.
+      </p>
+    </div>
+  </div>
 
   <script>
     // =========================================================================
-    // 1. TILE PROVIDERS & REGIONAL PRESETS
+    // 1. GOOGLE MAP STYLES & REGIONAL PRESETS
     // =========================================================================
-    const TILES = {
-      osm: {
-        label: 'Standard OSM',
-        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      },
-      hot: {
-        label: 'Humanitarian HOT',
-        url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
-        attribution: '&copy; OpenStreetMap contributors, Humanitarian Team'
-      },
-      dark: {
-        label: 'Carto Dark Matter',
-        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        attribution: '&copy; OpenStreetMap &copy; CARTO'
-      },
-      positron: {
-        label: 'Carto Positron',
-        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        attribution: '&copy; OpenStreetMap &copy; CARTO'
-      }
+    const MAP_STYLES = {
+      roadmap: { label: 'Google Roadmap' },
+      satellite: { label: 'Google Satellite' },
+      hybrid: { label: 'Google Hybrid' },
+      terrain: { label: 'Google Terrain' }
     };
 
     const CITY_PRESETS = [
@@ -477,200 +496,11 @@
     ];
 
     // =========================================================================
-    // 2. COMPLETE SYNCHRONIZED CDO + MINDANAO LOCATION DATASET (37 VENUES)
+    // 2. LOCATION DATASET (STARTS EMPTY)
     // =========================================================================
-    const CDO_LOCATIONS = [
-      {
-        id: 'cdo-centrio-mall',
-        name: 'Centrio Mall (Ayala Malls)',
-        category: 'Shopping',
-        address: 'Claro M. Recto Ave & Corrales Ave, Cagayan de Oro',
-        lat: 8.4851,
-        lng: 124.6496,
-        rating: 4.8,
-        totalReviews: 24,
-        photo: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Automatic glass sliding doors, zero-threshold entryway, and continuous access ramps.',
-        aiBarriers: [],
-        tags: ['Wheelchair-accessible entrance', 'Ramp available', 'Elevator access', 'Accessible restroom', 'Wide aisles / pathways', 'Accessible parking']
-      },
-      {
-        id: 'cdo-sm-downtown',
-        name: 'SM CDO Downtown Premier',
-        category: 'Shopping',
-        address: 'Claro M. Recto Ave corner Osmeña St, Cagayan de Oro',
-        lat: 8.4883,
-        lng: 124.6534,
-        rating: 4.9,
-        totalReviews: 31,
-        photo: 'https://images.unsplash.com/photo-1567449303078-57ad995bd302?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Wide level drop-off entrance with low tactile thresholds and dedicated PWD lounges.',
-        aiBarriers: [],
-        tags: ['Wheelchair-accessible entrance', 'Elevator access', 'Accessible restroom', 'Braille menu / signage', 'Quiet / low-sensory zone', 'Staff trained in assistance']
-      },
-      {
-        id: 'cdo-nmmc-hospital',
-        name: 'Northern Mindanao Medical Center (NMMC)',
-        category: 'Healthcare',
-        address: 'Capitol Compound, J.V. Serina St, Cagayan de Oro',
-        lat: 8.4877,
-        lng: 124.6480,
-        rating: 4.6,
-        totalReviews: 18,
-        photo: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Broad medical access ramp with dual stainless-steel handrails and ground-level entrance.',
-        aiBarriers: ['Busy ambulatory traffic during peak morning clinics'],
-        tags: ['Ramp available', 'Wheelchair-accessible entrance', 'Staff trained in assistance', 'Elevator access', 'Accessible parking']
-      },
-      {
-        id: 'cdo-cafe-laguna',
-        name: 'Cafe Laguna Cagayan de Oro',
-        category: 'Dining & Cafe',
-        address: 'Limketkai Center Rosario Strip, Cagayan de Oro',
-        lat: 8.4800,
-        lng: 124.6550,
-        rating: 4.5,
-        totalReviews: 12,
-        photo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Flush ground entrance with smooth patio tiling and movable dining chairs.',
-        aiBarriers: [],
-        tags: ['Wheelchair-accessible entrance', 'Wide aisles / pathways', 'Staff trained in assistance', 'Accessible restroom']
-      },
-      {
-        id: 'cdo-limketkai-mall',
-        name: 'Limketkai Center (Main Mall)',
-        category: 'Shopping',
-        address: 'Limketkai Drive, Lapasan, Cagayan de Oro',
-        lat: 8.4795,
-        lng: 124.6542,
-        rating: 4.2,
-        totalReviews: 19,
-        photo: 'https://images.unsplash.com/photo-1568254183919-78a4f43a2877?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Covered sidewalk drop-off with ramped curb cut leading to broad sliding glass doors.',
-        aiBarriers: ['Some older pedestrian bridge connections have small elevation changes'],
-        tags: ['Ramp available', 'Wheelchair-accessible entrance', 'Wide aisles / pathways', 'Elevator access', 'Accessible parking']
-      },
-      {
-        id: 'cdo-missy-bonbon',
-        name: 'Missy Bon Bon Artisan Breadshop',
-        category: 'Dining & Cafe',
-        address: 'Limketkai Rosario Arcade, Cagayan de Oro',
-        lat: 8.4815,
-        lng: 124.6530,
-        rating: 4.0,
-        totalReviews: 9,
-        photo: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Level entry from arcade walkway with clear doorway clearance.',
-        aiBarriers: ['Heavy manual door may require staff assistance'],
-        tags: ['Wheelchair-accessible entrance', 'Staff trained in assistance', 'Quiet / low-sensory zone']
-      },
-      {
-        id: 'cdo-xavier-university',
-        name: 'Xavier University - Ateneo de Cagayan',
-        category: 'Education',
-        address: '73 Corrales Ave, Cagayan de Oro',
-        lat: 8.4764,
-        lng: 124.6450,
-        rating: 3.8,
-        totalReviews: 16,
-        photo: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Main campus gate has smooth pedestrian ramp alongside security turnstiles.',
-        aiBarriers: ['Older heritage buildings have 3-step entrances without ramps'],
-        tags: ['Ramp available', 'Wheelchair-accessible entrance', 'Staff trained in assistance', 'Elevator access']
-      },
-      {
-        id: 'cdo-divisoria-plaza',
-        name: 'Divisoria Plaza (Golden Friendship Park)',
-        category: 'Public Space',
-        address: 'RN Abejuela St & Tirso Neri St, Cagayan de Oro',
-        lat: 8.4770,
-        lng: 124.6445,
-        rating: 3.2,
-        totalReviews: 11,
-        photo: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Curb ramp cuts at intersections allow access to central park walkways.',
-        aiBarriers: ['Some tree roots lifting concrete slabs on north side'],
-        tags: ['Wheelchair-accessible entrance', 'Quiet / low-sensory zone', 'Wide aisles / pathways']
-      },
-      {
-        id: 'cdo-pueblo-clubhouse',
-        name: 'Pueblo de Oro Clubhouse & Veranda',
-        category: 'Public Space',
-        address: 'Pueblo de Oro Township, Uptown, Cagayan de Oro',
-        lat: 8.4410,
-        lng: 124.6090,
-        rating: 4.4,
-        totalReviews: 7,
-        photo: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Paved level porte-cochere with smooth ramp leading to main reception.',
-        aiBarriers: [],
-        tags: ['Accessible parking', 'Wheelchair-accessible entrance', 'Ramp available', 'Quiet / low-sensory zone']
-      },
-      {
-        id: 'cdo-cogon-market-west',
-        name: 'Cogon Public Market (West Entrance)',
-        category: 'Shopping',
-        address: 'Capt. Vicente Roa St & JR Borja St, Cagayan de Oro',
-        lat: 8.4768,
-        lng: 124.6515,
-        rating: 2.1,
-        totalReviews: 14,
-        photo: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=600&q=80',
-        aiSummary: 'Elevated concrete step entrance with high curb and narrow turnstiles.',
-        aiBarriers: ['3 steep concrete steps with no ramp at West gate', 'Narrow vendor-obstructed aisles'],
-        tags: []
-      },
-      {
-        id: 'cdo-city-library-branch',
-        name: 'CDO City Community Library & Reading Room',
-        category: 'Education',
-        address: 'Burgos St, Barangay 1, Cagayan de Oro',
-        lat: 8.4785,
-        lng: 124.6432,
-        rating: 0,
-        totalReviews: 0,
-        photo: '',
-        aiSummary: 'Community library branch awaiting volunteer accessibility verification.',
-        aiBarriers: [],
-        tags: ['Quiet / low-sensory zone', 'Wheelchair-accessible entrance']
-      }
-    ];
-
-    const MINDANAO_REGIONAL_RAW = [
-      { id: 'dvo-sm-lanang', name: 'SM Lanang Premier', category: 'Shopping', address: 'J.P. Laurel Avenue, Lanang, Davao City', lat: 7.0988, lng: 125.6311, rating: 4.7, totalReviews: 15, tags: ['Wheelchair-accessible entrance', 'Elevator access', 'Accessible restroom', 'Accessible parking'] },
-      { id: 'dvo-sm-ecoland', name: 'SM City Davao (Ecoland)', category: 'Shopping', address: 'Quimpo Boulevard, Matina, Davao City', lat: 7.0492, lng: 125.5883, rating: 4.6, totalReviews: 12, tags: ['Wheelchair-accessible entrance', 'Ramp available', 'Elevator access'] },
-      { id: 'dvo-peoples-park', name: "People's Park Davao", category: 'Public Space', address: 'Palma Gil Street, Davao City', lat: 7.0684, lng: 125.6087, rating: 4.3, totalReviews: 9, tags: ['Wheelchair-accessible entrance', 'Wide aisles / pathways', 'Quiet / low-sensory zone'] },
-      { id: 'dvo-ddh', name: 'Davao Doctors Hospital', category: 'Healthcare', address: '118 E. Quirino Avenue, Davao City', lat: 7.0669, lng: 125.6098, rating: 4.5, totalReviews: 11, tags: ['Wheelchair-accessible entrance', 'Ramp available', 'Elevator access', 'Staff trained in assistance'] },
-      { id: 'dvo-spmc', name: 'Southern Philippines Medical Center', category: 'Healthcare', address: 'J.P. Laurel Avenue, Davao City', lat: 7.0992, lng: 125.6128, rating: 4.4, totalReviews: 14, tags: ['Wheelchair-accessible entrance', 'Ramp available', 'Staff trained in assistance'] },
-      { id: 'dvo-magsaysay-park', name: 'Magsaysay Park', category: 'Public Space', address: 'Magsaysay Avenue, Davao City', lat: 7.0720, lng: 125.6170, rating: 3.9, totalReviews: 6, tags: ['Ramp available', 'Wide aisles / pathways'] },
-      { id: 'dvo-lachi', name: "Lachi's Sans Rival Atbp.", category: 'Dining & Cafe', address: 'F. Torres Street, Davao City', lat: 7.0740, lng: 125.6120, rating: 3.7, totalReviews: 5, tags: ['Staff trained in assistance'] },
-      { id: 'gensan-sm', name: 'SM City General Santos', category: 'Shopping', address: 'Santiago Boulevard, General Santos City', lat: 6.1127, lng: 125.1748, rating: 4.7, totalReviews: 10, tags: ['Wheelchair-accessible entrance', 'Elevator access', 'Accessible restroom'] },
-      { id: 'gensan-kcc', name: 'KCC Mall of GenSan', category: 'Shopping', address: 'J. Catolico Avenue, General Santos City', lat: 6.1210, lng: 125.1740, rating: 4.5, totalReviews: 8, tags: ['Wheelchair-accessible entrance', 'Ramp available', 'Elevator access'] },
-      { id: 'gensan-queen-tuna', name: 'Queen Tuna Park', category: 'Public Space', address: 'Jose Catolico Sr. Avenue, General Santos City', lat: 6.1086, lng: 125.1718, rating: 3.8, totalReviews: 4, tags: ['Wide aisles / pathways'] },
-      { id: 'gensan-dadiangas-medical', name: 'Dadiangas Medical Center', category: 'Healthcare', address: 'National Highway, General Santos City', lat: 6.1120, lng: 125.1750, rating: 4.4, totalReviews: 7, tags: ['Ramp available', 'Wheelchair-accessible entrance'] },
-      { id: 'gensan-tuna-grill', name: 'Tambilawan Kamayan Restaurant', category: 'Dining & Cafe', address: 'General Santos City', lat: 6.1150, lng: 125.1730, rating: 0, totalReviews: 0, tags: [] },
-      { id: 'butuan-sm', name: 'SM City Butuan', category: 'Shopping', address: 'JC Aquino Avenue, Butuan City', lat: 8.9530, lng: 125.5350, rating: 4.8, totalReviews: 9, tags: ['Wheelchair-accessible entrance', 'Elevator access', 'Accessible restroom', 'Accessible parking'] },
-      { id: 'butuan-city-hall', name: 'Butuan City Hall / Guingona Park', category: 'Public Space', address: 'J.C. Aquino Avenue, Butuan City', lat: 8.9475, lng: 125.5430, rating: 4.1, totalReviews: 5, tags: ['Ramp available', 'Wide aisles / pathways'] },
-      { id: 'butuan-mcu', name: 'Butuan Medical Center', category: 'Healthcare', address: 'J. Rosales Avenue, Butuan City', lat: 8.9520, lng: 125.5350, rating: 4.3, totalReviews: 6, tags: ['Ramp available', 'Wheelchair-accessible entrance'] },
-      { id: 'butuan-cafe', name: "Margie's Kitchen", category: 'Dining & Cafe', address: 'Montilla Boulevard, Butuan City', lat: 8.9490, lng: 125.5400, rating: 0, totalReviews: 0, tags: [] },
-      { id: 'zambo-sm-mindpro', name: 'SM City Mindpro', category: 'Shopping', address: 'La Purisima Street, Zamboanga City', lat: 6.9125, lng: 122.0790, rating: 4.6, totalReviews: 11, tags: ['Wheelchair-accessible entrance', 'Elevator access', 'Accessible restroom'] },
-      { id: 'zambo-paseo', name: 'Paseo del Mar', category: 'Public Space', address: 'Valderrosa Street, Zamboanga City', lat: 6.9010, lng: 122.0765, rating: 4.2, totalReviews: 7, tags: ['Wide aisles / pathways', 'Wheelchair-accessible entrance'] },
-      { id: 'zambo-zamboanga-medical', name: 'Zamboanga City Medical Center', category: 'Healthcare', address: 'General Vicente Alvarez Street, Zamboanga City', lat: 6.9140, lng: 122.0780, rating: 4.3, totalReviews: 8, tags: ['Ramp available', 'Wheelchair-accessible entrance'] },
-      { id: 'zambo-alavar', name: 'Alavar Seafood Restaurant', category: 'Dining & Cafe', address: 'Don Alfaro Street, Zamboanga City', lat: 6.9160, lng: 122.0790, rating: 3.9, totalReviews: 4, tags: ['Staff trained in assistance'] },
-      { id: 'cotabato-citymall', name: 'CityMall Cotabato', category: 'Shopping', address: 'Quezon Avenue, Cotabato City', lat: 7.2160, lng: 124.2490, rating: 4.4, totalReviews: 6, tags: ['Wheelchair-accessible entrance', 'Ramp available', 'Accessible parking'] },
-      { id: 'cotabato-old-city-hall', name: 'Cotabato City Plaza', category: 'Public Space', address: 'Sinsuat Avenue, Cotabato City', lat: 7.2220, lng: 124.2450, rating: 0, totalReviews: 0, tags: [] },
-      { id: 'iligan-rob', name: 'Robinsons Place Iligan', category: 'Shopping', address: 'Macapagal Avenue, Iligan City', lat: 8.2280, lng: 124.2450, rating: 4.6, totalReviews: 9, tags: ['Wheelchair-accessible entrance', 'Elevator access', 'Accessible restroom', 'Accessible parking'] },
-      { id: 'iligan-maria-cristina', name: 'Maria Cristina Falls Viewpoint', category: 'Public Space', address: 'NPC Nature Park, Iligan City', lat: 8.1610, lng: 124.2030, rating: 3.5, totalReviews: 5, tags: ['Ramp available'] },
-      { id: 'iligan-medical', name: 'Adventist Medical Center Iligan', category: 'Healthcare', address: 'Quezon Avenue, Iligan City', lat: 8.2290, lng: 124.2450, rating: 4.4, totalReviews: 6, tags: ['Wheelchair-accessible entrance', 'Ramp available'] },
-      { id: 'pagadian-gaisano', name: 'Gaisano Capital Pagadian', category: 'Shopping', address: 'Rizal Avenue, Pagadian City', lat: 7.8260, lng: 123.4370, rating: 4.2, totalReviews: 4, tags: ['Wheelchair-accessible entrance', 'Elevator access'] }
-    ].map(item => ({
-      ...item,
-      photo: '',
-      aiSummary: item.rating > 0 ? 'Regional Mindanao venue with community accessibility data.' : 'Public venue listing awaiting community verification.',
-      aiBarriers: []
-    }));
-
-    const ALL_LOCATIONS = [...CDO_LOCATIONS, ...MINDANAO_REGIONAL_RAW];
+    // No venues or addresses are preloaded. Add objects with the same shape
+    // here to populate the standalone prototype map.
+    const ALL_LOCATIONS = [];
 
     // =========================================================================
     // 3. STATE MANAGEMENT
@@ -680,27 +510,131 @@
     let activeA11yFilters = [];
     let nearbyRadiusKm = null;
     let userCoords = null;
-    let selectedLocation = ALL_LOCATIONS[0];
+    let selectedLocation = null;
     let filteredLocations = [...ALL_LOCATIONS];
     let activeRoute = null;
 
     // =========================================================================
-    // 4. INITIALIZE LEAFLET MAP & LAYER GROUPS
+    // 4. GOOGLE MAPS LOADER & OVERLAY LAYERS
     // =========================================================================
-    const map = L.map('map', {
-      zoomControl: false
-    }).setView([7.5, 125.0], 7);
+    let map = null;
+    const routeLayerGroup = [];
+    const userLayerGroup = [];
+    const markersLayerGroup = [];
 
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    function clearOverlayGroup(group) {
+      group.forEach(item => {
+        if (item && typeof item.setMap === 'function') item.setMap(null);
+        else if (item && typeof item.remove === 'function') item.remove();
+      });
+      group.length = 0;
+    }
 
-    let currentTileLayer = L.tileLayer(TILES.osm.url, {
-      maxZoom: 19,
-      attribution: TILES.osm.attribution
-    }).addTo(map);
+    function showMapError(message) {
+      const el = document.getElementById('map-error');
+      const msg = document.getElementById('map-error-message');
+      if (msg && message) msg.textContent = message;
+      if (el) el.classList.remove('hidden');
+    }
 
-    const routeLayerGroup = L.layerGroup().addTo(map);
-    const userLayerGroup = L.layerGroup().addTo(map);
-    const markersLayerGroup = L.layerGroup().addTo(map);
+    function loadGoogleMaps(apiKey) {
+      return new Promise((resolve, reject) => {
+        if (window.google && window.google.maps) return resolve(window.google.maps);
+        if (!apiKey) return reject(new Error('No Google Maps API key configured. Add VITE_GOOGLE_MAPS_API_KEY to .env, then open this page from the AccessMap app.'));
+
+        const callbackName = '__accessMapGoogleMapsReady';
+        window[callbackName] = () => {
+          delete window[callbackName];
+          resolve(window.google.maps);
+        };
+
+        const script = document.createElement('script');
+        script.src = 'https://maps.googleapis.com/maps/api/js?v=weekly&key=' +
+          encodeURIComponent(apiKey) +
+          '&libraries=places,geometry,marker&region=PH&language=en&callback=' + callbackName;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => reject(new Error('Failed to load the Google Maps JavaScript API. Check your internet connection and API key restrictions.'));
+        document.head.appendChild(script);
+      });
+    }
+
+    /**
+     * Renders arbitrary HTML at a geographic position using Google's OverlayView.
+     * This preserves the prototype's custom pin and cluster designs.
+     */
+    function createHtmlOverlay(options) {
+      const overlay = new google.maps.OverlayView();
+      overlay.position = new google.maps.LatLng(options.lat, options.lng);
+      overlay.html = options.html;
+      overlay.anchorX = options.anchorX !== undefined ? options.anchorX : 0.5;
+      overlay.anchorY = options.anchorY !== undefined ? options.anchorY : 1;
+      overlay.zIndex = options.zIndex || 10;
+      overlay.title = options.title || '';
+      overlay.onClick = options.onClick || null;
+      overlay.div = null;
+
+      overlay.onAdd = function () {
+        const div = document.createElement('div');
+        div.className = 'gm-html-marker';
+        div.style.transform = `translate(-${this.anchorX * 100}%, -${this.anchorY * 100}%)`;
+        div.style.zIndex = String(this.zIndex);
+        div.innerHTML = this.html;
+        if (this.title) div.title = this.title;
+        if (this.onClick) {
+          div.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.onClick();
+          });
+        }
+        this.div = div;
+        this.getPanes().overlayMouseTarget.appendChild(div);
+      };
+
+      overlay.draw = function () {
+        const projection = this.getProjection();
+        if (!projection || !this.div) return;
+        const point = projection.fromLatLngToDivPixel(this.position);
+        this.div.style.left = point.x + 'px';
+        this.div.style.top = point.y + 'px';
+      };
+
+      overlay.onRemove = function () {
+        if (this.div) {
+          this.div.remove();
+          this.div = null;
+        }
+      };
+
+      return overlay;
+    }
+
+    function initAccessMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 7.5, lng: 125.0 },
+        zoom: 7,
+        mapTypeId: 'roadmap',
+        disableDefaultUI: true,
+        gestureHandling: 'greedy',
+        clickableIcons: false,
+        restriction: {
+          latLngBounds: { north: 21.5, south: 4.5, west: 116.5, east: 127.0 },
+          strictBounds: true
+        }
+      });
+
+      map.addListener('zoom_changed', () => {
+        renderMapMarkers();
+        updateViewportHeader();
+      });
+      map.addListener('idle', updateViewportHeader);
+
+      // Initial Boot
+      renderCityPresets();
+      applyFiltersAndRender();
+      updateViewportHeader();
+    }
 
     // =========================================================================
     // 5. SPATIAL MATH, COLOR TIERS & CATEGORY SVG BUILDERS
@@ -976,86 +910,106 @@
       } else if (selectedLocation) {
         updateBottomCard(selectedLocation);
       }
+
+      const card = document.getElementById('location-card');
+      const emptyState = document.getElementById('map-empty-state');
+      if (filteredLocations.length === 0) {
+        card.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      } else {
+        card.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+      }
     }
 
     function renderMapMarkers() {
-      markersLayerGroup.clearLayers();
-      const zoom = map.getZoom();
+      if (!map || !window.google || !window.google.maps) return;
+      clearOverlayGroup(markersLayerGroup);
+
+      const zoom = map.getZoom() || 7;
       const showPill = zoom >= 13;
       const items = computeMapClusters(filteredLocations, zoom, selectedLocation?.id);
 
       items.forEach(item => {
         if (item.isCluster) {
-          const icon = L.divIcon({
-            className: 'custom-pin-marker',
+          const overlay = createHtmlOverlay({
+            lat: item.lat,
+            lng: item.lng,
             html: buildClusterHtml(item),
-            iconSize: [54, 64],
-            iconAnchor: [27, 32]
+            anchorX: 0.5,
+            anchorY: 0.5,
+            zIndex: 20,
+            title: `${item.count} accessible venues`,
+            onClick: () => {
+              const bounds = new google.maps.LatLngBounds(
+                { lat: item.bounds[0][0], lng: item.bounds[0][1] },
+                { lat: item.bounds[1][0], lng: item.bounds[1][1] }
+              );
+              map.fitBounds(bounds, { top: 70, right: 70, bottom: 70, left: 70 });
+              const maxZoom = Math.min(16, zoom + 3);
+              if (map.getZoom() > maxZoom) map.setZoom(maxZoom);
+            }
           });
-          const m = L.marker([item.lat, item.lng], { icon }).addTo(markersLayerGroup);
-          m.on('click', () => {
-            map.flyToBounds(item.bounds, { padding: [70, 70], maxZoom: Math.min(16, zoom + 3), duration: 0.75 });
-          });
+          overlay.setMap(map);
+          markersLayerGroup.push(overlay);
         } else {
           const loc = item.loc;
           const isSelected = selectedLocation && selectedLocation.id === loc.id;
-          const icon = L.divIcon({
-            className: 'custom-pin-marker',
-            html: buildPinHtml(loc, isSelected, showPill),
-            iconSize: [44, 58],
-            iconAnchor: [22, 46]
-          });
-          const m = L.marker([item.lat, item.lng], {
-            icon,
-            zIndexOffset: isSelected ? 1000 : 0
-          }).addTo(markersLayerGroup);
-
           const scoreStr = loc.rating > 0 ? `${loc.rating.toFixed(1)}★` : 'Unrated';
-          m.bindTooltip(
-            `<div class="font-extrabold text-xs text-white">${loc.name}</div>
-             <div class="text-[10px] text-emerald-300 font-semibold">${loc.category} • ${scoreStr}</div>`,
-            { direction: 'top', offset: [0, -40], className: 'modern-tooltip' }
-          );
 
-          m.on('click', () => {
-            selectLocation(loc, true);
+          const overlay = createHtmlOverlay({
+            lat: item.lat,
+            lng: item.lng,
+            html: buildPinHtml(loc, isSelected, showPill),
+            anchorX: 0.5,
+            anchorY: 0.9,
+            zIndex: isSelected ? 1000 : 10,
+            title: `${loc.name} • ${loc.category} • ${scoreStr}`,
+            onClick: () => selectLocation(loc, true)
           });
+          overlay.setMap(map);
+          markersLayerGroup.push(overlay);
         }
       });
     }
 
     function renderUserAndRadiusOverlay() {
-      userLayerGroup.clearLayers();
+      if (!map || !window.google || !window.google.maps) return;
+      clearOverlayGroup(userLayerGroup);
+
       const origin = userCoords || (nearbyRadiusKm !== null ? DEFAULT_CDO_CENTER : null);
       if (!origin) return;
 
       if (nearbyRadiusKm !== null) {
-        L.circle([origin.lat, origin.lng], {
+        const circle = new google.maps.Circle({
+          map,
+          center: { lat: origin.lat, lng: origin.lng },
           radius: nearbyRadiusKm * 1000,
-          color: '#38bdf8',
-          weight: 2,
-          dashArray: '6, 6',
+          strokeColor: '#38bdf8',
+          strokeOpacity: 0.9,
+          strokeWeight: 2,
           fillColor: '#0284c7',
           fillOpacity: 0.1
-        }).addTo(userLayerGroup);
+        });
+        userLayerGroup.push(circle);
       }
 
-      const beaconIcon = L.divIcon({
-        className: 'custom-pin-marker',
+      const beacon = createHtmlOverlay({
+        lat: origin.lat,
+        lng: origin.lng,
         html: `
           <div style="position:relative;width:26px;height:26px;">
             <div class="pin-pulse-ring" style="position:absolute;inset:0;border-radius:9999px;background:#38bdf8;opacity:0.4;"></div>
             <div style="position:relative;width:18px;height:18px;margin:4px;border-radius:9999px;background:#0284c7;border:3px solid #ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>
           </div>
         `,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
-      });
-
-      L.marker([origin.lat, origin.lng], {
-        icon: beaconIcon,
+        anchorX: 0.5,
+        anchorY: 0.5,
+        zIndex: 900,
         title: userCoords ? 'Your Active GPS Location' : 'CDO Downtown Reference Point'
-      }).addTo(userLayerGroup);
+      });
+      beacon.setMap(map);
+      userLayerGroup.push(beacon);
     }
 
     function selectLocation(loc, panToPin = true) {
@@ -1063,8 +1017,9 @@
       updateBottomCard(loc);
       renderMapMarkers();
 
-      if (panToPin) {
-        map.flyTo([loc.lat, loc.lng], Math.max(map.getZoom(), 15), { duration: 0.75 });
+      if (panToPin && map) {
+        map.panTo({ lat: loc.lat, lng: loc.lng });
+        map.setZoom(Math.max(map.getZoom() || 0, 15));
       }
 
       if (activeRoute) {
@@ -1121,7 +1076,7 @@
       document.getElementById('metric-dist-label').textContent = userCoords ? 'GPS Distance' : 'From CDO Center';
       document.getElementById('metric-distance').textContent = `${distKm} km away`;
       document.getElementById('metric-status').textContent =
-        loc.rating >= 4.0 ? 'Community Verified' : loc.rating > 0 ? 'Community Rated' : 'Unrated Seed Venue';
+        loc.rating >= 4.0 ? 'Community Verified' : loc.rating > 0 ? 'Community Rated' : 'Awaiting Verification';
     }
 
     function stepVenue(dir) {
@@ -1132,8 +1087,54 @@
     }
 
     // =========================================================================
-    // 7. ACCESSIBLE ROUTING ENGINE (OSRM + GEODESIC FALLBACK)
+    // 7. ACCESSIBLE ROUTING ENGINE (GOOGLE DIRECTIONS + GEODESIC FALLBACK)
     // =========================================================================
+    function requestGoogleWalkingRoute(origin, targetLoc) {
+      return new Promise((resolve, reject) => {
+        if (!window.google || !window.google.maps) {
+          return reject(new Error('Google Maps SDK is not ready.'));
+        }
+
+        const timer = setTimeout(() => reject(new Error('Google Directions request timed out.')), 8000);
+        const directionsService = new google.maps.DirectionsService();
+
+        directionsService.route(
+          {
+            origin: new google.maps.LatLng(origin.lat, origin.lng),
+            destination: new google.maps.LatLng(targetLoc.lat, targetLoc.lng),
+            travelMode: google.maps.TravelMode.WALKING,
+            provideRouteAlternatives: false,
+            region: 'PH'
+          },
+          (result, status) => {
+            clearTimeout(timer);
+            if (status !== 'OK' || !result || !result.routes || !result.routes[0]) {
+              return reject(new Error('Google Directions failed with status: ' + status));
+            }
+
+            const route = result.routes[0];
+            const leg = route.legs && route.legs[0];
+            const coords = [];
+            if (route.overview_path) {
+              route.overview_path.forEach(pt => coords.push([pt.lat(), pt.lng()]));
+            }
+            if (coords.length < 2) {
+              return reject(new Error('Google Directions returned no route path.'));
+            }
+
+            const distKm = leg && leg.distance
+              ? Math.max(0.1, Math.round((leg.distance.value / 1000) * 10) / 10)
+              : calculateDistanceKm(origin.lat, origin.lng, targetLoc.lat, targetLoc.lng);
+            const durationMins = leg && leg.duration
+              ? Math.max(1, Math.round(leg.duration.value / 60))
+              : Math.max(2, Math.round((distKm * 1250) / 70));
+
+            resolve({ coords, distKm, durationMins });
+          }
+        );
+      });
+    }
+
     function generateGeodesicArc(sLat, sLng, eLat, eLng, segments = 32) {
       const pts = [];
       const dLat = eLat - sLat;
@@ -1167,22 +1168,13 @@
       let isFallback = true;
 
       try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 4000);
-        const url = `https://router.project-osrm.org/route/v1/foot/${origin.lng},${origin.lat};${targetLoc.lng},${targetLoc.lat}?overview=full&geometries=geojson`;
-        const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(timer);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-            coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-            distKm = Math.max(0.1, Math.round((data.routes[0].distance / 1000) * 10) / 10);
-            durationMins = Math.max(1, Math.round(data.routes[0].distance / 70));
-            isFallback = false;
-          }
-        }
+        const googleRoute = await requestGoogleWalkingRoute(origin, targetLoc);
+        coords = googleRoute.coords;
+        distKm = googleRoute.distKm;
+        durationMins = googleRoute.durationMins;
+        isFallback = false;
       } catch (e) {
-        // Fallback arc
+        // Fall back to a direct geodesic arc when Directions is unavailable.
       }
 
       if (coords.length < 2) {
@@ -1191,24 +1183,41 @@
       }
 
       activeRoute = { coords, distKm, durationMins, isFallback };
-      routeLayerGroup.clearLayers();
+      clearOverlayGroup(routeLayerGroup);
 
-      L.polyline(coords, { color: '#0f172a', weight: 8, opacity: 0.7 }).addTo(routeLayerGroup);
-      const line = L.polyline(coords, {
-        color: '#38bdf8',
-        weight: 4.5,
-        opacity: 0.98,
-        dashArray: isFallback ? '8, 8' : null
-      }).addTo(routeLayerGroup);
+      if (map && window.google && window.google.maps) {
+        const path = coords.map(([lat, lng]) => ({ lat, lng }));
 
-      map.fitBounds(line.getBounds(), { padding: [90, 90], maxZoom: 16 });
+        const casing = new google.maps.Polyline({
+          map,
+          path,
+          strokeColor: '#0f172a',
+          strokeOpacity: 0.7,
+          strokeWeight: 8,
+          zIndex: 50
+        });
+        const line = new google.maps.Polyline({
+          map,
+          path,
+          strokeColor: '#38bdf8',
+          strokeOpacity: 0.98,
+          strokeWeight: 4.5,
+          zIndex: 51
+        });
+        routeLayerGroup.push(casing, line);
+
+        const bounds = new google.maps.LatLngBounds();
+        path.forEach(point => bounds.extend(point));
+        map.fitBounds(bounds, { top: 90, right: 90, bottom: 90, left: 90 });
+        if (map.getZoom() > 16) map.setZoom(16);
+      }
 
       const banner = document.getElementById('route-banner');
       banner.classList.remove('hidden');
       banner.classList.add('flex');
       document.getElementById('route-summary-text').textContent = isFallback
         ? `Direct mobility path preview (${distKm} km)`
-        : `Street route via OpenStreetMap (${distKm} km)`;
+        : `Google walking route (${distKm} km)`;
       document.getElementById('route-eta-pill').textContent = `~${durationMins} min transit`;
 
       const barrierPill = document.getElementById('route-barrier-pill');
@@ -1224,7 +1233,7 @@
     function toggleRoutePreview() {
       if (activeRoute) {
         activeRoute = null;
-        routeLayerGroup.clearLayers();
+        clearOverlayGroup(routeLayerGroup);
         const banner = document.getElementById('route-banner');
         banner.classList.add('hidden');
         banner.classList.remove('flex');
@@ -1401,22 +1410,26 @@
     function selectCityPreset(id) {
       const preset = CITY_PRESETS.find(c => c.id === id) || CITY_PRESETS[0];
       document.getElementById('city-drawer').classList.add('hidden');
-      map.flyTo([preset.lat, preset.lng], preset.zoom, { duration: 0.9 });
+      if (!map) return;
+      map.panTo({ lat: preset.lat, lng: preset.lng });
+      map.setZoom(preset.zoom);
     }
 
-    function switchTileLayer(styleKey) {
-      if (!TILES[styleKey]) return;
-      map.removeLayer(currentTileLayer);
-      currentTileLayer = L.tileLayer(TILES[styleKey].url, {
-        maxZoom: 19,
-        attribution: TILES[styleKey].attribution
-      }).addTo(map);
+    function zoomMap(delta) {
+      if (!map) return;
+      map.setZoom((map.getZoom() || 7) + delta);
+    }
 
-      document.getElementById('active-layer-label').textContent = TILES[styleKey].label;
+    function switchMapStyle(styleKey) {
+      if (!MAP_STYLES[styleKey] || !map) return;
+
+      map.setMapTypeId(styleKey);
+      document.getElementById('active-layer-label').textContent = MAP_STYLES[styleKey].label;
       document.getElementById('layer-menu').classList.add('hidden');
 
-      ['osm', 'hot', 'dark', 'positron'].forEach(k => {
+      Object.keys(MAP_STYLES).forEach(k => {
         const btn = document.getElementById('btn-' + k);
+        if (!btn) return;
         btn.className = k === styleKey
           ? 'text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
           : 'text-xs text-left px-3 py-1.5 rounded-xl font-semibold transition-colors hover:bg-slate-800 text-slate-300 border border-transparent';
@@ -1432,9 +1445,10 @@
       document.getElementById('radar-status-label').textContent = km ? `${km}km Radar` : 'Radar';
       renderUserAndRadiusOverlay();
       applyFiltersAndRender();
-      if (km !== null) {
+      if (km !== null && map) {
         const origin = userCoords || DEFAULT_CDO_CENTER;
-        map.flyTo([origin.lat, origin.lng], km <= 1 ? 15 : km <= 3 ? 14 : 13, { duration: 0.8 });
+        map.panTo({ lat: origin.lat, lng: origin.lng });
+        map.setZoom(km <= 1 ? 15 : km <= 3 ? 14 : 13);
       }
     }
 
@@ -1443,7 +1457,10 @@
       document.getElementById('radar-menu').classList.add('hidden');
       renderUserAndRadiusOverlay();
       applyFiltersAndRender();
-      map.flyTo([userCoords.lat, userCoords.lng], 15, { duration: 0.9 });
+      if (map) {
+        map.panTo({ lat: userCoords.lat, lng: userCoords.lng });
+        map.setZoom(15);
+      }
     }
 
     function locateUserGps() {
@@ -1456,7 +1473,10 @@
           userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           renderUserAndRadiusOverlay();
           applyFiltersAndRender();
-          map.flyTo([userCoords.lat, userCoords.lng], 15, { duration: 1.0 });
+          if (map) {
+            map.panTo({ lat: userCoords.lat, lng: userCoords.lng });
+            map.setZoom(15);
+          }
         },
         () => simulateCdoGps(),
         { enableHighAccuracy: true, timeout: 6000 }
@@ -1464,15 +1484,17 @@
     }
 
     function updateViewportHeader() {
+      if (!map) return;
       const z = map.getZoom();
       const center = map.getCenter();
+      if (z === undefined || !center) return;
       document.getElementById('header-zoom-badge').textContent = `| Zoom ${z}`;
 
       let activePreset = CITY_PRESETS[0];
       if (z > 9) {
         let minD = Infinity;
         for (let i = 1; i < CITY_PRESETS.length; i++) {
-          const d = calculateDistanceKm(center.lat, center.lng, CITY_PRESETS[i].lat, CITY_PRESETS[i].lng);
+          const d = calculateDistanceKm(center.lat(), center.lng(), CITY_PRESETS[i].lat, CITY_PRESETS[i].lng);
           if (d < minD) {
             minD = d;
             activePreset = CITY_PRESETS[i];
@@ -1519,16 +1541,21 @@
       }
     });
 
-    map.on('zoomend', () => {
-      renderMapMarkers();
-      updateViewportHeader();
-    });
-    map.on('moveend', updateViewportHeader);
+    // =========================================================================
+    // 9. BOOT: LOAD GOOGLE MAPS, THEN INITIALIZE THE MAP
+    // =========================================================================
+    const metaKeyEl = document.querySelector('meta[name="google-maps-api-key"]');
+    const metaKey = metaKeyEl ? (metaKeyEl.getAttribute('content') || '') : '';
+    const googleMapsKey = new URLSearchParams(location.search).get('googleMapsKey') ||
+      (metaKey && !metaKey.startsWith('__') ? metaKey : '') ||
+      window.__GOOGLE_MAPS_API_KEY__ ||
+      '';
 
-    // Initial Boot
-    renderCityPresets();
-    applyFiltersAndRender();
-    updateBottomCard(selectedLocation);
+    loadGoogleMaps(googleMapsKey)
+      .then(() => initAccessMap())
+      .catch(err => {
+        showMapError(err.message);
+      });
   </script>
 </body>
 </html>
