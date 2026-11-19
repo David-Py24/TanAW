@@ -296,33 +296,33 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Pin New Accessible Location"
-      className="fixed inset-0 z-[1100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-[1100] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
     >
       {/* Floating Card replicating the reference UI container */}
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden animate-scale-up select-none">
+      <div className="bg-white rounded-[24px] shadow-[8px_8px_0px_#0F172A] border-[2px] border-[#0F172A] w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden animate-scale-up select-none font-space">
         {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
           {/* Header with Icon, Title, and Subtitle */}
           <div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-slate-950 text-white flex items-center justify-center">
-                  <Accessibility className="w-4 h-4 text-white" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#21524B] text-white border-[1.5px] border-[#0F172A] shadow-[0_1.5px_0_#0F172A] flex items-center justify-center">
+                  <Accessibility className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                <h2 className="text-xl font-bold text-[#0F172A] tracking-tight">
                   Pin Accessible Place
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-[#0F172A] bg-white hover:bg-[#EAF3F7] border-[1.5px] border-[#0F172A] shadow-[0_1.5px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
                 aria-label="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-[#0F172A]" />
               </button>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            <p className="text-xs sm:text-sm text-[#0F172A]/70 font-medium mt-1.5">
               Add a venue in Cagayan de Oro and record verified accessibility features for the community.
             </p>
           </div>
@@ -331,15 +331,15 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({
           <div className="space-y-2">
             <label
               htmlFor="storefront-upload"
-              className="border border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50/60 rounded-2xl p-6 sm:p-7 flex flex-col items-center justify-center text-center cursor-pointer transition-all group bg-slate-50/30"
+              className="border-2 border-dashed border-[#0F172A] hover:bg-[#EAF3F7] rounded-[20px] p-6 sm:p-7 flex flex-col items-center justify-center text-center cursor-pointer transition-all group bg-[#F8FAFC] shadow-[0_2px_0_#0F172A]"
             >
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:scale-105 group-hover:text-slate-800 transition-all mb-2.5">
-                <UploadCloud className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-full bg-[#E7F2F0] text-[#21524B] border-[1.5px] border-[#0F172A] shadow-[0_1.5px_0_#0F172A] flex items-center justify-center group-hover:scale-105 transition-all mb-2.5">
+                <UploadCloud className="w-6 h-6" />
               </div>
-              <span className="text-xs sm:text-sm font-semibold text-slate-800">
+              <span className="text-xs sm:text-sm font-bold text-[#0F172A]">
                 {photoName ? photoName : 'Select storefront photo or drag and drop here'}
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+              <span className="text-[11px] sm:text-xs text-[#0F172A]/70 mt-0.5 font-medium">
                 JPG, PNG or WebP, up to 15MB • Enables Gemini AI entrance scan
               </span>
               <input
@@ -656,18 +656,18 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({
           </div>
 
           {/* Footer Actions (Direct Recreation: Cancel / [📍 Pin location]) */}
-          <div className="pt-2 flex items-center justify-end gap-3">
+          <div className="pt-2 flex items-center justify-end gap-3 font-space">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-950 transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs sm:text-sm font-bold text-[#0F172A] bg-white rounded-xl border-[1.5px] border-[#0F172A] shadow-[0_1.5px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="px-5 py-2.5 bg-slate-950 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
+              className="px-5 py-2.5 bg-[#21524B] hover:bg-[#1a423d] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 border-[1.5px] border-[#0F172A] shadow-[0_2px_0_#0F172A] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
             >
               <MapPin className="w-4 h-4 text-white" />
               <span>Pin location</span>

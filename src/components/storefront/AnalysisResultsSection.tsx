@@ -30,60 +30,61 @@ export const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({
   const acceptedCount = Object.values(acceptedTagsMap).filter(Boolean).length;
 
   return (
-    <div className="space-y-4 pt-2 border-t border-slate-200 animate-fade-in">
+    <div className="space-y-4 pt-3 border-t-[1.5px] border-[#0F172A] animate-fade-in font-space">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-[#21524B]" />
           <span>AI Storefront Review Results</span>
         </h3>
-        <span className="text-xs text-slate-400 font-mono">
-          {acceptedCount} tags accepted
+        <span className="inline-flex items-center gap-1.5 bg-[#E7F2F0] text-[#13332E] border border-[#21524B] rounded-full text-[11px] font-bold px-2.5 py-0.5 shadow-[0_1px_0_#21524B]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#21524B]"></span>
+          <span>{acceptedCount} tags accepted</span>
         </span>
       </div>
 
-      {/* Summary Card */}
-      <div className="p-4 bg-sky-50/70 border border-sky-200 rounded-2xl space-y-1">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-sky-900">
+      {/* Summary Card matching .tile in sidebar pages */}
+      <div className="p-4 bg-white border-[1.8px] border-[#0F172A] rounded-[14px] shadow-[0_2px_0_#0F172A] space-y-1">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#21524B]">
           Architectural Assessment:
         </span>
-        <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
+        <p className="text-xs sm:text-sm text-[#0F172A] leading-relaxed font-bold">
           {analysisResult.summary}
         </p>
       </div>
 
-      {/* Detected Physical Features with Confidence & Visual Evidence */}
+      {/* Detected Physical Features with Confidence & Visual Evidence matching .ci */}
       {analysisResult.detected_features && analysisResult.detected_features.length > 0 && (
         <div className="space-y-2">
-          <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+          <span className="text-xs font-bold text-[#475569] uppercase tracking-wider">
             Observed Accessibility Features & Evidence
           </span>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {analysisResult.detected_features.map((feat, idx) => {
               const confidencePct = Math.round((feat.confidence || 0.8) * 100);
               return (
                 <div
                   key={idx}
-                  className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-1.5"
+                  className="p-3.5 bg-white border-[1.5px] border-[#0F172A] rounded-[14px] shadow-[0_2px_0_#0F172A] space-y-2"
                 >
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                      {getTagIcon(feat.tag)}
+                    <span className="font-bold text-[#0F172A] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-[#21524B] text-white flex items-center justify-center font-bold text-[10px]">✓</span>
                       <span>{feat.tag}</span>
                     </span>
-                    <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[11px]">
+                    <span className="font-bold text-[#13332E] bg-[#E7F2F0] border border-[#21524B] px-2.5 py-0.5 rounded-full text-[11px]">
                       {confidencePct}% Confidence
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-600">
-                    <strong className="text-slate-800">Visual Evidence:</strong>{' '}
+                  <p className="text-xs text-[#475569] font-medium">
+                    <strong className="text-[#0F172A]">Visual Evidence:</strong>{' '}
                     {feat.evidence}
                   </p>
 
-                  {/* Progress gauge */}
-                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  {/* Progress gauge matching .bar */}
+                  <div className="w-full bg-[#E2E8F0] h-[5px] rounded-full overflow-hidden">
                     <div
-                      className="bg-emerald-500 h-full rounded-full transition-all"
+                      className="bg-[#21524B] h-full rounded-full transition-all"
                       style={{ width: `${confidencePct}%` }}
                     />
                   </div>
@@ -96,14 +97,14 @@ export const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({
 
       {/* Barriers Box */}
       {analysisResult.possible_barriers && analysisResult.possible_barriers.length > 0 && (
-        <div className="p-3.5 bg-amber-50/80 border border-amber-300 rounded-2xl space-y-1.5">
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
-            <ShieldAlert className="w-4 h-4 text-amber-600" />
+        <div className="p-3.5 bg-[#FEE2E2] border-[1.5px] border-[#991B1B] rounded-[14px] space-y-1.5">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#991B1B]">
+            <ShieldAlert className="w-4 h-4 text-[#991B1B]" />
             <span>Identified Physical Obstacles & Barriers</span>
           </div>
-          <ul className="text-xs text-amber-800 list-disc list-inside space-y-1">
+          <ul className="text-xs text-[#991B1B] list-disc list-inside space-y-1 font-medium">
             {analysisResult.possible_barriers.map((barrier, bIdx) => (
-              <li key={bIdx} className="font-medium">
+              <li key={bIdx}>
                 {barrier}
               </li>
             ))}
@@ -114,10 +115,10 @@ export const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({
       {/* Suggested Tags to Accept or Reject */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+          <span className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
             Accept or Reject Suggested Tags:
           </span>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] font-bold text-[#475569]">
             Check the tags you want to apply
           </span>
         </div>
@@ -128,10 +129,10 @@ export const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({
             return (
               <label
                 key={tag}
-                className={`p-3 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition-colors ${
+                className={`p-3 rounded-[12px] border-[1.5px] flex items-center justify-between gap-2 cursor-pointer transition-all ${
                   isAccepted
-                    ? 'bg-emerald-50/80 border-emerald-300 shadow-2xs'
-                    : 'bg-slate-50 border-slate-200 opacity-60'
+                    ? 'bg-[#E7F2F0] border-[#21524B] shadow-[0_2px_0_#21524B]'
+                    : 'bg-white border-[#0F172A]/40 opacity-70 hover:opacity-100 shadow-[0_1px_0_#0F172A]'
                 }`}
               >
                 <div className="flex items-center gap-2 min-w-0">
@@ -139,17 +140,17 @@ export const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({
                     type="checkbox"
                     checked={isAccepted}
                     onChange={() => onToggleTagAcceptance(tag)}
-                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                    className="w-4 h-4 text-[#21524B] rounded border-[#0F172A] focus:ring-[#21524B]"
                   />
-                  <span className="text-xs font-semibold text-slate-900 truncate">
+                  <span className="text-xs font-bold text-[#0F172A] truncate">
                     {tag}
                   </span>
                 </div>
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                     isAccepted
-                      ? 'bg-emerald-200 text-emerald-900'
-                      : 'bg-slate-200 text-slate-600'
+                      ? 'bg-[#21524B] text-white border-[#0F172A]'
+                      : 'bg-white text-[#475569] border-slate-300'
                   }`}
                 >
                   {isAccepted ? 'Accepted' : 'Rejected'}
@@ -161,23 +162,23 @@ export const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({
       </div>
 
       {/* AI Disclaimer */}
-      <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 flex items-start gap-2 text-[11px] text-slate-600">
-        <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+      <div className="p-3 bg-[#EAF3F7] rounded-[12px] border border-[#21524B]/30 flex items-start gap-2.5 text-[11px] text-[#475569] font-medium">
+        <Info className="w-4 h-4 text-[#21524B] shrink-0 mt-0.5" />
         <p>
-          <strong>Disclaimer:</strong> AI analysis is based on photographic visual inspection only and may be inaccurate or incomplete. All AI-suggested tags will display an "AI-suggested" badge on TanAW until confirmed on-site by community members.
+          <strong className="text-[#0F172A]">Disclaimer:</strong> AI analysis is based on photographic visual inspection only and may be inaccurate or incomplete. All AI-suggested tags will display an "AI-suggested" badge on TanAW until confirmed on-site by community members.
         </p>
       </div>
 
       {/* Location Target Selection (if not launched from an existing location) */}
       {!targetLocation && (
         <div className="pt-2">
-          <label className="block text-xs font-bold text-slate-800 mb-1">
+          <label className="block text-xs font-bold text-[#0F172A] mb-1">
             Select Existing Location Pin to Update:
           </label>
           <select
             value={selectedLocationId}
             onChange={(e) => onSelectLocationId(e.target.value)}
-            className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-800"
+            className="w-full p-2.5 bg-white border-[1.5px] border-[#0F172A] rounded-full px-4 text-xs sm:text-sm font-bold text-[#0F172A] shadow-[0_2px_0_#0F172A] focus:outline-none"
           >
             <option value="">-- Choose a location in Cagayan de Oro --</option>
             {locations.map((loc) => (

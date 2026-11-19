@@ -47,11 +47,11 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
   };
 
   return (
-    <div className="space-y-4 pt-2 border-t border-slate-200">
+    <div className="space-y-4 pt-4 border-t-[1.5px] border-dashed border-[#CBD5E1] font-space">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-slate-700" />
-          <h3 className="text-sm font-bold text-slate-900">
+          <MessageSquare className="w-4 h-4 text-[#21524B]" />
+          <h3 className="text-sm font-bold text-[#0F172A]">
             Community Reviews & Notes ({location.reviews.length})
           </h3>
         </div>
@@ -59,9 +59,9 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
           <button
             type="button"
             onClick={() => setIsAddingReview(true)}
-            className="text-xs font-bold text-sky-700 hover:text-sky-800 flex items-center gap-1 cursor-pointer"
+            className="btn-neo text-xs px-3.5 py-1.5"
           >
-            <PlusCircle className="w-3.5 h-3.5" />
+            <PlusCircle className="w-3.5 h-3.5 text-[#21524B]" />
             <span>Write Review</span>
           </button>
         )}
@@ -71,14 +71,14 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
       {isAddingReview && (
         <form
           onSubmit={handleReviewSubmit}
-          className="p-4 bg-sky-50/50 rounded-2xl border border-sky-200 space-y-3.5 animate-fade-in"
+          className="p-4 bg-white rounded-[16px] border-[1.8px] border-[#0F172A] shadow-[0_3px_0_#0F172A] space-y-3.5 animate-fade-in"
         >
-          <h4 className="text-xs font-bold uppercase tracking-wider text-sky-900">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
             Add Your Accessibility Experience
           </h4>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-[#0F172A] mb-1">
               Your Name or Handle
             </label>
             <input
@@ -87,12 +87,12 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
               placeholder="e.g. Maria S."
-              className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs sm:text-sm bg-white"
+              className="w-full px-3 py-2 rounded-xl border-[1.5px] border-[#0F172A] text-xs sm:text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#21524B] shadow-[0_1.5px_0_#0F172A]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-[#0F172A] mb-1">
               Overall Accessibility Rating (1–5 Stars)
             </label>
             <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                 onChange={setNewRating}
                 size="lg"
               />
-              <span className="text-xs font-bold text-slate-700 ml-2">
+              <span className="text-xs font-bold text-[#0F172A] ml-2">
                 {newRating} / 5 Stars
               </span>
             </div>
@@ -110,13 +110,13 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
           {/* Optional tag ratings */}
           {location.tags.length > 0 && (
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#0F172A] mb-1">
                 Rate Specific Features (Optional):
               </label>
-              <div className="space-y-1.5 max-h-36 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
+              <div className="space-y-1.5 max-h-36 overflow-y-auto p-2 bg-white rounded-xl border-[1.5px] border-[#0F172A]">
                 {location.tags.map((tag) => (
-                  <div key={tag.name} className="flex items-center justify-between text-xs">
-                    <span className="truncate max-w-[200px] text-slate-700">{tag.name}</span>
+                  <div key={tag.name} className="flex items-center justify-between text-xs py-1">
+                    <span className="truncate max-w-[200px] text-[#0F172A] font-medium">{tag.name}</span>
                     <div className="flex items-center gap-1">
                       <StarRating
                         value={tagRatings[tag.name] || 0}
@@ -131,7 +131,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-[#0F172A] mb-1">
               Detailed Accessibility Comment
             </label>
             <textarea
@@ -140,7 +140,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share details about ramps, door width, bathroom grab bars, sensory conditions, staff assistance..."
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm bg-white"
+              className="w-full px-3 py-2 rounded-xl border-[1.5px] border-[#0F172A] text-xs sm:text-sm bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#21524B] shadow-[0_1.5px_0_#0F172A]"
             />
           </div>
 
@@ -148,15 +148,15 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
             <button
               type="button"
               onClick={() => setIsAddingReview(false)}
-              className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 cursor-pointer"
+              className="btn-neo text-xs px-3.5 py-1.5"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs cursor-pointer"
+              className="btn-neo btn-neo-accent text-xs px-4 py-2"
             >
-              <Send className="w-3 h-3" />
+              <Send className="w-3.5 h-3.5" />
               <span>Submit Review</span>
             </button>
           </div>
@@ -166,18 +166,18 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
       {/* Existing Reviews List */}
       <div className="space-y-3">
         {location.reviews.length === 0 ? (
-          <p className="text-xs text-slate-400 italic py-2">
+          <p className="text-xs text-[#0F172A]/60 italic py-2">
             No written reviews yet. Be the first to share an accessibility review!
           </p>
         ) : (
           location.reviews.map((rev) => (
             <div
               key={rev.id}
-              className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5"
+              className="p-3.5 bg-white rounded-[16px] border-[1.8px] border-[#0F172A] shadow-[0_2px_0_#0F172A] space-y-1.5"
             >
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-900">{rev.authorName}</span>
-                <div className="flex items-center gap-1 text-slate-400 text-[11px]">
+                <span className="font-bold text-[#0F172A]">{rev.authorName}</span>
+                <div className="flex items-center gap-1 text-[#0F172A]/60 text-[11px] font-mono">
                   <Calendar className="w-3 h-3" />
                   <span>{rev.date}</span>
                 </div>
@@ -187,7 +187,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                 <StarRating value={rev.rating} size="sm" showLabel labelSuffix="★" />
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#0F172A] leading-relaxed">
                 {rev.comment}
               </p>
             </div>

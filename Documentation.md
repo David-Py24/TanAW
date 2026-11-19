@@ -205,6 +205,30 @@ TanAW is an open-source, crowdsourced urban accessibility platform designed to c
   - Repositioned the search bar closer to the sidebar (`top-4 left-4 sm:top-4.5 sm:left-5` with `items-start`) for convenient access next to the left navigation/places panel while remaining fully visible in the open map canvas.
   - Verified compilation and bundle integrity via `npm run lint` (0 errors) and `npm run build` (**666ms**).
 
+### `2026-11-19 10:10:00` — Neo-Grotesque Design System Adoption for Locations, Pinned Details, and AI Storefront Stabilizer
+- **Event**: Harmonized the Locations list panel, Pinned Location Details drawer, and the AI Storefront Accessibility Analyzer/Stabilizer with the Profile Neo-Grotesque Design System.
+- **Decisions & Implementation**:
+  - **Locations List Panel & Cards (`PlacesPanel.tsx`, `LocationCard.tsx`)**:
+    - Converted container to Space Grotesk (`font-space`), solid `1.8px solid #0F172A` right border, and `4px 0 0 #0F172A` tactile shadow.
+    - Added squircle location count pill, rounded tactile filter & more action buttons (`border-[1.8px] border-[#0F172A] shadow-[0_1.5px_0_#0F172A]`).
+    - Styled segmented filter tabs (`All Places`, `Verified (4★+)`, `Barriers`) with neo-grotesque pills (`#21524B` deep teal active states with hard shadows).
+    - Restyled search input and accordion filter chips with 1.8px ink borders and subtle drop shadows.
+    - Overhauled inactive and expanded location cards with `rounded-[16px]` / `rounded-[20px]`, `border-[1.8px] border-[#0F172A]`, `shadow-[0_3px_0_#0F172A]`, neo-grotesque `VERIFIED ACCESS` badges (`#E7F2F0` / `#21524B`), and micro-lift hover animations.
+  - **Pinned Location Details Drawer & Sections (`LocationOverviewCard.tsx`, `TagVotingList.tsx`, `AiAnalysisSection.tsx`, `ReviewSection.tsx`, `LocationDetailDrawer.tsx`)**:
+    - Restyled fused details header with tactile `Back to Places` pill, direct `Pin` button, and action controls.
+    - Updated navigation coordinates and directions block, verified entrance photo container, community pin counter card (`#E7F2F0`), and overall accessibility rating card (`#21524B` score badge).
+    - Re-engineered tag voting rows with tactile `Confirm` and `Dispute` buttons, star rating indicators, and neo-grotesque status chips.
+    - Updated Gemini AI storefront visual assessment card and barrier warning boxes with solid borders and Space Grotesk typography.
+    - Styled review submission form and community reviews cards.
+  - **AI Storefront Accessibility Analyzer / Stabilizer (`Modal.tsx`, `AIStorefrontModal.tsx`, `PhotoInputSection.tsx`, `AnalysisResultsSection.tsx`, `AddLocationModal.tsx`)**:
+    - Overhauled universal modal dialog wrapper with `border-[2px] border-[#0F172A]`, `shadow-[8px_8px_0px_#0F172A]`, and Space Grotesk font.
+    - Styled header with deep teal `#21524B` squircle icon badge and tactile close button.
+    - Upgraded photo upload dropzone with 2px dashed ink border, `#E7F2F0` upload icon circle, and neo-grotesque sample storefront selector cards.
+    - Upgraded analysis results screen with architectural assessment cards, visual evidence meters, barrier alert cards, checkbox tags (`#E7F2F0` accepted states), and deep teal primary CTA buttons.
+  - **Build & Verification**:
+    - Verified compilation via `npm run build` (`vite v8.3.6`, 0 errors, gzip 160 kB).
+    - Synchronized `PlacesPanel.tsx` and `Badge.tsx` to `TanAW-Interactive-Map-Page`.
+
 ### `2026-11-19 00:28:00` — Partial-Opened Bottom Sheet Architecture for Mobile Pages & Missions
 - **Event**: Re-architected mobile page and mission drawer openings to use partially-opened bottom sheets instead of covering the entire viewport.
 - **Decisions & Implementation**:
@@ -465,3 +489,25 @@ TanAW is an open-source, crowdsourced urban accessibility platform designed to c
   - **Profile Design System Styling**: Rebuilt `buildGuiCardHtml` in [routingAndSpatial.ts](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/utils/routingAndSpatial.ts) with Space Grotesk typography, `#EAF3F7` header with dashed `#9DBBC7` divider, `#E7F2F0` category badge pill, solid ink bordered rating pill, `#21524B` deep teal / `#E7F2F0` pin button with tactile drop shadow, `#E7F2F0` verified accessibility tag chips with solid ink borders, and a dashed footer quick actions hint.
   - **Synchronized to Map Repository**: Propagated changes to `TanAW-Interactive-Map-Page/Src/components/MapView.tsx` and `TanAW-Interactive-Map-Page/Src/utils/routingAndSpatial.ts`.
 - **Impact**: Hovering over any map pin now cleanly displays venue accessibility details to the right of the pin without covering the pin icon or northern map context, with 100% design system uniformity across the entire application.
+
+---
+
+## `2026-11-19 10:45:00` — Adopted Sidebar Page Design System (TanAW-Contribution-History-Page) for Locations, Pinned Location Details, and AI Storefront Stabilizer
+- **Event**: Harmonized the Locations list drawer, Pinned location inspection subcomponents, and AI Storefront Accessibility Stabilizer / Analyzer with the canonical design system tokens and patterns established in sidebar pages (specifically `TanAW-Contribution-History-Page/Src/contribution-history.html` and `AccessMap.html`).
+- **Decisions**:
+  - **Dynamic Texture & Palette Tokens**: Added `.dot-grid-bg` motion dot-grid texture overlay (`radial-gradient(circle at 1px 1px, rgba(15,23,42,0.07) 1.2px, transparent 0) 32px 32px`), Space Grotesk font hierarchy, and neo-brutalist button primitives (`.btn-neo`, `.btn-neo-accent` `#21524B` deep teal, and `.btn-neo-glow`) to [TanAW/src/index.css](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/index.css).
+  - **Locations List Panel & Cards**:
+    - Restyled [PlacesPanel.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/PlacesPanel.tsx) with live places count pill badge, circular `.btn-neo` icon controls, canonical underline tab bar (`border-b-[1.5px] border-[#0F172A]` with active tab `border-b-[3px] border-[#21524B]`), and rounded-full `.search` input with solid ink border and tactile drop shadow.
+    - Updated [LocationCard.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/LocationCard.tsx) to feature `1.8px solid #0F172A` borders, `0 3px 0 #0F172A` shadow, tactile `.btn-neo` pin pill, 5px progress gauge (`.bar`), 4-column metric grid (`.kv`), and auditor avatar row (`.foot`).
+  - **Pinned Location Details Drawer & Sections**:
+    - Transformed [LocationOverviewCard.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/location-detail/LocationOverviewCard.tsx) with coordinate `.tile`, community interest banner `.chip`, and rating statistics box (`.stats`).
+    - Updated [TagVotingList.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/location-detail/TagVotingList.tsx) to adopt `.ci` check item rows with `.ok` green check circle icons and `.btn-neo` Confirm / Dispute buttons.
+    - Enhanced [ReviewSection.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/location-detail/ReviewSection.tsx) with `.btn-neo` action buttons and solid-ink card containers.
+    - Updated [LocationDetailDrawer.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/LocationDetailDrawer.tsx) with `.dot-grid-bg`, header action pills, and `.btn-neo-accent` AI scan trigger.
+  - **AI Storefront Accessibility Stabilizer / Analyzer**:
+    - Re-architected [Modal.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/ui/Modal.tsx) and [AIStorefrontModal.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/AIStorefrontModal.tsx) as `.panel` with 22px border radius, 1.8px dark ink border, `shadow-[0_6px_0_#0F172A]`, live model badge (`● Model v3.4`), and `.pfoot` footer (`Platform detection accuracy 99.4%`).
+    - Reconstructed [PhotoInputSection.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/storefront/PhotoInputSection.tsx) with the interactive Storefront AI Visual Scanner viewport (`.scan`), animated turquoise laser beam (`@keyframes laserBeamMove`), target bounding boxes (auto-sensor door and ramp zone), dashed upload zone, and tactile pre-loaded venue cards.
+    - Styled [AnalysisResultsSection.tsx](file:///C:/Users/Ghing/Documents/TanAws/TanAW/src/components/storefront/AnalysisResultsSection.tsx) with confidence gauges (`.bar`), `.ci` feature list, and rounded selection pills.
+  - **Synchronized Sibling Repositories**: Mirrored updated `PlacesPanel.tsx` and `Badge.tsx` into [TanAW-Interactive-Map-Page](file:///C:/Users/Ghing/Documents/TanAws/TanAW-Interactive-Map-Page).
+- **Verification**: Executed `npm --prefix TanAW run build` (`vite build`), completing successfully in 617ms with 0 compilation errors.
+- **Impact**: Unifies the primary cartographic location inspection and AI storefront analysis workflows with the visual design language of the sidebar pages.

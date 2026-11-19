@@ -51,49 +51,49 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label={`Accessibility details for ${location.name}`}
-      className="fixed inset-y-0 right-0 w-full sm:w-[480px] lg:w-[520px] bg-white shadow-2xl z-[1000] flex flex-col border-l border-slate-200 overflow-hidden"
+      className="fixed inset-y-0 right-0 w-full sm:w-[480px] lg:w-[520px] bg-white shadow-2xl z-[1000] flex flex-col border-l-[2px] border-[#0F172A] overflow-hidden font-space"
     >
-      {/* Header */}
-      <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
+      {/* Header matching sidebar pages */}
+      <div className="p-4 sm:p-5 border-b-[1.5px] border-[#0F172A] bg-white flex items-center justify-between gap-3 shrink-0">
         <div className="min-w-0">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="inline-flex items-center gap-1.5 bg-[#E7F2F0] text-[#13332E] border border-[#21524B] rounded-full text-[10px] font-bold px-2.5 py-0.5">
             {location.category}
           </span>
-          <h2 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+          <h2 className="text-base sm:text-lg font-bold text-[#0F172A] truncate mt-1">
             {location.name}
           </h2>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleShare}
-            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer"
+            className="btn-neo w-8 h-8 p-0"
             title="Share location"
             aria-label="Share location"
           >
-            <Share2 className="w-5 h-5" />
+            <Share2 className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer"
+            className="btn-neo w-8 h-8 p-0"
             title="Close details"
             aria-label="Close details"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {copySuccess && (
-        <div className="bg-emerald-600 text-white text-xs py-1.5 text-center font-medium">
+        <div className="bg-[#21524B] text-white text-xs py-1.5 text-center font-bold border-b border-[#0F172A]">
           ✓ Copied location details to clipboard!
         </div>
       )}
 
       {/* Scrollable Body */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 dot-grid-bg">
         <LocationOverviewCard location={location} onTogglePin={onTogglePin} />
 
         <AiAnalysisSection
@@ -115,24 +115,25 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
       </div>
 
       {/* Footer Quick Actions */}
-      <div className="p-4 border-t border-slate-200 bg-white flex items-center justify-between gap-3 shrink-0">
+      <div className="p-4 border-t-[1.5px] border-[#0F172A] bg-[#EAF3F7] flex items-center justify-between gap-3 shrink-0">
         <button
           type="button"
           onClick={() => onRunAIScanOnPin(location)}
-          className="flex-1 py-2.5 px-3 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          className="btn-neo btn-neo-accent btn-neo-glow flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
         >
-          <Sparkles className="w-4 h-4 text-indigo-600" />
+          <Sparkles className="w-4 h-4 text-amber-300" />
           <span>Scan Storefront Photo</span>
         </button>
 
         <button
           type="button"
           onClick={onClose}
-          className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+          className="btn-neo py-2.5 px-4 text-xs sm:text-sm font-bold"
         >
           Close
         </button>
       </div>
     </div>
+  );
   );
 };
