@@ -135,5 +135,4 @@ export const LocationDetailDrawer: React.FC<LocationDetailDrawerProps> = ({
       </div>
     </div>
   );
-  );
 };

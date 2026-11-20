@@ -28,6 +28,24 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
   const [inviteCopied, setInviteCopied] = useState<boolean>(false);
   const { announce } = useA11y();
 
+  const [userSession] = useState<{ email?: string; name?: string } | null>(() => {
+    try {
+      const raw = localStorage.getItem('tanaw_user_session');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const userName = userSession?.name || 'Alex David';
+  const userInitials =
+    userName
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase() || 'AD';
+
   const handleInviteClick = () => {
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(window.location.origin);
@@ -131,7 +149,7 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
             <div className="w-[30px] h-[30px] rounded-[9px] bg-[#0F172A] text-white grid place-items-center border-[1.5px] border-[#0F172A] shadow-[0_2px_0_#0F172A] shrink-0 group-hover:scale-105 transition-transform p-1">
               <img
                 src="/logo-green.png"
-                alt="TanAW Official Green Logo"
+                alt="TanAW Official Logo"
                 className="w-full h-full object-contain"
               />
             </div>
@@ -158,11 +176,11 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
           className={`w-full text-left bg-white border-[1.5px] border-[#0F172A] rounded-[12px] shadow-[0_2px_0_#0F172A] mb-3.5 flex items-center cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all ${
             isCollapsed ? 'justify-center p-[9px]' : 'gap-2.5 p-[9px_10px]'
           }`}
-          title="Alex David - My workspace"
-          aria-label="Workspace: Alex David"
+          title={`${userName} - My workspace`}
+          aria-label={`Workspace: ${userName}`}
         >
           <span className="w-[30px] h-[30px] rounded-full bg-[#21524B] text-white grid place-items-center font-bold text-[11px] shrink-0">
-            AD
+            {userInitials}
           </span>
           {!isCollapsed && (
             <>
@@ -170,7 +188,7 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
                 <b className="block text-[13px] leading-[1.2] text-[#0F172A] font-bold truncate">
                   My workspace
                 </b>
-                <small className="block text-[#475569] text-[11px] truncate">Alex David</small>
+                <small className="block text-[#475569] text-[11px] truncate">{userName}</small>
               </div>
               <svg className="ml-auto text-[#475569] w-[15px] h-[15px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
                 <use href="#i-chev" />
@@ -314,6 +332,53 @@ export const SidebarRail: React.FC<SidebarRailProps> = ({
               <use href="#i-sliders" />
             </svg>
             {!isCollapsed && <span>Settings</span>}
+          </button>
+        </div>
+
+        {/* PORTAL & SESSION Group */}
+        <div
+          className={
+            isCollapsed
+              ? 'my-2 h-[1px] bg-[#D5E5EC] w-full block text-[0px]'
+              : "flex items-center gap-2.5 text-[#475569] text-[10px] font-bold tracking-[0.09em] my-3.5 mx-1.5 uppercase after:content-[''] after:flex-1 after:h-[1px] after:bg-[#D5E5EC]"
+          }
+        >
+          {!isCollapsed && 'PORTAL'}
+        </div>
+
+        <div className="flex flex-col gap-1 mb-3.5">
+          <a
+            href="index.html"
+            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] border-transparent font-medium hover:bg-[#EAF3F7] whitespace-nowrap text-[#0F172A] cursor-pointer transition-all ${
+              isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'
+            }`}
+            title="Return to Landing Page"
+          >
+            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round">
+              <use href="#i-globe" />
+            </svg>
+            {!isCollapsed && <span>Landing page</span>}
+          </a>
+
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                localStorage.removeItem('tanaw_user_session');
+              } catch (e) {}
+              window.location.href = 'signin.html';
+            }}
+            className={`flex items-center gap-3 rounded-[10px] text-[13.5px] border-[1.5px] border-transparent font-medium hover:bg-rose-50 text-rose-700 whitespace-nowrap cursor-pointer transition-all ${
+              isCollapsed ? 'justify-center p-[9px]' : 'p-[8px_10px]'
+            }`}
+            title="Sign out of TanAW"
+          >
+            <svg className="w-[18px] h-[18px] shrink-0 fill-none stroke-current stroke-[1.8] stroke-linecap-round stroke-linejoin-round" viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            {!isCollapsed && <span>Sign out</span>}
           </button>
         </div>
 

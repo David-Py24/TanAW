@@ -29,6 +29,8 @@ import {
   Search,
   ChevronUp,
   ChevronDown,
+  Globe,
+  LogOut,
 } from 'lucide-react';
 import { MapTileStyle } from '../MapView';
 
@@ -244,6 +246,16 @@ export const MobileRiftFloraLayout: React.FC<MobileRiftFloraLayoutProps> = ({
       {/* 3. RIGHT FLOATING UTILITY STACK: Quick Map Controls               */}
       {/* ================================================================= */}
       <div className="fixed right-3 top-20 z-[500] pointer-events-auto flex flex-col items-center gap-2.5">
+        {/* Landing Page */}
+        <a
+          href="index.html"
+          className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-md shadow-md border border-slate-200/90 text-slate-700 hover:text-slate-950 flex items-center justify-center transition-all active:scale-90 cursor-pointer"
+          title="Return to Landing Page"
+          aria-label="Landing Page"
+        >
+          <Globe className="w-4 h-4" />
+        </a>
+
         {/* Settings */}
         <button
           type="button"
